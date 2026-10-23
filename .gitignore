@@ -1,0 +1,7 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.DS_Store
+
+# Built by `pnpm preview`. Dev tooling output, not source.
+preview/out/

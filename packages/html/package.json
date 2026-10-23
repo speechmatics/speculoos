@@ -1,0 +1,39 @@
+{
+  "name": "@speculoos/html",
+  "version": "0.0.1",
+  "description": "Framework-free HTML renderer for the Speculoos IR. Emits class names, never styles.",
+  "license": "ISC",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
+    "lint": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json"
+  },
+  "dependencies": {
+    "@speculoos/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@speculoos/asyncapi": "workspace:*",
+    "@speculoos/fixtures": "workspace:*",
+    "@speculoos/loader": "workspace:*",
+    "@speculoos/openapi": "workspace:*",
+    "@types/node": "^22.10.2",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.3"
+  }
+}

@@ -1,0 +1,417 @@
+/**
+ * `<Operation>` — one operation, whichever dialect it came from.
+ *
+ * The two operation shapes stay distinct all the way to the page: a
+ * request/response operation has a method, a body and statuses, and a message
+ * operation has a direction and a set of messages. Folding them together would
+ * have meant inventing a lowest common denominator that reads like neither.
+ */
+
+import { useMemo, type ReactNode } from "react";
+import type {
+  Endpoint,
+  Example,
+  MediaVariant,
+  Operation as IROperation,
+  Parameter,
+  RestResponse,
+  SecurityRequirements,
+  WsMessage,
+} from "@speculoos/core";
+import { useComponents, useSpeculoos } from "./context.js";
+import { useOperation } from "./hooks.js";
+import { DocsBody, SchemaTable } from "./fields.js";
+import { parametersNode, propertiesNode } from "./synth.js";
+import type { Tab } from "./components.js";
+import { DIRECTION_LABEL } from "./labels.js";
+
+/**
+ * `in: "path"` covers both an OAS path parameter and an AsyncAPI channel address
+ * parameter — the IR unifies them because they occupy the same position in a
+ * reader's mental model. "Path parameters" over a WebSocket channel still reads
+ * wrong, though, so the heading follows the address rather than the IR field.
+ */
+const PARAM_GROUPS: { in: Parameter["in"]; title: string; channelTitle?: string }[] = [
+  { in: "path", title: "Path parameters", channelTitle: "Address parameters" },
+  { in: "query", title: "Query parameters" },
+  { in: "header", title: "Header parameters" },
+  { in: "cookie", title: "Cookie parameters" },
+];
+
+/** JSON for display. Falls back to String() for anything that will not encode. */
+function format(value: unknown): string {
+  try {
+    return JSON.stringify(value, null, 2) ?? String(value);
+  } catch {
+    return String(value);
+  }
+}
+
+function Examples({ examples, idPrefix }: { examples: Example[]; idPrefix: string }): ReactNode {
+  const C = useComponents();
+  if (examples.length === 0) return null;
+  const tabs: Tab[] = examples.map((ex, i) => ({
+    id: `${idPrefix}-example-${i}`,
+    label: ex.name ?? ex.summary ?? `Example ${i + 1}`,
+    content: (
+      <>
+        {ex.description !== undefined && <C.Markdown>{ex.description}</C.Markdown>}
+        {ex.externalValue !== undefined ? (
+          <C.Link
+            href={ex.externalValue}
+            target={{ kind: "external", url: ex.externalValue }}
+          >
+            {ex.externalValue}
+          </C.Link>
+        ) : (
+          <C.CodeBlock language="json">{format(ex.value)}</C.CodeBlock>
+        )}
+      </>
+    ),
+  }));
+  return <C.Tabs kind="example" tabs={tabs} />;
+}
+
+function Content({ content, idPrefix }: { content: MediaVariant[]; idPrefix: string }): ReactNode {
+  const C = useComponents();
+  if (content.length === 0) return null;
+  const tabs: Tab[] = content.map((variant) => ({
+    id: `${idPrefix}-${variant.mediaType}`,
+    label: <C.Badge tone="mediaType">{variant.mediaType}</C.Badge>,
+    content: (
+      <>
+        <SchemaTable node={variant.node} view={variant.view} />
+        <Examples examples={variant.examples} idPrefix={`${idPrefix}-${variant.mediaType}`} />
+      </>
+    ),
+  }));
+  return <C.Tabs kind="mediaType" tabs={tabs} />;
+}
+
+function Security({ security, level }: { security: SecurityRequirements; level: number }): ReactNode {
+  const C = useComponents();
+  const { ir } = useSpeculoos();
+  if (security.length === 0) return null;
+  return (
+    <C.Section kind="security" title="Security" level={level}>
+      <C.List kind="security">
+        {security.map((alternative, i) => (
+          <C.ListItem key={i}>
+            {alternative.length === 0 ? (
+              <C.Badge tone="securityScheme">optional</C.Badge>
+            ) : (
+              alternative.map((req) => {
+                // The parenthetical says what kind of credential this is. When
+                // the scheme is named after its own kind — `bearer: {scheme:
+                // bearer}`, which is the common case — repeating it reads like a
+                // bug, so it is left off.
+                const scheme = ir.securitySchemes[req.scheme];
+                const kind = scheme === undefined ? undefined
+                  : scheme.kind === "http" ? scheme.scheme
+                  : scheme.kind;
+                const label =
+                  kind === undefined || kind.toLowerCase() === req.scheme.toLowerCase()
+                    ? req.scheme
+                    : `${req.scheme} (${kind})`;
+                return (
+                  <C.Badge key={req.scheme} tone="securityScheme">
+                    {req.scopes.length === 0 ? label : `${label}: ${req.scopes.join(", ")}`}
+                  </C.Badge>
+                );
+              })
+            )}
+          </C.ListItem>
+        ))}
+      </C.List>
+    </C.Section>
+  );
+}
+
+function Parameters({
+  endpoint,
+  operation,
+  level,
+}: {
+  endpoint: Endpoint;
+  operation: IROperation;
+  level: number;
+}): ReactNode {
+  const C = useComponents();
+  // Endpoint parameters come first: they are shared by every operation here, so
+  // they are the ones a reader has probably already met.
+  const all = useMemo(
+    () => [
+      ...endpoint.parameters,
+      ...(operation.kind === "request-response" ? operation.parameters : []),
+    ],
+    [endpoint.parameters, operation],
+  );
+  if (all.length === 0) return null;
+  return (
+    <>
+      {PARAM_GROUPS.map(({ in: location, title, channelTitle }) => {
+        const group = all.filter((p) => p.in === location);
+        if (group.length === 0) return null;
+        const heading =
+          endpoint.addressKind === "channel" && channelTitle !== undefined ? channelTitle : title;
+        return (
+          <C.Section key={location} kind="parameters" title={heading} level={level}>
+            <SchemaTable
+              node={parametersNode(group, operation.source)}
+              kind="parameters"
+              expandRefs="always"
+            />
+          </C.Section>
+        );
+      })}
+    </>
+  );
+}
+
+function Responses({ responses, level, idPrefix }: {
+  responses: RestResponse[];
+  level: number;
+  idPrefix: string;
+}): ReactNode {
+  const C = useComponents();
+  if (responses.length === 0) return null;
+  const tabs: Tab[] = responses.map((response) => ({
+    id: `${idPrefix}-${response.status}`,
+    label: <C.Badge tone="status">{response.status}</C.Badge>,
+    content: (
+      <>
+        <DocsBody docs={response.docs} />
+        {response.headers.length > 0 && (
+          <C.Section kind="response" title="Headers" level={level + 1}>
+            <SchemaTable
+              node={propertiesNode(response.headers, { document: "", pointer: "#" })}
+              kind="headers"
+              expandRefs="always"
+            />
+          </C.Section>
+        )}
+        <Content content={response.content} idPrefix={`${idPrefix}-${response.status}`} />
+      </>
+    ),
+  }));
+  return (
+    <C.Section kind="response" title="Responses" level={level}>
+      <C.Tabs kind="status" tabs={tabs} />
+    </C.Section>
+  );
+}
+
+function Message({ message, level }: { message: WsMessage; level: number }): ReactNode {
+  const C = useComponents();
+  return (
+    <>
+      <DocsBody docs={message.docs} />
+      {message.contentType !== undefined && (
+        <C.Badge tone="mediaType">{message.contentType}</C.Badge>
+      )}
+      {message.discriminatorValue !== undefined && (
+        <C.Badge tone="constraint">{format(message.discriminatorValue)}</C.Badge>
+      )}
+      <SchemaTable node={message.payload} />
+      {message.headers !== undefined && (
+        <C.Section kind="message" title="Headers" level={level + 1}>
+          <SchemaTable node={message.headers} kind="headers" />
+        </C.Section>
+      )}
+      {message.examples.length > 0 && (
+        <C.Tabs
+          kind="example"
+          tabs={message.examples.map((ex, i) => ({
+            id: `${message.id}-example-${i}`,
+            label: ex.name ?? ex.summary ?? `Example ${i + 1}`,
+            content: <C.CodeBlock language="json">{format(ex.payload)}</C.CodeBlock>,
+          }))}
+        />
+      )}
+    </>
+  );
+}
+
+function Messages({ messages, level, title, kind }: {
+  messages: WsMessage[];
+  level: number;
+  title: string;
+  kind: "messages" | "reply";
+}): ReactNode {
+  const C = useComponents();
+  if (messages.length === 0) return null;
+  return (
+    <C.Section kind={kind} title={title} level={level}>
+      <C.Tabs
+        kind="message"
+        tabs={messages.map((message) => ({
+          id: message.id,
+          label: message.title ?? message.name,
+          content: <Message message={message} level={level} />,
+        }))}
+      />
+    </C.Section>
+  );
+}
+
+export interface OperationProps {
+  /** Operation id. Give this, or `operation` plus `endpoint`. */
+  id?: string;
+  operation?: IROperation;
+  endpoint?: Endpoint;
+  /** Heading level for this operation's own section. Defaults to the provider's. */
+  level?: number;
+}
+
+/** One operation, with everything hanging off it. */
+export function Operation(props: OperationProps): ReactNode {
+  const C = useComponents();
+  const { ir, options } = useSpeculoos();
+  const found = useOperation(props.id ?? "");
+  const endpoint = props.endpoint ?? found?.endpoint;
+  const operation = props.operation ?? found?.operation;
+  const level = props.level ?? options.headingLevel;
+
+  if (endpoint === undefined || operation === undefined) {
+    return <C.Empty>{`No operation ${props.id ?? ""}`}</C.Empty>;
+  }
+
+  const subtitle =
+    operation.kind === "request-response" ? (
+      <>
+        <C.Badge tone="method">{operation.method.toUpperCase()}</C.Badge>
+        {/* `endpoint.id` namespaces a webhook as "webhook:name" so it cannot
+            collide with a path. That is identity, not a label, so the page gets
+            the address and a badge saying which it is. */}
+        {operation.isWebhook && <C.Badge tone="note">webhook</C.Badge>}
+        <C.Code>{endpoint.address}</C.Code>
+      </>
+    ) : (
+      <>
+        <C.Badge tone="direction">{DIRECTION_LABEL[operation.direction]}</C.Badge>
+        <C.Code>{endpoint.address}</C.Code>
+      </>
+    );
+
+  // An operation with no security of its own inherits the document default.
+  // Showing the inherited one is the point: "which key do I send" must be
+  // answerable from the operation a reader is looking at.
+  const security = operation.security.length > 0 ? operation.security : ir.security;
+
+  return (
+    <C.Section
+      kind="operation"
+      id={operation.slug}
+      title={operation.docs.title ?? operation.id}
+      subtitle={subtitle}
+      level={level}
+      deprecated={operation.deprecated}
+    >
+      <DocsBody docs={operation.docs} />
+      {endpoint.protocols.map((protocol) => (
+        <C.Badge key={protocol} tone="protocol">
+          {protocol}
+        </C.Badge>
+      ))}
+      <Security security={security} level={level + 1} />
+      <Parameters endpoint={endpoint} operation={operation} level={level + 1} />
+
+      {operation.kind === "request-response" ? (
+        <>
+          {operation.requestBody !== undefined && (
+            <C.Section
+              kind="request"
+              title="Request body"
+              level={level + 1}
+              subtitle={
+                operation.requestBody.required ? (
+                  <C.Badge tone="required">required</C.Badge>
+                ) : undefined
+              }
+            >
+              <DocsBody docs={operation.requestBody.docs} />
+              <Content content={operation.requestBody.content} idPrefix={`${operation.id}-request`} />
+            </C.Section>
+          )}
+          <Responses responses={operation.responses} level={level + 1} idPrefix={operation.id} />
+          {operation.callbacks.length > 0 && (
+            <C.Section kind="callbacks" title="Callbacks" level={level + 1}>
+              {operation.callbacks.map((callback) =>
+                callback.operations.map((callbackOp) => (
+                  <Operation
+                    key={callbackOp.id}
+                    endpoint={callback}
+                    operation={callbackOp}
+                    level={level + 2}
+                  />
+                )),
+              )}
+            </C.Section>
+          )}
+          {operation.links.length > 0 && (
+            <C.Section kind="links" title="Links" level={level + 1}>
+              <C.List kind="links">
+                {operation.links.map((link) => {
+                  const target =
+                    link.operationId === undefined
+                      ? undefined
+                      : ir.endpoints
+                          .flatMap((e) => e.operations.map((o) => ({ endpoint: e, operation: o })))
+                          .find((e) => e.operation.id === link.operationId);
+                  const href =
+                    target === undefined
+                      ? undefined
+                      : options.href({
+                          kind: "operation",
+                          id: target.operation.id,
+                          operation: target.operation,
+                          endpoint: target.endpoint,
+                        });
+                  return (
+                    <C.ListItem key={link.name}>
+                      {href !== undefined && target !== undefined ? (
+                        <C.Link
+                          href={href}
+                          target={{
+                            kind: "operation",
+                            id: target.operation.id,
+                            operation: target.operation,
+                            endpoint: target.endpoint,
+                          }}
+                        >
+                          {link.name}
+                        </C.Link>
+                      ) : (
+                        <C.Code>{link.name}</C.Code>
+                      )}
+                      <DocsBody docs={link.docs} />
+                      {link.parameters.map((p) => (
+                        <C.Code key={p.name}>{`${p.name} = ${format(p.expression)}`}</C.Code>
+                      ))}
+                    </C.ListItem>
+                  );
+                })}
+              </C.List>
+            </C.Section>
+          )}
+        </>
+      ) : (
+        <>
+          <Messages messages={operation.messages} level={level + 1} title="Messages" kind="messages" />
+          {operation.reply !== undefined && (
+            <Messages
+              messages={operation.reply.messages}
+              level={level + 1}
+              title={
+                operation.reply.address === undefined
+                  ? "Reply"
+                  : `Reply on ${operation.reply.address}`
+              }
+              kind="reply"
+            />
+          )}
+        </>
+      )}
+    </C.Section>
+  );
+}

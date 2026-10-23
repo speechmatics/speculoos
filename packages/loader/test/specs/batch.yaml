@@ -1,0 +1,23 @@
+openapi: "3.1.0"
+info:
+  title: Batch
+  version: "2.0.0"
+paths:
+  /jobs:
+    post:
+      operationId: createJob
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JobConfig"
+      responses:
+        "201":
+          description: Created
+components:
+  schemas:
+    JobConfig:
+      type: object
+      properties:
+        language:
+          $ref: "./common.yaml#/components/schemas/Language"

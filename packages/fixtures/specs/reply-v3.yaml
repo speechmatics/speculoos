@@ -1,0 +1,41 @@
+asyncapi: "3.0.0"
+info:
+  title: Request Reply
+  version: "1.0.0"
+servers:
+  broker:
+    host: broker.example.com
+    protocol: kafka
+channels:
+  ping:
+    address: /ping
+    messages:
+      Ping:
+        payload:
+          type: object
+          properties:
+            nonce: { type: string }
+  pong:
+    address: /pong
+    messages:
+      Pong:
+        payload:
+          type: object
+          properties:
+            nonce: { type: string }
+operations:
+  ping:
+    action: send
+    channel:
+      $ref: "#/channels/ping"
+    messages:
+      - $ref: "#/channels/ping/messages/Ping"
+    reply:
+      channel:
+        $ref: "#/channels/pong"
+      messages:
+        - $ref: "#/channels/pong/messages/Pong"
+  brokenAction:
+    action: shout
+    channel:
+      $ref: "#/channels/ping"

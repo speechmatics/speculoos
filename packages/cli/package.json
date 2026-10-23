@@ -1,0 +1,45 @@
+{
+  "name": "@speculoos/cli",
+  "version": "0.0.1",
+  "description": "Build, lint and inspect API specs as Speculoos IR.",
+  "license": "ISC",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
+    "lint": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json"
+  },
+  "dependencies": {
+    "@speculoos/asyncapi": "workspace:*",
+    "@speculoos/core": "workspace:*",
+    "@speculoos/loader": "workspace:*",
+    "@speculoos/openapi": "workspace:*",
+    "@speculoos/transforms": "workspace:*",
+    "ajv": "^8.17.1"
+  },
+  "devDependencies": {
+    "@speculoos/core": "workspace:*",
+    "@speculoos/fixtures": "workspace:*",
+    "@types/node": "^22.10.2",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.3"
+  },
+  "bin": {
+    "speculoos": "./dist/cli.js"
+  }
+}

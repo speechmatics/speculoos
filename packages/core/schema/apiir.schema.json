@@ -1,0 +1,2231 @@
+{
+  "$ref": "#/definitions/ApiIR",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "AdditionalProperties": {
+      "anyOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "forbidden",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "any",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "schema",
+              "type": "string"
+            },
+            "node": {
+              "$ref": "#/definitions/Node"
+            }
+          },
+          "required": [
+            "kind",
+            "node"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "AnyNode": {
+      "additionalProperties": false,
+      "description": "`{}` or `true`.",
+      "properties": {
+        "docs": {
+          "$ref": "#/definitions/Docs",
+          "description": "Docs attached to this node. For a RefNode these are usage-level docs from $ref siblings (OAS 3.1 / 2020-12); type-level docs live on the TypeDef."
+        },
+        "kind": {
+          "const": "any",
+          "type": "string"
+        },
+        "nullable": {
+          "description": "Folded from: type: [X, \"null\"], OAS 3.0 `nullable: true`, and anyOf/oneOf: [X, { type: \"null\" }].",
+          "type": "boolean"
+        },
+        "source": {
+          "$ref": "#/definitions/SourceLocation"
+        }
+      },
+      "required": [
+        "docs",
+        "kind",
+        "nullable",
+        "source"
+      ],
+      "type": "object"
+    },
+    "ApiIR": {
+      "additionalProperties": false,
+      "properties": {
+        "diagnostics": {
+          "items": {
+            "$ref": "#/definitions/Diagnostic"
+          },
+          "type": "array"
+        },
+        "endpoints": {
+          "items": {
+            "$ref": "#/definitions/Endpoint"
+          },
+          "type": "array"
+        },
+        "info": {
+          "$ref": "#/definitions/ApiInfo"
+        },
+        "irVersion": {
+          "const": 1,
+          "type": "number"
+        },
+        "provenance": {
+          "$ref": "#/definitions/Provenance"
+        },
+        "schemas": {
+          "$ref": "#/definitions/TypeRegistry",
+          "description": "Project-wide, so documents sharing a schema share one entry."
+        },
+        "security": {
+          "$ref": "#/definitions/SecurityRequirements",
+          "description": "Document-level default, applied to operations whose own `security` is empty."
+        },
+        "securitySchemes": {
+          "additionalProperties": {
+            "$ref": "#/definitions/SecurityScheme"
+          },
+          "type": "object"
+        },
+        "servers": {
+          "items": {
+            "$ref": "#/definitions/Server"
+          },
+          "type": "array"
+        },
+        "tags": {
+          "description": "Source order preserved. This is the navigation.",
+          "items": {
+            "$ref": "#/definitions/TagDef"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "irVersion",
+        "info",
+        "servers",
+        "securitySchemes",
+        "tags",
+        "endpoints",
+        "security",
+        "schemas",
+        "diagnostics",
+        "provenance"
+      ],
+      "type": "object"
+    },
+    "ApiInfo": {
+      "additionalProperties": false,
+      "properties": {
+        "contact": {
+          "$ref": "#/definitions/Contact"
+        },
+        "description": {
+          "description": "CommonMark.",
+          "type": "string"
+        },
+        "extensions": {
+          "additionalProperties": {},
+          "type": "object"
+        },
+        "externalDocs": {
+          "additionalProperties": false,
+          "properties": {
+            "description": {
+              "type": "string"
+            },
+            "url": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "url"
+          ],
+          "type": "object"
+        },
+        "license": {
+          "$ref": "#/definitions/License"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "termsOfService": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "version": {
+          "description": "API version as declared by the document, e.g. \"2.0.1\". Not the IR version.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "version"
+      ],
+      "type": "object"
+    },
+    "ApiKeyScheme": {
+      "additionalProperties": false,
+      "properties": {
+        "docs": {
+          "$ref": "#/definitions/Docs"
+        },
+        "id": {
+          "description": "Key in `ApiIR.securitySchemes`, which is what a `SecurityRequirement` names.",
+          "type": "string"
+        },
+        "in": {
+          "enum": [
+            "header",
+            "query",
+            "cookie"
+          ],
+          "type": "string"
+        },
+        "kind": {
+          "const": "apiKey",
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/definitions/SourceLocation"
+        }
+      },
+      "required": [
+        "docs",
+        "id",
+        "in",
+        "kind",
+        "name",
+        "source"
+      ],
+      "type": "object"
+    },
+    "ArrayConstraints": {
+      "additionalProperties": false,
+      "properties": {
+        "contains": {
+          "additionalProperties": false,
+          "properties": {
+            "max": {
+              "type": "number"
+            },
+            "min": {
+              "type": "number"
+            },
+            "node": {
+              "$ref": "#/definitions/Node"
+            }
+          },
+          "required": [
+            "node"
+          ],
+          "type": "object"
+        },
+        "maxItems": {
+          "type": "number"
+        },
+        "minItems": {
+          "type": "number"
+        },
+        "uniqueItems": {
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "ArrayNode": {
+      "additionalProperties": false,
+      "properties": {
+        "constraints": {
+          "$ref": "#/definitions/ArrayConstraints"
+        },
+        "docs": {
+          "$ref": "#/definitions/Docs",
+          "description": "Docs attached to this node. For a RefNode these are usage-level docs from $ref siblings (OAS 3.1 / 2020-12); type-level docs live on the TypeDef."
+        },
+        "items": {
+          "$ref": "#/definitions/Node"
+        },
+        "kind": {
+          "const": "array",
+          "type": "string"
+        },
+        "nullable": {
+          "description": "Folded from: type: [X, \"null\"], OAS 3.0 `nullable: true`, and anyOf/oneOf: [X, { type: \"null\" }].",
+          "type": "boolean"
+        },
+        "source": {
+          "$ref": "#/definitions/SourceLocation"
+        }
+      },
+      "required": [
+        "constraints",
+        "docs",
+        "items",
+        "kind",
+        "nullable",
+        "source"
+      ],
+      "type": "object"
+    },
+    "Bindings": {
+      "additionalProperties": {},
+      "description": "Protocol-specific extras (AsyncAPI bindings), keyed by protocol name and passed through verbatim. Deliberately untyped: the set is open-ended, every renderer wants a different subset, and guessing a shape would be worse than not trying.",
+      "type": "object"
+    },
+    "BooleanNode": {
+      "additionalProperties": false,
+      "properties": {
+        "docs": {
+          "$ref": "#/definitions/Docs",
+          "description": "Docs attached to this node. For a RefNode these are usage-level docs from $ref siblings (OAS 3.1 / 2020-12); type-level docs live on the TypeDef."
+        },
+        "kind": {
+          "const": "boolean",
+          "type": "string"
+        },
+        "nullable": {
+          "description": "Folded from: type: [X, \"null\"], OAS 3.0 `nullable: true`, and anyOf/oneOf: [X, { type: \"null\" }].",
+          "type": "boolean"
+        },
+        "source": {
+          "$ref": "#/definitions/SourceLocation"
+        }
+      },
+      "required": [
+        "docs",
+        "kind",
+        "nullable",
+        "source"
+      ],
+      "type": "object"
+    },
+    "Bound": {
+      "additionalProperties": false,
+      "properties": {
+        "exclusive": {
+          "description": "Normalised from boolean (OAS 3.0 / draft-04) and numeric (2020-12) forms.",
+          "type": "boolean"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "value",
+        "exclusive"
+      ],
+      "type": "object"
+    },
+    "ConstNode": {
+      "additionalProperties": false,
+      "description": "`const`. Common for message-type fields, e.g. message: \"StartRecognition\".",
+      "properties": {
+        "docs": {
+          "$ref": "#/definitions/Docs",
+          "description": "Docs attached to this node. For a RefNode these are usage-level docs from $ref siblings (OAS 3.1 / 2020-12); type-level docs live on the TypeDef."
+        },
+        "kind": {
+          "const": "const",
+          "type": "string"
+        },
+        "nullable": {
+          "description": "Folded from: type: [X, \"null\"], OAS 3.0 `nullable: true`, and anyOf/oneOf: [X, { type: \"null\" }].",
+          "type": "boolean"
+        },
+        "source": {
+          "$ref": "#/definitions/SourceLocation"
+        },
+        "value": {}
+      },
+      "required": [
+        "docs",
+        "kind",
+        "nullable",
+        "source",
+        "value"
+      ],
+      "type": "object"
+    },
+    "Contact": {
+      "additionalProperties": false,
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "Diagnostic": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "description": "Stable code for allow-listing in CI, e.g. \"ALLOF_CONFLICT\". See ./diagnostics.ts.",
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "severity": {
+          "enum": [
+            "info",
+            "warning",
+            "error"
+          ],
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/definitions/SourceLocation"
+        }
+      },
+      "required": [
+        "severity",
+        "code",
+        "message",
+        "source"
+      ],
+      "type": "object"
+    },
+    "Direction": {
+      "description": "Normalised from AsyncAPI 2.x publish/subscribe (application perspective, famously inverted for readers) and 3.x send/receive, into the API consumer's perspective.",
+      "enum": [
+        "client-sends",
+        "server-sends"
+      ],
+      "type": "string"
+    },
+    "Docs": {
+      "additionalProperties": false,
+      "properties": {
+        "default": {},
+        "deprecated": {
+          "type": "boolean"
+        },
+        "description": {
+          "description": "CommonMark. Rendered by the consumer, never pre-rendered here.",
+          "type": "string"
+        },
+        "examples": {
+          "description": "Normalised from both `example` (OAS 3.0) and `examples` (JSON Schema / 3.1).",
+          "items": {},
+          "type": "array"
+        },
+        "extensions": {
+          "additionalProperties": {},
+          "description": "All `x-*` keys, passed through untouched for custom renderers.",
+          "type": "object"
+        },
+        "externalDocs": {
+          "additionalProperties": false,
+          "properties": {
+            "description": {
+              "type": "string"
+            },
+            "url": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "url"
+          ],
+          "type": "object"
+        },
+        "notes": {
+          "description": "Human-readable notes synthesised during lowering, e.g. from dependentRequired.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "Endpoint": {
+      "additionalProperties": false,
+      "description": "An address you can talk to: an OpenAPI Path Item or an AsyncAPI Channel.\n\nUnifying the two gives one navigation model, one grouping function and one anchor scheme across a docs site that has both a REST and a WebSocket API.",
+      "properties": {
+        "address": {
+          "description": "\"/v2/jobs/{id}\" (OAS path) or \"/v2\" (AsyncAPI 3.x address / 2.x channel key).",
+          "type": "string"
+        },
+        "addressKind": {
+          "enum": [
+            "path",
+            "channel"
+          ],
+          "type": "string"
+        },
+        "bindings": {
+          "$ref": "#/definitions/Bindings"
+        },
+        "docs": {
+          "$ref": "#/definitions/Docs"
+        },
+        "id": {
+          "description": "Source key. For AsyncAPI 3.x this is the channel id, which may differ from `address`.",
+          "type": "string"
+        },
+        "operations": {
+          "items": {
+            "$ref": "#/definitions/Operation"
+          },
+          "type": "array"
+        },
+        "parameters": {
+          "description": "Shared by every operation here: OAS path-level params, AsyncAPI channel params.",
+          "items": {
+            "$ref": "#/definitions/Parameter"
+          },
+          "type": "array"
+        },
+        "protocols": {
+          "description": "[\"https\"] for REST, [\"wss\"] for a WebSocket channel. From the resolved servers.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "servers": {
+          "description": "Ids into `ApiIR.servers`. Empty means every server.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "slug": {
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/definitions/SourceLocation"
+        }
+      },
+      "required": [
+        "id",
+        "slug",
+        "address",
+        "addressKind",
+        "protocols",
+        "docs",
+        "parameters",
+        "servers",
+        "operations",
+        "source"
+      ],
+      "type": "object"
+    },
+    "EnumMember": {
+      "additionalProperties": false,
+      "properties": {
+        "docs": {
+          "$ref": "#/definitions/Docs",
+          "description": "Populated when lowered from the oneOf-of-documented-consts idiom."
+        },
+        "value": {}
+      },
+      "required": [
+        "value"
+      ],
+      "type": "object"
+    },
+    "EnumNode": {
+      "additionalProperties": false,
+      "properties": {
+        "baseType": {
+          "description": "Inferred from `type` or from member values; undefined if mixed.",
+          "enum": [
+            "string",
+            "number",
+            "integer",
+            "boolean"
+          ],
+          "type": "string"
+        },
+        "docs": {
+          "$ref": "#/definitions/Docs",
+          "description": "Docs attached to this node. For a RefNode these are usage-level docs from $ref siblings (OAS 3.1 / 2020-12); type-level docs live on the TypeDef."
+        },
+        "kind": {
+          "const": "enum",
+          "type": "string"
+        },
+        "members": {
+          "items": {
+            "$ref": "#/definitions/EnumMember"
+          },
+          "type": "array"
+        },
+        "nullable": {
+          "description": "Folded from: type: [X, \"null\"], OAS 3.0 `nullable: true`, and anyOf/oneOf: [X, { type: \"null\" }].",
+          "type": "boolean"
+        },
+        "source": {
+          "$ref": "#/definitions/SourceLocation"
+        }
+      },
+      "required": [
+        "docs",
+        "kind",
+        "members",
+        "nullable",
+        "source"
+      ],
+      "type": "object"
+    },
+    "Example": {
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "externalValue": {
+          "description": "Set instead of `value` when the source gave a URL rather than a literal.",
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "value": {
+          "description": "Optional: an OAS Example carries either `value` or `externalValue`, and a literal `undefined` would not survive a JSON round-trip anyway."
+        }
+      },
+      "type": "object"
+    },
+    "HttpMethod": {
+      "enum": [
+        "get",
+        "put",
+        "post",
+        "delete",
+        "patch",
+        "head",
+        "options",
+        "trace"
+      ],
+      "type": "string"
+    },
+    "HttpScheme": {
+      "additionalProperties": false,
+      "properties": {
+        "bearerFormat": {
+          "description": "e.g. \"JWT\". Display only.",
+          "type": "string"
+        },
+        "docs": {
+          "$ref": "#/definitions/Docs"
+        },
+        "id": {
+          "description": "Key in `ApiIR.securitySchemes`, which is what a `SecurityRequirement` names.",
+          "type": "string"
+        },
+        "kind": {
+          "const": "http",
+          "type": "string"
+        },
+        "scheme": {
+          "description": "\"basic\", \"bearer\", \"digest\"… lowercased.",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/definitions/SourceLocation"
+        }
+      },
+      "required": [
+        "docs",
+        "id",
+        "kind",
+        "scheme",
+        "source"
+      ],
+      "type": "object"
+    },
+    "IntersectionNode": {
+      "additionalProperties": false,
+      "description": "Fallback for allOf members that could not be merged into one ObjectNode.",
+      "properties": {
+        "docs": {
+          "$ref": "#/definitions/Docs",
+          "description": "Docs attached to this node. For a RefNode these are usage-level docs from $ref siblings (OAS 3.1 / 2020-12); type-level docs live on the TypeDef."
+        },
+        "kind": {
+          "const": "intersection",
+          "type": "string"
+        },
+        "members": {
+          "items": {
+            "$ref": "#/definitions/Node"
+          },
+          "type": "array"
+        },
+        "nullable": {
+          "description": "Folded from: type: [X, \"null\"], OAS 3.0 `nullable: true`, and anyOf/oneOf: [X, { type: \"null\" }].",
+          "type": "boolean"
+        },
+        "source": {
+          "$ref": "#/definitions/SourceLocation"
+        }
+      },
+      "required": [
+        "docs",
+        "kind",
+        "members",
+        "nullable",
+        "source"
+      ],
+      "type": "object"
+    },
+    "License": {
+      "additionalProperties": false,
+      "properties": {
+        "identifier": {
+          "description": "SPDX identifier (OAS 3.1 / AsyncAPI 3.x).",
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "type": "object"
+    },
+    "Link": {
+      "additionalProperties": false,
+      "description": "OAS Link Object: a hint that one operation's output feeds another's input.",
+      "properties": {
+        "docs": {
+          "$ref": "#/definitions/Docs"
+        },
+        "name": {
+          "type": "string"
+        },
+        "operationId": {
+          "description": "Id of the target operation, when it could be resolved.",
+          "type": "string"
+        },
+        "operationRef": {
+          "description": "OAS `operationRef`, kept when `operationId` could not be resolved.",
+          "type": "string"
+        },
+        "parameters": {
+          "description": "Parameter name → runtime expression, e.g. \"$response.body#/id\". Display only.",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "expression": {},
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "expression"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "requestBody": {},
+        "server": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "docs",
+        "parameters"
+      ],
+      "type": "object"
+    },
+    "MapNode": {
+      "additionalProperties": false,
+      "description": "Object with no fixed properties, used as a dictionary: Record<K, V>.",
+      "properties": {
+        "constraints": {
+          "$ref": "#/definitions/ObjectConstraints"
+        },
+        "docs": {
+          "$ref": "#/definitions/Docs",
+          "description": "Docs attached to this node. For a RefNode these are usage-level docs from $ref siblings (OAS 3.1 / 2020-12); type-level docs live on the TypeDef."
+        },
+        "keys": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/StringNode"
+            },
+            {
+              "$ref": "#/definitions/EnumNode"
+            }
+          ],
+          "description": "From propertyNames / a single patternProperties pattern, if any."
+        },
+        "kind": {
+          "const": "map",
+          "type": "string"
+        },
+        "nullable": {
+          "description": "Folded from: type: [X, \"null\"], OAS 3.0 `nullable: true`, and anyOf/oneOf: [X, { type: \"null\" }].",
+          "type": "boolean"
+        },
+        "source": {
+          "$ref": "#/definitions/SourceLocation"
+        },
+        "values": {
+          "$ref": "#/definitions/Node"
+        }
+      },
+      "required": [
+        "constraints",
+        "docs",
+        "kind",
+        "nullable",
+        "source",
+        "values"
+      ],
+      "type": "object"
+    },
+    "MediaVariant": {
+      "additionalProperties": false,
+      "properties": {
+        "examples": {
+          "items": {
+            "$ref": "#/definitions/Example"
+          },
+          "type": "array"
+        },
+        "mediaType": {
+          "description": "e.g. \"application/json\", \"multipart/form-data\".",
+          "type": "string"
+        },
+        "node": {
+          "$ref": "#/definitions/Node"
+        },
+        "view": {
+          "$ref": "#/definitions/View",
+          "description": "Which view this content is. The adapter has already applied `projectForView` to the inline structure of `node`, but it cannot reach through a `$ref` — a registry entry is shared by every view, and rewriting it would mean three copies of every type. So the view travels with the content, and renderers pass it on:\n\n    toTree(variant.node, ir, { view: variant.view })\n\nWithout this a `$ref`-valued request body shows its readOnly fields."
+        }
+      },
+      "required": [
+        "mediaType",
+        "node",
+        "view",
+        "examples"
+      ],
+      "type": "object"
+    },
+    "MessageOperation": {
+      "additionalProperties": false,
+      "description": "An AsyncAPI 3.x operation, or one half of a 2.x publish/subscribe pair.\n\nKeeping operations distinct from channels is what makes 3.x `reply` representable; folding messages into the channel would lose it.",
+      "properties": {
+        "bindings": {
+          "$ref": "#/definitions/Bindings"
+        },
+        "deprecated": {
+          "type": "boolean"
+        },
+        "direction": {
+          "$ref": "#/definitions/Direction",
+          "description": "Always the API consumer's point of view, whatever the source dialect said."
+        },
+        "docs": {
+          "$ref": "#/definitions/Docs"
+        },
+        "id": {
+          "description": "operationId / AsyncAPI operation key, or derived from the address. Unique project-wide.",
+          "type": "string"
+        },
+        "kind": {
+          "const": "message",
+          "type": "string"
+        },
+        "messages": {
+          "items": {
+            "$ref": "#/definitions/WsMessage"
+          },
+          "type": "array"
+        },
+        "reply": {
+          "additionalProperties": false,
+          "description": "AsyncAPI 3.x request/reply.",
+          "properties": {
+            "address": {
+              "description": "Where the reply arrives, when it differs from the operation's own channel.",
+              "type": "string"
+            },
+            "channel": {
+              "type": "string"
+            },
+            "messages": {
+              "items": {
+                "$ref": "#/definitions/WsMessage"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "messages"
+          ],
+          "type": "object"
+        },
+        "security": {
+          "$ref": "#/definitions/SecurityRequirements",
+          "description": "Empty means \"inherit the document-level default\"."
+        },
+        "slug": {
+          "description": "URL-safe anchor, assigned over the completed document like `TypeDef.slug`.",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/definitions/SourceLocation"
+        },
+        "tags": {
+          "description": "Names into `ApiIR.tags`. Order preserved.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "deprecated",
+        "direction",
+        "docs",
+        "id",
+        "kind",
+        "messages",
+        "security",
+        "slug",
+        "source",
+        "tags"
+      ],
+      "type": "object"
+    },
+    "NeverNode": {
+      "additionalProperties": false,
+      "description": "`false`.",
+      "properties": {
+        "docs": {
+          "$ref": "#/definitions/Docs",
+          "description": "Docs attached to this node. For a RefNode these are usage-level docs from $ref siblings (OAS 3.1 / 2020-12); type-level docs live on the TypeDef."
+        },
+        "kind": {
+          "const": "never",
+          "type": "string"
+        },
+        "nullable": {
+          "description": "Folded from: type: [X, \"null\"], OAS 3.0 `nullable: true`, and anyOf/oneOf: [X, { type: \"null\" }].",
+          "type": "boolean"
+        },
+        "source": {
+          "$ref": "#/definitions/SourceLocation"
+        }
+      },
+      "required": [
+        "docs",
+        "kind",
+        "nullable",
+        "source"
+      ],
+      "type": "object"
+    },
+    "Node": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/StringNode"
+        },
+        {
+          "$ref": "#/definitions/NumberNode"
+        },
+        {
+          "$ref": "#/definitions/BooleanNode"
+        },
+        {
+          "$ref": "#/definitions/NullNode"
+        },
+        {
+          "$ref": "#/definitions/ConstNode"
+        },
+        {
+          "$ref": "#/definitions/EnumNode"
+        },
+        {
+          "$ref": "#/definitions/ObjectNode"
+        },
+        {
+          "$ref": "#/definitions/MapNode"
+        },
+        {
+          "$ref": "#/definitions/ArrayNode"
+        },
+        {
+          "$ref": "#/definitions/TupleNode"
+        },
+        {
+          "$ref": "#/definitions/UnionNode"
+        },
+        {
+          "$ref": "#/definitions/IntersectionNode"
+        },
+        {
+          "$ref": "#/definitions/RefNode"
+        },
+        {
+          "$ref": "#/definitions/AnyNode"
+        },
+        {
+          "$ref": "#/definitions/NeverNode"
+        },
+        {
+          "$ref": "#/definitions/UnsupportedNode"
+        }
+      ]
+    },
+    "NullNode": {
+      "additionalProperties": false,
+      "description": "Only emitted when null is the *sole* allowed value; otherwise see `nullable`.",
+      "properties": {
+        "docs": {
+          "$ref": "#/definitions/Docs",
+          "description": "Docs attached to this node. For a RefNode these are usage-level docs from $ref siblings (OAS 3.1 / 2020-12); type-level docs live on the TypeDef."
+        },
+        "kind": {
+          "const": "null",
+          "type": "string"
+        },
+        "nullable": {
+          "description": "Folded from: type: [X, \"null\"], OAS 3.0 `nullable: true`, and anyOf/oneOf: [X, { type: \"null\" }].",
+          "type": "boolean"
+        },
+        "source": {
+          "$ref": "#/definitions/SourceLocation"
+        }
+      },
+      "required": [
+        "docs",
+        "kind",
+        "nullable",
+        "source"
+      ],
+      "type": "object"
+    },
+    "NumberConstraints": {
+      "additionalProperties": false,
+      "properties": {
+        "format": {
+          "description": "e.g. \"int32\", \"int64\", \"float\", \"double\".",
+          "type": "string"
+        },
+        "maximum": {
+          "$ref": "#/definitions/Bound"
+        },
+        "minimum": {
+          "$ref": "#/definitions/Bound"
+        },
+        "multipleOf": {
+          "type": "number"
+        }
+      },
+      "type": "object"
+    },
+    "NumberNode": {
+      "additionalProperties": false,
+      "properties": {
+        "constraints": {
+          "$ref": "#/definitions/NumberConstraints"
+        },
+        "docs": {
+          "$ref": "#/definitions/Docs",
+          "description": "Docs attached to this node. For a RefNode these are usage-level docs from $ref siblings (OAS 3.1 / 2020-12); type-level docs live on the TypeDef."
+        },
+        "integer": {
+          "type": "boolean"
+        },
+        "kind": {
+          "const": "number",
+          "type": "string"
+        },
+        "nullable": {
+          "description": "Folded from: type: [X, \"null\"], OAS 3.0 `nullable: true`, and anyOf/oneOf: [X, { type: \"null\" }].",
+          "type": "boolean"
+        },
+        "source": {
+          "$ref": "#/definitions/SourceLocation"
+        }
+      },
+      "required": [
+        "constraints",
+        "docs",
+        "integer",
+        "kind",
+        "nullable",
+        "source"
+      ],
+      "type": "object"
+    },
+    "OAuth2Scheme": {
+      "additionalProperties": false,
+      "properties": {
+        "docs": {
+          "$ref": "#/definitions/Docs"
+        },
+        "flows": {
+          "items": {
+            "$ref": "#/definitions/OAuthFlow"
+          },
+          "type": "array"
+        },
+        "id": {
+          "description": "Key in `ApiIR.securitySchemes`, which is what a `SecurityRequirement` names.",
+          "type": "string"
+        },
+        "kind": {
+          "const": "oauth2",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/definitions/SourceLocation"
+        }
+      },
+      "required": [
+        "docs",
+        "flows",
+        "id",
+        "kind",
+        "source"
+      ],
+      "type": "object"
+    },
+    "OAuthFlow": {
+      "additionalProperties": false,
+      "properties": {
+        "authorizationUrl": {
+          "type": "string"
+        },
+        "refreshUrl": {
+          "type": "string"
+        },
+        "scopes": {
+          "description": "Scope name → description. Source order preserved.",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "description": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "tokenUrl": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "implicit",
+            "password",
+            "clientCredentials",
+            "authorizationCode"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "scopes"
+      ],
+      "type": "object"
+    },
+    "ObjectConstraints": {
+      "additionalProperties": false,
+      "properties": {
+        "maxProperties": {
+          "type": "number"
+        },
+        "minProperties": {
+          "type": "number"
+        }
+      },
+      "type": "object"
+    },
+    "ObjectNode": {
+      "additionalProperties": false,
+      "properties": {
+        "additional": {
+          "$ref": "#/definitions/AdditionalProperties"
+        },
+        "composedFrom": {
+          "description": "Named types merged in via allOf, for \"extends X\" display.",
+          "items": {
+            "$ref": "#/definitions/TypeId"
+          },
+          "type": "array"
+        },
+        "constraints": {
+          "$ref": "#/definitions/ObjectConstraints"
+        },
+        "docs": {
+          "$ref": "#/definitions/Docs",
+          "description": "Docs attached to this node. For a RefNode these are usage-level docs from $ref siblings (OAS 3.1 / 2020-12); type-level docs live on the TypeDef."
+        },
+        "kind": {
+          "const": "object",
+          "type": "string"
+        },
+        "nullable": {
+          "description": "Folded from: type: [X, \"null\"], OAS 3.0 `nullable: true`, and anyOf/oneOf: [X, { type: \"null\" }].",
+          "type": "boolean"
+        },
+        "patternProperties": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "node": {
+                "$ref": "#/definitions/Node"
+              },
+              "pattern": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "pattern",
+              "node"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "properties": {
+          "description": "Source key order preserved; never sorted.",
+          "items": {
+            "$ref": "#/definitions/Property"
+          },
+          "type": "array"
+        },
+        "propertyNames": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/StringNode"
+            },
+            {
+              "$ref": "#/definitions/EnumNode"
+            }
+          ],
+          "description": "From propertyNames, when it constrains keys of a mostly-fixed object."
+        },
+        "source": {
+          "$ref": "#/definitions/SourceLocation"
+        }
+      },
+      "required": [
+        "additional",
+        "composedFrom",
+        "constraints",
+        "docs",
+        "kind",
+        "nullable",
+        "patternProperties",
+        "properties",
+        "source"
+      ],
+      "type": "object"
+    },
+    "OpenIdConnectScheme": {
+      "additionalProperties": false,
+      "properties": {
+        "docs": {
+          "$ref": "#/definitions/Docs"
+        },
+        "id": {
+          "description": "Key in `ApiIR.securitySchemes`, which is what a `SecurityRequirement` names.",
+          "type": "string"
+        },
+        "kind": {
+          "const": "openIdConnect",
+          "type": "string"
+        },
+        "openIdConnectUrl": {
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/definitions/SourceLocation"
+        }
+      },
+      "required": [
+        "docs",
+        "id",
+        "kind",
+        "openIdConnectUrl",
+        "source"
+      ],
+      "type": "object"
+    },
+    "Operation": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/RequestResponseOperation"
+        },
+        {
+          "$ref": "#/definitions/MessageOperation"
+        }
+      ]
+    },
+    "OtherSecurityScheme": {
+      "additionalProperties": false,
+      "description": "AsyncAPI-only schemes (userPassword, scramSha256, gssapi, plain, X509, …) and anything else we recognise but have no structured fields for. `type` keeps the source spelling so a renderer can at least label it.",
+      "properties": {
+        "docs": {
+          "$ref": "#/definitions/Docs"
+        },
+        "id": {
+          "description": "Key in `ApiIR.securitySchemes`, which is what a `SecurityRequirement` names.",
+          "type": "string"
+        },
+        "kind": {
+          "const": "other",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/definitions/SourceLocation"
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "docs",
+        "id",
+        "kind",
+        "source",
+        "type"
+      ],
+      "type": "object"
+    },
+    "Parameter": {
+      "additionalProperties": false,
+      "properties": {
+        "docs": {
+          "$ref": "#/definitions/Docs"
+        },
+        "explode": {
+          "type": "boolean"
+        },
+        "in": {
+          "description": "\"path\" covers both OAS path parameters and AsyncAPI channel address parameters, which occupy the same position in a reader's mental model.",
+          "enum": [
+            "path",
+            "query",
+            "header",
+            "cookie"
+          ],
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "node": {
+          "$ref": "#/definitions/Node"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "source": {
+          "$ref": "#/definitions/SourceLocation"
+        },
+        "style": {
+          "description": "OAS serialisation hints, kept for display only.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "in",
+        "required",
+        "node",
+        "docs",
+        "source"
+      ],
+      "type": "object"
+    },
+    "Property": {
+      "additionalProperties": false,
+      "properties": {
+        "deprecated": {
+          "type": "boolean"
+        },
+        "docs": {
+          "$ref": "#/definitions/Docs",
+          "description": "Usage-level docs. Renderer precedence for description: property.docs → ref target TypeDef docs → nothing."
+        },
+        "name": {
+          "type": "string"
+        },
+        "node": {
+          "$ref": "#/definitions/Node"
+        },
+        "readOnly": {
+          "description": "Lifted from the property's subschema. Used by projectForView().",
+          "type": "boolean"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "writeOnly": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "name",
+        "node",
+        "required",
+        "readOnly",
+        "writeOnly",
+        "deprecated",
+        "docs"
+      ],
+      "type": "object"
+    },
+    "Provenance": {
+      "additionalProperties": false,
+      "properties": {
+        "dialect": {
+          "enum": [
+            "openapi",
+            "asyncapi",
+            "jsonschema"
+          ],
+          "type": "string"
+        },
+        "dialectVersion": {
+          "description": "As declared by the source document, e.g. \"3.1.0\".",
+          "type": "string"
+        },
+        "documents": {
+          "description": "Logical document names, matching `SourceLocation.document`. Caller-supplied and stable: these end up in every `TypeId` and therefore in every URL, so they must never be derived from absolute filesystem paths.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "dialect",
+        "dialectVersion",
+        "documents"
+      ],
+      "type": "object"
+    },
+    "RefNode": {
+      "additionalProperties": false,
+      "description": "Reference to a named type in the registry. Breaks cycles; renderer picks inline vs link.",
+      "properties": {
+        "docs": {
+          "$ref": "#/definitions/Docs",
+          "description": "Docs attached to this node. For a RefNode these are usage-level docs from $ref siblings (OAS 3.1 / 2020-12); type-level docs live on the TypeDef."
+        },
+        "kind": {
+          "const": "ref",
+          "type": "string"
+        },
+        "nullable": {
+          "description": "Folded from: type: [X, \"null\"], OAS 3.0 `nullable: true`, and anyOf/oneOf: [X, { type: \"null\" }].",
+          "type": "boolean"
+        },
+        "source": {
+          "$ref": "#/definitions/SourceLocation"
+        },
+        "target": {
+          "$ref": "#/definitions/TypeId"
+        }
+      },
+      "required": [
+        "docs",
+        "kind",
+        "nullable",
+        "source",
+        "target"
+      ],
+      "type": "object"
+    },
+    "RequestResponseOperation": {
+      "additionalProperties": false,
+      "description": "An OpenAPI operation, including OAS 3.1 webhooks.",
+      "properties": {
+        "bindings": {
+          "$ref": "#/definitions/Bindings"
+        },
+        "callbacks": {
+          "description": "OAS callbacks: an out-of-band request the server makes back to the caller. Structurally just more endpoints, so they are modelled as such.",
+          "items": {
+            "$ref": "#/definitions/Endpoint"
+          },
+          "type": "array"
+        },
+        "deprecated": {
+          "type": "boolean"
+        },
+        "docs": {
+          "$ref": "#/definitions/Docs"
+        },
+        "id": {
+          "description": "operationId / AsyncAPI operation key, or derived from the address. Unique project-wide.",
+          "type": "string"
+        },
+        "isWebhook": {
+          "description": "True for OAS 3.1 `webhooks` entries, which have no path of their own.",
+          "type": "boolean"
+        },
+        "kind": {
+          "const": "request-response",
+          "type": "string"
+        },
+        "links": {
+          "items": {
+            "$ref": "#/definitions/Link"
+          },
+          "type": "array"
+        },
+        "method": {
+          "$ref": "#/definitions/HttpMethod"
+        },
+        "parameters": {
+          "description": "Operation-level parameters only. Parameters shared by every operation at this address stay on the `Endpoint`; whether to merge the two lists for display is the renderer's call, because the two are shown differently by different sites.",
+          "items": {
+            "$ref": "#/definitions/Parameter"
+          },
+          "type": "array"
+        },
+        "requestBody": {
+          "additionalProperties": false,
+          "description": "Nodes already projected with View \"request\".",
+          "properties": {
+            "content": {
+              "items": {
+                "$ref": "#/definitions/MediaVariant"
+              },
+              "type": "array"
+            },
+            "docs": {
+              "$ref": "#/definitions/Docs"
+            },
+            "required": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "required",
+            "docs",
+            "content"
+          ],
+          "type": "object"
+        },
+        "responses": {
+          "description": "Nodes already projected with View \"response\".",
+          "items": {
+            "$ref": "#/definitions/RestResponse"
+          },
+          "type": "array"
+        },
+        "security": {
+          "$ref": "#/definitions/SecurityRequirements",
+          "description": "Empty means \"inherit the document-level default\"."
+        },
+        "slug": {
+          "description": "URL-safe anchor, assigned over the completed document like `TypeDef.slug`.",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/definitions/SourceLocation"
+        },
+        "tags": {
+          "description": "Names into `ApiIR.tags`. Order preserved.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "callbacks",
+        "deprecated",
+        "docs",
+        "id",
+        "isWebhook",
+        "kind",
+        "links",
+        "method",
+        "parameters",
+        "responses",
+        "security",
+        "slug",
+        "source",
+        "tags"
+      ],
+      "type": "object"
+    },
+    "RestResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "content": {
+          "items": {
+            "$ref": "#/definitions/MediaVariant"
+          },
+          "type": "array"
+        },
+        "docs": {
+          "$ref": "#/definitions/Docs"
+        },
+        "headers": {
+          "description": "Response headers, modelled as properties because that is how they read.",
+          "items": {
+            "$ref": "#/definitions/Property"
+          },
+          "type": "array"
+        },
+        "status": {
+          "description": "\"200\", \"4XX\", \"default\".",
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "docs",
+        "headers",
+        "content"
+      ],
+      "type": "object"
+    },
+    "SecurityRequirement": {
+      "additionalProperties": false,
+      "properties": {
+        "scheme": {
+          "description": "Key into `ApiIR.securitySchemes`.",
+          "type": "string"
+        },
+        "scopes": {
+          "description": "Empty for non-oauth2 schemes.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "scheme",
+        "scopes"
+      ],
+      "type": "object"
+    },
+    "SecurityRequirements": {
+      "description": "Outer array is OR (any one alternative suffices), inner is AND (all of them required together). An empty outer array means no security; an empty inner array means security is optional.",
+      "items": {
+        "items": {
+          "$ref": "#/definitions/SecurityRequirement"
+        },
+        "type": "array"
+      },
+      "type": "array"
+    },
+    "SecurityScheme": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/ApiKeyScheme"
+        },
+        {
+          "$ref": "#/definitions/HttpScheme"
+        },
+        {
+          "$ref": "#/definitions/OAuth2Scheme"
+        },
+        {
+          "$ref": "#/definitions/OpenIdConnectScheme"
+        },
+        {
+          "$ref": "#/definitions/OtherSecurityScheme"
+        }
+      ]
+    },
+    "Server": {
+      "additionalProperties": false,
+      "properties": {
+        "bindings": {
+          "$ref": "#/definitions/Bindings"
+        },
+        "docs": {
+          "$ref": "#/definitions/Docs"
+        },
+        "id": {
+          "description": "Key in the source document; referenced from `Endpoint.servers`.",
+          "type": "string"
+        },
+        "protocol": {
+          "description": "\"https\" | \"wss\" | \"kafka\" | … Taken from AsyncAPI `protocol`, or the OAS url scheme.",
+          "type": "string"
+        },
+        "protocolVersion": {
+          "type": "string"
+        },
+        "security": {
+          "description": "Security requirements that apply to every operation on this server.",
+          "items": {
+            "items": {
+              "$ref": "#/definitions/SecurityRequirement"
+            },
+            "type": "array"
+          },
+          "type": "array"
+        },
+        "source": {
+          "$ref": "#/definitions/SourceLocation"
+        },
+        "url": {
+          "description": "OAS `url`, or AsyncAPI `host` + `pathname` joined. Templated segments are left intact so renderers can highlight them, e.g. \"https://{region}.example.com\".",
+          "type": "string"
+        },
+        "variables": {
+          "items": {
+            "$ref": "#/definitions/ServerVariable"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "url",
+        "protocol",
+        "docs",
+        "variables",
+        "security",
+        "source"
+      ],
+      "type": "object"
+    },
+    "ServerVariable": {
+      "additionalProperties": false,
+      "properties": {
+        "default": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "enum": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "default"
+      ],
+      "type": "object"
+    },
+    "SourceLocation": {
+      "additionalProperties": false,
+      "properties": {
+        "document": {
+          "description": "Logical document name, e.g. \"batch\" | \"realtime\".",
+          "type": "string"
+        },
+        "pointer": {
+          "description": "JSON pointer into the bundled (not dereferenced) source document.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "document",
+        "pointer"
+      ],
+      "type": "object"
+    },
+    "StringConstraints": {
+      "additionalProperties": false,
+      "properties": {
+        "contentEncoding": {
+          "type": "string"
+        },
+        "contentMediaType": {
+          "type": "string"
+        },
+        "format": {
+          "description": "e.g. \"date-time\", \"uri\", \"uuid\", \"binary\", \"byte\". Kept verbatim.",
+          "type": "string"
+        },
+        "maxLength": {
+          "type": "number"
+        },
+        "minLength": {
+          "type": "number"
+        },
+        "pattern": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "StringNode": {
+      "additionalProperties": false,
+      "properties": {
+        "constraints": {
+          "$ref": "#/definitions/StringConstraints"
+        },
+        "docs": {
+          "$ref": "#/definitions/Docs",
+          "description": "Docs attached to this node. For a RefNode these are usage-level docs from $ref siblings (OAS 3.1 / 2020-12); type-level docs live on the TypeDef."
+        },
+        "kind": {
+          "const": "string",
+          "type": "string"
+        },
+        "nullable": {
+          "description": "Folded from: type: [X, \"null\"], OAS 3.0 `nullable: true`, and anyOf/oneOf: [X, { type: \"null\" }].",
+          "type": "boolean"
+        },
+        "source": {
+          "$ref": "#/definitions/SourceLocation"
+        }
+      },
+      "required": [
+        "constraints",
+        "docs",
+        "kind",
+        "nullable",
+        "source"
+      ],
+      "type": "object"
+    },
+    "TagDef": {
+      "additionalProperties": false,
+      "properties": {
+        "docs": {
+          "$ref": "#/definitions/Docs"
+        },
+        "name": {
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/definitions/SourceLocation",
+          "description": "Source order is preserved; this is the navigation order."
+        }
+      },
+      "required": [
+        "name",
+        "docs",
+        "source"
+      ],
+      "type": "object"
+    },
+    "TupleNode": {
+      "additionalProperties": false,
+      "description": "prefixItems (2020-12) or items: [...] (draft-07 / AsyncAPI 2.x).",
+      "properties": {
+        "constraints": {
+          "$ref": "#/definitions/ArrayConstraints"
+        },
+        "docs": {
+          "$ref": "#/definitions/Docs",
+          "description": "Docs attached to this node. For a RefNode these are usage-level docs from $ref siblings (OAS 3.1 / 2020-12); type-level docs live on the TypeDef."
+        },
+        "kind": {
+          "const": "tuple",
+          "type": "string"
+        },
+        "nullable": {
+          "description": "Folded from: type: [X, \"null\"], OAS 3.0 `nullable: true`, and anyOf/oneOf: [X, { type: \"null\" }].",
+          "type": "boolean"
+        },
+        "prefixItems": {
+          "items": {
+            "$ref": "#/definitions/Node"
+          },
+          "type": "array"
+        },
+        "rest": {
+          "anyOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "forbidden",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "any",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "schema",
+                  "type": "string"
+                },
+                "node": {
+                  "$ref": "#/definitions/Node"
+                }
+              },
+              "required": [
+                "kind",
+                "node"
+              ],
+              "type": "object"
+            }
+          ],
+          "description": "From `items` alongside prefixItems (or additionalItems in draft-07)."
+        },
+        "source": {
+          "$ref": "#/definitions/SourceLocation"
+        }
+      },
+      "required": [
+        "constraints",
+        "docs",
+        "kind",
+        "nullable",
+        "prefixItems",
+        "rest",
+        "source"
+      ],
+      "type": "object"
+    },
+    "TypeDef": {
+      "additionalProperties": false,
+      "properties": {
+        "docs": {
+          "$ref": "#/definitions/Docs",
+          "description": "Type-level docs."
+        },
+        "id": {
+          "$ref": "#/definitions/TypeId"
+        },
+        "name": {
+          "description": "Display name, e.g. \"TranscriptionConfig\" (last pointer segment, or title).",
+          "type": "string"
+        },
+        "node": {
+          "$ref": "#/definitions/Node"
+        },
+        "referencedBy": {
+          "description": "Computed post-lowering, for \"Referenced by\" back-links.",
+          "items": {
+            "$ref": "#/definitions/TypeId"
+          },
+          "type": "array"
+        },
+        "slug": {
+          "description": "URL-safe anchor, assigned once over the completed registry so collisions between documents (two `Job`s) can be broken deterministically. Renderers read this; they never derive anchors themselves.",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/definitions/SourceLocation"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "slug",
+        "node",
+        "docs",
+        "source",
+        "referencedBy"
+      ],
+      "type": "object"
+    },
+    "TypeId": {
+      "description": "Stable id derived from source location, e.g. \"realtime#/components/schemas/AddAudio\".",
+      "type": "string"
+    },
+    "TypeRegistry": {
+      "additionalProperties": {
+        "$ref": "#/definitions/TypeDef"
+      },
+      "description": "The project-wide named-type registry. Lives on `ApiIR.schemas`.",
+      "propertyNames": {
+        "description": "Stable id derived from source location, e.g. \"realtime#/components/schemas/AddAudio\"."
+      },
+      "type": "object"
+    },
+    "UnionNode": {
+      "additionalProperties": false,
+      "properties": {
+        "discriminator": {
+          "additionalProperties": false,
+          "properties": {
+            "inferred": {
+              "description": "True when inferred from a shared const-valued property, not declared.",
+              "type": "boolean"
+            },
+            "propertyName": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "propertyName",
+            "inferred"
+          ],
+          "type": "object"
+        },
+        "docs": {
+          "$ref": "#/definitions/Docs",
+          "description": "Docs attached to this node. For a RefNode these are usage-level docs from $ref siblings (OAS 3.1 / 2020-12); type-level docs live on the TypeDef."
+        },
+        "kind": {
+          "const": "union",
+          "type": "string"
+        },
+        "mode": {
+          "description": "oneOf → \"exactlyOne\", anyOf → \"atLeastOne\". Many renderers can ignore this.",
+          "enum": [
+            "exactlyOne",
+            "atLeastOne"
+          ],
+          "type": "string"
+        },
+        "nullable": {
+          "description": "Folded from: type: [X, \"null\"], OAS 3.0 `nullable: true`, and anyOf/oneOf: [X, { type: \"null\" }].",
+          "type": "boolean"
+        },
+        "source": {
+          "$ref": "#/definitions/SourceLocation"
+        },
+        "variants": {
+          "items": {
+            "$ref": "#/definitions/UnionVariant"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "docs",
+        "kind",
+        "mode",
+        "nullable",
+        "source",
+        "variants"
+      ],
+      "type": "object"
+    },
+    "UnionVariant": {
+      "additionalProperties": false,
+      "properties": {
+        "discriminatorValue": {
+          "description": "Value of the discriminating property for this variant, if known."
+        },
+        "label": {
+          "type": "string"
+        },
+        "labelSource": {
+          "description": "How the label was derived, so renderers can style e.g. index labels differently.",
+          "enum": [
+            "title",
+            "ref",
+            "discriminator",
+            "const",
+            "index"
+          ],
+          "type": "string"
+        },
+        "node": {
+          "$ref": "#/definitions/Node"
+        }
+      },
+      "required": [
+        "label",
+        "labelSource",
+        "node"
+      ],
+      "type": "object"
+    },
+    "UnsupportedNode": {
+      "additionalProperties": false,
+      "description": "Escape hatch for if/then/else, not, dependentSchemas, unevaluated*, $dynamicRef, non-JSON-Schema AsyncAPI schemaFormats (e.g. Avro), etc. Always paired with a Diagnostic.",
+      "properties": {
+        "docs": {
+          "$ref": "#/definitions/Docs",
+          "description": "Docs attached to this node. For a RefNode these are usage-level docs from $ref siblings (OAS 3.1 / 2020-12); type-level docs live on the TypeDef."
+        },
+        "kind": {
+          "const": "unsupported",
+          "type": "string"
+        },
+        "nullable": {
+          "description": "Folded from: type: [X, \"null\"], OAS 3.0 `nullable: true`, and anyOf/oneOf: [X, { type: \"null\" }].",
+          "type": "boolean"
+        },
+        "partial": {
+          "$ref": "#/definitions/Node",
+          "description": "Best-effort lowering of the parts that WERE understood, if any."
+        },
+        "raw": {
+          "description": "The canonical (post-upcast) schema fragment, for a \"raw schema\" view."
+        },
+        "reason": {
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/definitions/SourceLocation"
+        }
+      },
+      "required": [
+        "docs",
+        "kind",
+        "nullable",
+        "raw",
+        "reason",
+        "source"
+      ],
+      "type": "object"
+    },
+    "View": {
+      "enum": [
+        "request",
+        "response",
+        "neutral"
+      ],
+      "type": "string"
+    },
+    "WsMessage": {
+      "additionalProperties": false,
+      "properties": {
+        "bindings": {
+          "$ref": "#/definitions/Bindings"
+        },
+        "contentType": {
+          "type": "string"
+        },
+        "discriminatorValue": {
+          "description": "e.g. the const value of the message's discriminating field (\"AddTranscript\")."
+        },
+        "docs": {
+          "$ref": "#/definitions/Docs"
+        },
+        "examples": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "headers": {},
+              "name": {
+                "type": "string"
+              },
+              "payload": {},
+              "summary": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "payload"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "headers": {
+          "$ref": "#/definitions/Node"
+        },
+        "id": {
+          "$ref": "#/definitions/TypeId"
+        },
+        "name": {
+          "type": "string"
+        },
+        "payload": {
+          "$ref": "#/definitions/Node"
+        },
+        "source": {
+          "$ref": "#/definitions/SourceLocation"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "docs",
+        "payload",
+        "examples",
+        "source"
+      ],
+      "type": "object"
+    }
+  }
+}

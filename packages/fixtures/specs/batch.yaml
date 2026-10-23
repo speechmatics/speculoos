@@ -1,0 +1,182 @@
+openapi: "3.1.0"
+info:
+  title: Batch Transcription
+  version: "2.0.1"
+  description: Submit audio, get transcripts.
+  license:
+    name: MIT
+    identifier: MIT
+servers:
+  - url: https://asr.api.example.com/v2
+    description: Production
+    variables:
+      region:
+        default: eu
+        enum: [eu, us]
+tags:
+  - name: Jobs
+    description: Create and inspect jobs.
+  - name: Internal
+    description: Not for public use.
+    x-internal: true
+security:
+  - bearer: []
+paths:
+  /jobs:
+    parameters:
+      - name: X-Request-Id
+        in: header
+        schema:
+          type: string
+          format: uuid
+        description: Correlation id.
+    get:
+      operationId: listJobs
+      summary: List jobs
+      tags: [Jobs]
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        "200":
+          description: A page of jobs.
+          headers:
+            X-Total-Count:
+              schema:
+                type: integer
+              description: Total matching jobs.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Job"
+    post:
+      operationId: createJob
+      summary: Create a job
+      tags: [Jobs]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Job"
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                data_file:
+                  type: string
+                  format: binary
+      responses:
+        "201":
+          description: Created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+          links:
+            GetJob:
+              operationId: getJob
+              parameters:
+                id: $response.body#/id
+  /jobs/{id}:
+    get:
+      operationId: getJob
+      tags: [Jobs]
+      deprecated: true
+      x-internal: true
+      parameters:
+        - name: id
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: One job.
+webhooks:
+  jobFinished:
+    post:
+      operationId: jobFinished
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Job"
+      responses:
+        "200":
+          description: Acknowledged.
+components:
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: An API key.
+    oauth:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: https://auth.example.com/token
+          scopes:
+            jobs:read: Read jobs
+            jobs:write: Create jobs
+  schemas:
+    Job:
+      type: object
+      required: [id, config]
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        status:
+          $ref: "#/components/schemas/JobStatus"
+          description: Where this job has got to.
+        secret:
+          type: string
+          writeOnly: true
+        config:
+          $ref: "#/components/schemas/TranscriptionConfig"
+        parent:
+          $ref: "#/components/schemas/Job"
+        tags:
+          type: object
+          additionalProperties:
+            type: string
+    JobStatus:
+      type: string
+      enum: [running, done, rejected]
+      description: Lifecycle state.
+    TranscriptionConfig:
+      allOf:
+        - $ref: "#/components/schemas/BaseConfig"
+        - type: object
+          properties:
+            operating_point:
+              oneOf:
+                - const: standard
+                  description: Faster.
+                - const: enhanced
+                  description: More accurate.
+            language:
+              type: string
+              nullable: true
+    BaseConfig:
+      type: object
+      properties:
+        notification_url:
+          type: string
+          format: uri
+    Unrenderable:
+      x-internal: true
+      type: object
+      properties:
+        weird:
+          not:
+            type: string

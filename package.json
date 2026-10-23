@@ -1,0 +1,29 @@
+{
+  "name": "speculoos",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Render OpenAPI and AsyncAPI specs in your own design system, via a shared intermediate representation.",
+  "license": "ISC",
+  "packageManager": "pnpm@10.27.0",
+  "scripts": {
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r lint",
+    "speculoos": "node packages/cli/dist/cli.js",
+    "preview": "node preview/build.mjs",
+    "preview:serve": "node preview/build.mjs --serve",
+    "docs:diagnostics": "node scripts/diagnostics-doc.mjs",
+    "docs:check": "node scripts/diagnostics-doc.mjs --check"
+  },
+  "devDependencies": {
+    "@speculoos/asyncapi": "workspace:*",
+    "@speculoos/core": "workspace:*",
+    "@speculoos/fixtures": "workspace:*",
+    "@speculoos/html": "workspace:*",
+    "@speculoos/loader": "workspace:*",
+    "@speculoos/openapi": "workspace:*",
+    "markdown-it": "^14.1.0",
+    "typescript": "^5.9.3"
+  }
+}

@@ -1,0 +1,265 @@
+/*
+ * A demo stylesheet for @speculoos/html.
+ *
+ * Not shipped, not a design system, and not a recommendation — its only job is
+ * to answer one question: can the documented class names carry a real
+ * stylesheet? Every rule below targets a name from `CLASSES` in
+ * packages/html/src/classes.ts, with two deliberate exceptions:
+ *
+ *   - `.preview-*`, which is this harness's own page chrome, not Speculoos's;
+ *   - tag selectors *inside* `.spec-markdown`, which style the output of the
+ *     caller's markdown renderer. Speculoos never emits those elements.
+ *
+ * If styling this had required a tag selector anywhere else, or a class that is
+ * not in the catalogue, the contract would be wrong.
+ */
+
+:root {
+  --bg: #fbfbfa;
+  --panel: #fff;
+  --ink: #1c1c1a;
+  --muted: #6b6b66;
+  --line: #e3e2de;
+  --accent: #8a5a2b;
+  --accent-soft: #f4ece3;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #16161a;
+    --panel: #1d1d22;
+    --ink: #e8e7e3;
+    --muted: #9a9a94;
+    --line: #2e2e35;
+    --accent: #d8a26a;
+    --accent-soft: #2a2119;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 18rem) minmax(0, 1fr);
+  font: 15px/1.6 var(--sans);
+  color: var(--ink);
+  background: var(--bg);
+}
+
+/* ── harness chrome ──────────────────────────────────────────────────────── */
+
+.preview-sidebar {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  max-height: 100vh;
+  overflow-y: auto;
+  padding: 1.5rem 1rem;
+  border-right: 1px solid var(--line);
+  background: var(--panel);
+}
+.preview-brand { margin: 0 0 1rem; font-weight: 600; letter-spacing: 0.02em; }
+.preview-index { margin: 0 0 1.5rem; padding: 0; list-style: none; }
+.preview-index a { color: var(--accent); text-decoration: none; }
+.preview-main { min-width: 0; padding: 2rem 2.5rem 8rem; }
+
+/* ── document header ─────────────────────────────────────────────────────── */
+
+.spec-title { margin: 0; font-size: 2rem; letter-spacing: -0.02em; }
+.spec-version { margin: 0.25rem 0 0; color: var(--muted); font-family: var(--mono); font-size: 0.85em; }
+.spec-summary { margin: 0.75rem 0 0; font-size: 1.1em; color: var(--muted); }
+.spec-info { padding-bottom: 1.5rem; border-bottom: 1px solid var(--line); margin-bottom: 1.5rem; }
+
+/* ── sections ────────────────────────────────────────────────────────────── */
+
+.spec-section { margin: 1.5rem 0; }
+.spec-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+.spec-heading-title { font-size: 1em; }
+.spec-heading-subtitle { display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 400; }
+
+/* An operation is the unit a reader navigates to, so it gets the card. */
+.spec-section--operation {
+  padding: 1.25rem 1.5rem;
+  margin: 2rem 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  scroll-margin-top: 1rem;
+}
+.spec-section--operation > .spec-heading { font-size: 1.3rem; letter-spacing: -0.01em; }
+.spec-section--tag > .spec-heading { font-size: 1.6rem; margin-top: 2.5rem; }
+.spec-section--type { padding: 1rem 1.25rem; margin: 1rem 0; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); scroll-margin-top: 1rem; }
+.spec-section--deprecated > .spec-heading .spec-heading-title { text-decoration: line-through; opacity: 0.65; }
+
+/* `data-level` is why depth is styleable without hard-coding h2/h3. */
+.spec-section-body[data-level] { min-width: 0; }
+.spec-section--parameters > .spec-heading,
+.spec-section--request > .spec-heading,
+.spec-section--response > .spec-heading,
+.spec-section--security > .spec-heading,
+.spec-section--messages > .spec-heading,
+.spec-section--reply > .spec-heading {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-top: 1.25rem;
+}
+
+/* ── inline pieces ───────────────────────────────────────────────────────── */
+
+.spec-code {
+  font-family: var(--mono);
+  font-size: 0.86em;
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  background: var(--accent-soft);
+}
+.spec-codeblock {
+  margin: 0.5rem 0;
+  padding: 0.85rem 1rem;
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  font-size: 0.82em;
+}
+.spec-link { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+.spec-badge {
+  display: inline-block;
+  padding: 0.1em 0.5em;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  font-size: 0.72em;
+  font-family: var(--mono);
+  line-height: 1.7;
+  white-space: nowrap;
+  color: var(--muted);
+}
+.spec-badge--method { background: var(--accent); border-color: var(--accent); color: var(--panel); font-weight: 600; }
+.spec-badge--direction { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+.spec-badge--required { background: transparent; border-color: var(--accent); color: var(--accent); }
+.spec-badge--status,
+.spec-badge--mediaType,
+.spec-badge--protocol,
+.spec-badge--securityScheme { background: var(--bg); }
+.spec-badge--note { font-style: italic; }
+.spec-empty { color: var(--muted); font-style: italic; }
+.spec-protocols { margin: 0.25rem 0; display: flex; gap: 0.35rem; }
+
+.spec-markdown { color: var(--ink); }
+.spec-markdown > :first-child { margin-top: 0; }
+.spec-markdown > :last-child { margin-bottom: 0; }
+.spec-markdown p { margin: 0.4rem 0; }
+.spec-markdown code { font-family: var(--mono); font-size: 0.88em; }
+.spec-markdown pre { overflow-x: auto; padding: 0.75rem; border-radius: 6px; background: var(--bg); }
+.spec-markdown a { color: var(--accent); }
+
+/* ── field tables ────────────────────────────────────────────────────────── */
+
+.spec-fields { margin: 0.5rem 0; padding: 0; list-style: none; }
+
+/*
+ * The grid that makes a <ul> read as a table. This is the whole argument for
+ * not emitting <table>: nesting is free, and the columns are six lines of CSS
+ * that belong to the site rather than to Speculoos.
+ */
+.spec-field {
+  padding: 0.6rem 0;
+  border-top: 1px solid var(--line);
+}
+.spec-fields > .spec-field:first-child { border-top: none; }
+.spec-field-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+.spec-field-name { font-weight: 600; }
+.spec-field-name .spec-code { background: transparent; padding: 0; }
+.spec-field-type .spec-code { background: transparent; padding: 0; color: var(--muted); }
+.spec-field-docs { margin-left: 0; font-size: 0.94em; color: var(--muted); }
+.spec-field-docs:empty { display: none; }
+.spec-field-variants {
+  margin: 0.3rem 0 0;
+  font-size: 0.74em;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+.spec-field-children {
+  margin-top: 0.4rem;
+  padding-left: 1rem;
+  border-left: 2px solid var(--line);
+}
+.spec-field--deprecated > .spec-field-head .spec-field-name { text-decoration: line-through; opacity: 0.6; }
+
+.spec-chips { display: inline-flex; flex-wrap: wrap; gap: 0.3rem; }
+.spec-chip--note .spec-badge { border-style: dashed; }
+.spec-chip--unsupported .spec-badge { border-color: var(--accent); color: var(--accent); }
+
+.spec-extends { margin: 0.35rem 0; display: flex; flex-wrap: wrap; gap: 0.4rem; font-size: 0.85em; }
+
+/* In rows layout the markup is flat, so indentation comes from data-depth. */
+.spec-fields[data-layout="rows"] .spec-field { padding-left: calc(var(--depth, 0) * 1rem); }
+.spec-fields[data-layout="rows"] .spec-field[data-depth="1"] { --depth: 1; }
+.spec-fields[data-layout="rows"] .spec-field[data-depth="2"] { --depth: 2; }
+.spec-fields[data-layout="rows"] .spec-field[data-depth="3"] { --depth: 3; }
+.spec-fields[data-layout="rows"] .spec-field[data-depth="4"] { --depth: 4; }
+
+/* ── groups (the static stand-in for tabs) ───────────────────────────────── */
+
+.spec-group { margin: 0.5rem 0; display: grid; gap: 0.75rem; }
+.spec-group-item {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bg);
+}
+.spec-group-label {
+  margin: 0;
+  padding: 0.45rem 0.75rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+.spec-group-body { padding: 0.75rem; }
+.spec-group-body > .spec-schema > .spec-fields { margin-top: 0; }
+
+/* ── lists ───────────────────────────────────────────────────────────────── */
+
+.spec-list { margin: 0.4rem 0; padding: 0; list-style: none; display: grid; gap: 0.4rem; }
+.spec-list-item { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.4rem; }
+.spec-list--operations .spec-list-item { gap: 0.5rem; }
+.spec-list-item--deprecated { opacity: 0.55; }
+.spec-server-variables { margin: 0.35rem 0 0 1rem; padding: 0; list-style: none; font-size: 0.9em; color: var(--muted); }
+
+/* ── navigation ──────────────────────────────────────────────────────────── */
+
+.spec-nav .spec-heading { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.spec-nav .spec-section { margin: 1rem 0; }
+.spec-nav .spec-markdown { display: none; }
+.spec-nav-title { font-size: 0.9em; }
+.spec-nav .spec-code { background: transparent; padding: 0; font-size: 0.78em; color: var(--muted); }
+.spec-nav .spec-badge--method { font-size: 0.62em; }
+.spec-nav .spec-list-item { display: block; line-height: 1.4; margin-bottom: 0.3rem; }
+
+.spec-referenced-by { margin: 0.75rem 0 0; font-size: 0.85em; display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.spec-referenced-by-label { color: var(--muted); }
+
+@media (max-width: 55rem) {
+  body { grid-template-columns: minmax(0, 1fr); }
+  .preview-sidebar { position: static; max-height: none; border-right: none; border-bottom: 1px solid var(--line); }
+  .preview-main { padding: 1.25rem; }
+}

@@ -1,0 +1,112 @@
+asyncapi: "2.6.0"
+info:
+  title: Realtime Transcription
+  version: "2.0.0"
+  description: Stream audio, receive transcripts.
+tags:
+  - name: Realtime
+    description: The websocket API.
+servers:
+  production:
+    url: wss://eu2.rt.example.com/v2
+    protocol: wss
+    protocolVersion: "13"
+    description: Production endpoint.
+    security:
+      - bearer: []
+channels:
+  /v2/{language}:
+    description: The transcription socket.
+    parameters:
+      language:
+        description: Language of the audio.
+        schema:
+          type: string
+    publish:
+      operationId: sendToServer
+      summary: Messages the client sends.
+      tags:
+        - name: Realtime
+      message:
+        oneOf:
+          - $ref: "#/components/messages/StartRecognition"
+          - $ref: "#/components/messages/AddAudio"
+    subscribe:
+      operationId: receiveFromServer
+      summary: Messages the server sends.
+      tags:
+        - name: Realtime
+      message:
+        oneOf:
+          - $ref: "#/components/messages/RecognitionStarted"
+components:
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: A JWT.
+  messages:
+    StartRecognition:
+      name: StartRecognition
+      title: Start recognition
+      summary: Begin a session.
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/StartRecognition"
+      examples:
+        - name: minimal
+          payload:
+            message: StartRecognition
+    AddAudio:
+      name: AddAudio
+      summary: A chunk of audio.
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/AddAudio"
+    RecognitionStarted:
+      name: RecognitionStarted
+      summary: The session is live.
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/RecognitionStarted"
+  schemas:
+    StartRecognition:
+      type: object
+      required: [message]
+      properties:
+        message:
+          const: StartRecognition
+        transcription_config:
+          $ref: "#/components/schemas/TranscriptionConfig"
+    AddAudio:
+      type: object
+      required: [message]
+      properties:
+        message:
+          const: AddAudio
+        seq_no:
+          type: integer
+          minimum: 0
+    RecognitionStarted:
+      type: object
+      required: [message]
+      properties:
+        message:
+          const: RecognitionStarted
+        id:
+          type: string
+          format: uuid
+    TranscriptionConfig:
+      type: object
+      required: [language]
+      properties:
+        language:
+          type: string
+          description: ISO 639-1 code.
+        operating_point:
+          oneOf:
+            - const: standard
+              description: Faster.
+            - const: enhanced
+              description: More accurate.

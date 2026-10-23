@@ -1,0 +1,6 @@
+components:
+  schemas:
+    Language:
+      type: string
+      description: An ISO 639-1 language code.
+      pattern: "^[a-z]{2}$"

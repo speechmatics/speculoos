@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ["22", "24"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        # Version comes from `packageManager` in package.json.
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Build first: packages resolve each other through `dist`, so a test run
+      # against a stale build is testing the wrong code.
+      - run: pnpm build
+
+      - run: pnpm typecheck
+
+      - run: pnpm test
+
+      # The IR's JSON Schema is generated from the types. A change to `ApiIR`
+      # that forgets to regenerate it is a silently wrong published artifact.
+      - run: pnpm --filter @speculoos/core run schema:check
+
+      # docs/DIAGNOSTICS.md is generated from the catalogue in core. Codes are a
+      # public contract, so the two must not drift.
+      - run: pnpm docs:check
+
+      # The preview harness is dev tooling, but building it exercises both
+      # adapters and the HTML renderer end to end over every fixture, and it is
+      # where a rendering regression shows up as something a human can read.
+      - run: pnpm preview
