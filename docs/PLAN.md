@@ -931,6 +931,26 @@ and reshaping, not adding. So OD-2 stays descoped with the path genuinely open.
 *Still open:* the reference integration is still a fake component library rather than the
 Speechmatics design system. Unchanged from M4, and still a consumer task.
 
+**M6 — Shipped component maps. Planned.** A Radix Themes map, as a package rather than an
+example, with a factory taking options and spread for wholesale replacement. Twelve
+components, not a renderer: there is one React renderer and a map per library. Closes the
+reference-integration item carried since M4. Full plan in
+[`M6-COMPONENT-MAPS.md`](./M6-COMPONENT-MAPS.md).
+
+*The architecture question it settles.* Shipping a map was initially resisted on the grounds
+that a package per library re-creates `m × n`. That was wrong — a map is one of the `n`, and
+shipping it costs maintenance, which is linear. The genuine objection is narrower: the map is
+the least differentiated and hardest-to-get-right part of adoption, so shipping one lowers the
+cliff without compromising anything, *provided* dependency direction stays one-way.
+`@speculoos/react` must never know a design system exists.
+
+*Two things the pilot surfaced before a line was written.* `BadgeProps` cannot say which HTTP
+method a method badge is for, so a map cannot colour GET green and DELETE red without parsing
+`children` — and `@speculoos/html` has the same gap. And a map can have requirements on the
+*provider* options: a Radix `Table` map needs `layout: "rows"`, because `<tr>` cannot nest,
+but nothing lets it say so. Both are additive fixes, and both are free only until a map ships
+and `Components` becomes a public implementation contract rather than a consumer-facing one.
+
 **Post-1.0:** example synthesis and code samples (OD-2); further framework bindings; an
 MDX/Docusaurus/Astro integration package; a playground app.
 

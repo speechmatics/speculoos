@@ -82,6 +82,7 @@ pnpm preview:serve   # http://localhost:8137
 - [`docs/DIAGNOSTICS.md`](docs/DIAGNOSTICS.md) — all 25 diagnostic codes, their severities and meanings
 - [`docs/WRITING-A-RENDERER.md`](docs/WRITING-A-RENDERER.md)
 - [`docs/WRITING-AN-ADAPTER.md`](docs/WRITING-AN-ADAPTER.md)
+- [`docs/M6-COMPONENT-MAPS.md`](docs/M6-COMPONENT-MAPS.md) — the next milestone: a shipped Radix Themes component map
 
 ## Status
 
