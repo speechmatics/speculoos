@@ -11,12 +11,12 @@
  * so a site that wants a sidebar and a page per operation can call the pieces.
  */
 
-import { groupByTag, listedEndpoints } from "@speculoos/core";
+import { apiEntries, groupByTag } from "@speculoos/core";
 import type { ApiIR, Server } from "@speculoos/core";
 import { h, join, text, type Html } from "./escape.js";
 import { resolve, type HtmlOptions } from "./options.js";
 import { badge, code, docsBody, inline, markdown, section, type Ctx } from "./parts.js";
-import { endpointSection, operationSection } from "./operation.js";
+import { entrySection, operationSection } from "./operation.js";
 import { renderTypes } from "./navigation.js";
 
 function servers(c: Ctx, list: Server[], level: number): Html {
@@ -65,14 +65,14 @@ export interface RenderApiOptions extends HtmlOptions {
   /** Include the document title, description and servers. Default true. */
   includeInfo?: boolean;
   /**
-   * "endpoint" renders each path or channel once, with its operations under it.
-   * "tag" groups operations under the document's declared tags, repeating an
-   * operation's address in each. Default "endpoint".
+   * "entry" renders each API reference entry in document order: a REST
+   * operation standing alone, a channel with its send and receive. "tag" groups
+   * operations under the document's declared tags. Default "entry".
    */
-  groupBy?: "endpoint" | "tag";
+  groupBy?: "entry" | "tag";
 }
 
-/** Every operation, grouped by endpoint or tag, plus the type sections its links point at. */
+/** Every entry, or every operation by tag, plus the type sections its links point at. */
 export function renderApi(ir: ApiIR, options: RenderApiOptions = {}): Html {
   const c: Ctx = { ir, o: resolve(options) };
   const level = c.o.headingLevel;
@@ -104,7 +104,7 @@ export function renderApi(ir: ApiIR, options: RenderApiOptions = {}): Html {
             ...g.entries.map((entry) => operationSection(c, entry, level + 2)),
           ),
         )
-      : listedEndpoints(ir).map((endpoint) => endpointSection(c, endpoint, level + 1));
+      : apiEntries(ir).map((entry) => entrySection(c, entry, level + 1));
 
   return h(
     "div",

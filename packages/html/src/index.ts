@@ -22,6 +22,7 @@ export { renderApi, type RenderApiOptions } from "./api.js";
 export {
   renderEndpoint,
   renderEndpointById,
+  renderEntry,
   renderOperation,
   renderOperationById,
   type RenderEndpointOptions,

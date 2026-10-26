@@ -9,11 +9,13 @@
 import { useMemo } from "react";
 import {
   allOperations,
+  apiEntries,
   groupByTag,
   listedEndpoints,
   toRows,
   toTree,
   typeLabel,
+  type ApiEntry,
   type Endpoint,
   type FieldNode,
   type LabelOptions,
@@ -67,6 +69,15 @@ export function useFieldRows(node: Node, opts?: FieldOptions): FieldNode[] {
 export function useOperation(id: string): OperationEntry | undefined {
   const { ir } = useSpeculoos();
   return useMemo(() => allOperations(ir).find((e) => e.operation.id === id), [ir, id]);
+}
+
+/**
+ * The API reference's entries, in document order: one per REST operation, one
+ * per channel. One page each, if a site wants that — see `apiEntries` in core.
+ */
+export function useEntries(): ApiEntry[] {
+  const { ir } = useSpeculoos();
+  return useMemo(() => apiEntries(ir), [ir]);
 }
 
 /**

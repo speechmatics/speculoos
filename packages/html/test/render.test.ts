@@ -7,12 +7,13 @@
  * because React happened to paper over it.
  */
 import { beforeAll, describe, expect, it } from "vitest";
-import { allOperations, type ApiIR } from "@speculoos/core";
+import { allOperations, apiEntries, type ApiIR, type OperationEntry } from "@speculoos/core";
 import {
   renderApi,
   renderNav,
   renderEndpoint,
   renderEndpointById,
+  renderEntry,
   renderOperation,
   renderOperationById,
   renderSchema,
@@ -246,7 +247,7 @@ describe("endpoints", () => {
     expect(count(html, `data-key="X-Request-Id"`)).toBe(1);
   });
 
-  it("renders each operation once when the page is grouped by endpoint", () => {
+  it("renders each operation once, REST ones standing alone and channel ones inside their channel", () => {
     const html = renderApi(rest);
     for (const { operation } of allOperations(rest)) expect(count(html, `id="${operation.slug}"`)).toBe(1);
     expect(html).not.toContain("spec-section--tag");
@@ -256,10 +257,20 @@ describe("endpoints", () => {
     expect(renderApi(rest, { groupBy: "tag" })).toContain("spec-section--tag");
   });
 
-  it("links the nav to each endpoint and its operations", () => {
-    const html = renderNav(rest);
-    expect(html).toContain('class="spec-link spec-link--endpoint" href="#jobs"');
-    expect(html).toContain('href="#list-jobs"');
+  it("links the nav to each REST operation, and to each channel once", () => {
+    const restNav = renderNav(rest);
+    expect(restNav).toContain('href="#list-jobs"');
+    expect(restNav).not.toContain('href="#jobs"');
+    const wsNav = renderNav(ws);
+    expect(wsNav).toContain('class="spec-link spec-link--endpoint" href="#v2-language"');
+    expect(asText(wsNav).trim()).toBe("WSS /v2/{language}");
+  });
+
+  it("renders an entry as its page body", () => {
+    const [first] = apiEntries(rest);
+    expect(renderEntry(first!, rest)).toBe(renderOperation(first as OperationEntry, rest));
+    const channel = apiEntries(ws)[0]!;
+    expect(renderEntry(channel, ws)).toBe(renderEndpoint(channel.endpoint, ws));
   });
 
   it("leaves a reply-only address out of the page and the nav, but renders it by id", async () => {

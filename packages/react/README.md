@@ -14,42 +14,54 @@ a component map you supply.
 
 ```tsx
 <SpeculoosProvider ir={ir} components={components} options={{ maxDepth: 2 }}>
-  <EndpointList />
-  <Endpoint id="/jobs" />
+  <EntryList />
   <Operation id="createJob" />
+  <Endpoint id="/v2/{language}" />
   <SchemaTable typeId="batch#/components/schemas/TranscriptionConfig" />
   <TypeSections />
 </SpeculoosProvider>
 ```
 
-## Endpoints
+## Entries: what a reference page is
 
-An `<Endpoint>` is a path or a channel with every operation on it: the address
-is the heading, and what the operations share — protocol, description,
-parameters — is shown once above them. Under it, a REST operation is headed by
-its summary and a message operation by what the reader does, "Send" or
-"Receive". It is the unit most sites give a page of its own, so routing one page
-per endpoint is two pieces:
+An API reference is a list of **entries**, the unit a site gives a page and a
+sidebar link:
+
+- **A REST operation is an entry.** `POST /projects` is a page, rendered by
+  `<Operation>`: its summary as the heading, method and path beside it, then
+  parameters, request and responses.
+- **A channel is one entry,** holding all its operations. `WSS /v2/{language}`
+  is a page, rendered by `<Endpoint>`: its address (or title), the protocol where
+  a method would stand, the shared parameters once, then **Send** and
+  **Receive** — the parts a request and response play on a REST page.
+
+`apiEntries(ir)` in `@speculoos/core` lists them in document order;
+`useEntries()` is the hook; `<Entry entry={e} />` renders either kind;
+`<EntryList>` is the sidebar. Routing one page per entry is two pieces:
 
 ```tsx
-// Pages: one per endpoint that has operations (listedEndpoints, from @speculoos/core).
-listedEndpoints(ir).map((e) => ({ path: `/api/${e.slug}`, render: () => <Endpoint endpoint={e} /> }));
+import { apiEntries, entrySlug } from "@speculoos/core";
+
+// Pages: one per entry.
+apiEntries(ir).map((e) => ({ path: `/api/${entrySlug(e)}`, render: () => <Entry entry={e} /> }));
 
 // Links: tell Speculoos where things live. An operation's target carries its
-// endpoint, so it can point at that page's anchor.
+// endpoint, so one on a channel can point at the channel's page and its anchor.
 const href = (t: HrefTarget) =>
-  t.kind === "endpoint" ? `/api/${t.endpoint.slug}`
-  : t.kind === "operation" ? `/api/${t.endpoint.slug}#${t.operation.slug}`
+  t.kind === "operation"
+    ? t.endpoint.addressKind === "channel"
+      ? `/api/${t.endpoint.slug}#${t.operation.slug}`
+      : `/api/${t.operation.slug}`
+  : t.kind === "endpoint" ? `/api/${t.endpoint.slug}`
   : t.kind === "type" && t.def ? `/api/types#${t.def.slug}`
   : t.kind === "external" ? t.url
   : undefined;
 ```
 
-`<EndpointList>` is the matching navigation. Listings — it, `useEndpoints`,
-`listedEndpoints` — leave out endpoints with no operations, such as an AsyncAPI
-reply-only address, whose reply is already shown inside the operation that
-expects it; `<Endpoint id>` still renders one if asked. `<Operation>` still renders one
-operation standalone, with its address and the endpoint's parameters included.
+A channel with no operations — typically an AsyncAPI reply-only address, whose
+reply is already shown inside the operation that expects it — is not an entry,
+though `<Endpoint id>` still renders it. `<Endpoint>` also works on a REST path,
+for a site that wants all of a path's methods on one page.
 
 ## The component map
 
@@ -98,7 +110,7 @@ const Field = ({ f }: { f: FieldNode }) => (
 
 | Option | Default | What it decides |
 |---|---|---|
-| `href` | `#slug` | Where links point. Replace this and nothing else for a page-per-endpoint site — see Endpoints. |
+| `href` | `#slug` | Where links point. Replace this and nothing else for a page-per-entry site — see Entries. |
 | `layout` | `"tree"` | `"rows"` hands `Fields` a flat pre-order list carrying `depth`, for design systems that cannot nest a row inside a row. |
 | `expandRefs` | `"never"` | `"depth"` or `"always"` inline referenced types instead of linking to them. |
 | `maxDepth` | `2` | Only consulted when `expandRefs` is `"depth"`. |
@@ -107,7 +119,7 @@ const Field = ({ f }: { f: FieldNode }) => (
 
 ## Hooks
 
-`useFieldTree`, `useFieldRows`, `useEndpoint`, `useEndpoints`, `useOperation`, `useOperations`, `useTagGroups`,
+`useFieldTree`, `useFieldRows`, `useEntries`, `useEndpoint`, `useEndpoints`, `useOperation`, `useOperations`, `useTagGroups`,
 `useTypeLabel`, `useTypeDef`. Everything the shipped components do goes through
 these, so writing your own markup entirely is not a lesser path:
 `SchemaTable` is forty lines over `useFieldTree`.

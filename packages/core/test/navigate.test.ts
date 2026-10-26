@@ -1,6 +1,26 @@
 import { describe, expect, it } from "vitest";
-import { allOperations, createSlugger, groupByTag, slugify, toRows, walk } from "../src/index.js";
+import { allOperations, apiEntries, createSlugger, entrySlug, groupByTag, slugify, toRows, walk } from "../src/index.js";
 import { ir, jobRef, schemas } from "./fixture.js";
+
+describe("apiEntries", () => {
+  it("makes each REST operation an entry, and each channel one entry holding its operations", () => {
+    const entries = apiEntries(ir);
+    for (const endpoint of ir.endpoints) {
+      const mine = entries.filter((e) => e.endpoint === endpoint);
+      if (endpoint.operations.length === 0) expect(mine).toEqual([]);
+      else if (endpoint.addressKind === "channel") expect(mine.map((e) => e.kind)).toEqual(["channel"]);
+      else expect(mine.map((e) => e.kind === "operation" && e.operation.id)).toEqual(endpoint.operations.map((o) => o.id));
+    }
+    expect(entries.some((e) => e.kind === "channel")).toBe(true);
+    expect(entries.some((e) => e.kind === "operation")).toBe(true);
+  });
+
+  it("anchors an entry at its operation's slug, or its channel's", () => {
+    for (const entry of apiEntries(ir)) {
+      expect(entrySlug(entry)).toBe(entry.kind === "operation" ? entry.operation.slug : entry.endpoint.slug);
+    }
+  });
+});
 
 describe("groupByTag", () => {
   it("preserves declared tag order and buckets untagged operations last", () => {

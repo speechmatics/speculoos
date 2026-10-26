@@ -43,9 +43,10 @@ stylesheet link. Paste it into whatever is already building your pages.
 
 | Function | Renders |
 |---|---|
-| `renderApi(ir, opts)` | Title, servers, every endpoint with its operations, every named type. `groupBy: "tag"` groups operations by tag instead |
-| `renderNav(ir, opts)` | The index: each endpoint and its operations. `groupBy: "tag"` or `"none"` for an operation list |
-| `renderEndpoint(endpoint, ir, opts)` | One path or channel: address, description and shared parameters once, then each operation. One page each — iterate `listedEndpoints(ir)` from core, which skips reply-only addresses |
+| `renderApi(ir, opts)` | Title, servers, every entry — each REST operation, each channel with its send and receive — every named type. `groupBy: "tag"` groups operations by tag instead |
+| `renderNav(ir, opts)` | The index: one link per entry, `POST Create a job` / `WSS /v2/{language}`. `groupBy: "tag"` or `"none"` for an operation list |
+| `renderEntry(entry, ir, opts)` | One entry as its page body. Iterate `apiEntries(ir)` from core for one page each |
+| `renderEndpoint(endpoint, ir, opts)` | One path or channel: heading, protocol and address, description and shared parameters once, then each operation |
 | `renderEndpointById(id, ir, opts)` | The same, looked up by `endpoint.id` |
 | `renderOperation(entry, ir, opts)` | One operation and everything hanging off it |
 | `renderOperationById(id, ir, opts)` | The same, looked up by `operation.id` |

@@ -8,12 +8,13 @@
  * dropped types would make that decision invisible.
  */
 
-import type { ReactNode } from "react";
-import type { Endpoint, Operation as IROperation, TypeId } from "@speculoos/core";
+import { Fragment, type ReactNode } from "react";
+import { entrySlug } from "@speculoos/core";
+import type { ApiEntry, Endpoint, HrefTarget, Operation as IROperation, TypeId } from "@speculoos/core";
 import { useComponents, useSpeculoos } from "./context.js";
-import { useEndpoints, useTagGroups } from "./hooks.js";
+import { useEntries, useTagGroups } from "./hooks.js";
 import { DocsBody, SchemaTable } from "./fields.js";
-import { DIRECTION_LABEL, DIRECTION_VERB } from "./labels.js";
+import { DIRECTION_LABEL } from "./labels.js";
 
 /**
  * Method, path and title, as inline siblings with a space between each.
@@ -41,65 +42,68 @@ function OperationLabel({ endpoint, operation }: { endpoint: Endpoint; operation
 }
 
 /**
- * An operation's label under its endpoint in `EndpointList`: the mark and the
- * title, without the address the endpoint already shows. A message operation
- * with no title says what the reader does, "Send" / "Receive".
+ * An entry's sidebar label. A REST operation leads with its method and then
+ * its summary, falling back to its path; a channel leads with its protocol —
+ * standing where a method would — and then its title, falling back to its
+ * address.
  */
-function NestedOperationLabel({ operation }: { operation: IROperation }): ReactNode {
+function EntryLabel({ entry }: { entry: ApiEntry }): ReactNode {
   const C = useComponents();
-  return operation.kind === "request-response" ? (
+  if (entry.kind === "operation") {
+    const { endpoint, operation } = entry;
+    return (
+      <>
+        {operation.kind === "request-response" ? (
+          <C.Badge tone="method" value={operation.method}>{operation.method.toUpperCase()}</C.Badge>
+        ) : (
+          <C.Badge tone="direction" value={operation.direction}>{DIRECTION_LABEL[operation.direction]}</C.Badge>
+        )}
+        {operation.kind === "request-response" && operation.isWebhook && <> <C.Badge tone="note">webhook</C.Badge></>}{" "}
+        {operation.docs.title ?? <C.Code>{endpoint.address}</C.Code>}
+      </>
+    );
+  }
+  const { endpoint } = entry;
+  return (
     <>
-      <C.Badge tone="method" value={operation.method}>{operation.method.toUpperCase()}</C.Badge>
-      {operation.isWebhook && <> <C.Badge tone="note">webhook</C.Badge></>}
-      {operation.docs.title !== undefined && <> {operation.docs.title}</>}
-    </>
-  ) : (
-    <>
-      <C.Badge tone="direction" value={operation.direction}>{DIRECTION_LABEL[operation.direction]}</C.Badge>{" "}
-      {operation.docs.title ?? DIRECTION_VERB[operation.direction]}
+      {endpoint.protocols.map((protocol) => (
+        <Fragment key={protocol}>
+          <C.Badge tone="protocol" value={protocol}>{protocol.toUpperCase()}</C.Badge>{" "}
+        </Fragment>
+      ))}
+      {endpoint.docs.title ?? <C.Code>{endpoint.address}</C.Code>}
     </>
   );
 }
 
-export interface EndpointListProps {
-  /** Leave out each endpoint's operations, listing only the addresses. Default false. */
-  addressesOnly?: boolean;
+/** Where an entry's link points: its operation, or its channel. */
+function entryTarget(entry: ApiEntry): HrefTarget {
+  return entry.kind === "operation"
+    ? { kind: "operation", id: entry.operation.id, operation: entry.operation, endpoint: entry.endpoint }
+    : { kind: "endpoint", id: entry.endpoint.id, endpoint: entry.endpoint };
 }
 
 /**
- * Every endpoint, in document order, each linking to itself and listing its
- * operations beneath. The navigation for a site with a page per endpoint.
+ * The API reference's index: one link per REST operation, one per channel, in
+ * document order. The sidebar for a site with a page per entry — see
+ * `apiEntries` in core for why a channel is one entry and a path is not.
  */
-export function EndpointList({ addressesOnly = false }: EndpointListProps = {}): ReactNode {
+export function EntryList(): ReactNode {
   const C = useComponents();
   const { options } = useSpeculoos();
-  const endpoints = useEndpoints();
+  const entries = useEntries();
 
-  if (endpoints.length === 0) return <C.Empty>No endpoints</C.Empty>;
+  if (entries.length === 0) return <C.Empty>No operations</C.Empty>;
 
   return (
-    <C.List kind="endpoints">
-      {endpoints.map((endpoint) => {
-        const target = { kind: "endpoint" as const, id: endpoint.id, endpoint };
+    <C.List kind="entries">
+      {entries.map((entry) => {
+        const target = entryTarget(entry);
         const href = options.href(target);
-        const address = <C.Code>{endpoint.address}</C.Code>;
+        const label = <EntryLabel entry={entry} />;
         return (
-          <C.ListItem key={endpoint.id}>
-            {href === undefined ? address : <C.Link href={href} target={target}>{address}</C.Link>}
-            {!addressesOnly && endpoint.operations.length > 0 && (
-              <C.List kind="operations">
-                {endpoint.operations.map((operation) => {
-                  const opTarget = { kind: "operation" as const, id: operation.id, operation, endpoint };
-                  const opHref = options.href(opTarget);
-                  const label = <NestedOperationLabel operation={operation} />;
-                  return (
-                    <C.ListItem key={operation.id}>
-                      {opHref === undefined ? label : <C.Link href={opHref} target={opTarget}>{label}</C.Link>}
-                    </C.ListItem>
-                  );
-                })}
-              </C.List>
-            )}
+          <C.ListItem key={entrySlug(entry)}>
+            {href === undefined ? label : <C.Link href={href} target={target}>{label}</C.Link>}
           </C.ListItem>
         );
       })}

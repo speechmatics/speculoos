@@ -8,9 +8,10 @@
  * have meant inventing a lowest common denominator that reads like neither.
  */
 
-import { useMemo, type ReactNode } from "react";
+import { Fragment, useMemo, type ReactNode } from "react";
 import { replyAddress } from "@speculoos/core";
 import type {
+  ApiEntry,
   ApiIR,
   Endpoint as IREndpoint,
   Example,
@@ -513,17 +514,24 @@ export function Endpoint(props: EndpointProps): ReactNode {
 
   if (endpoint === undefined) return <C.Empty>{`No endpoint ${props.id ?? ""}`}</C.Empty>;
 
+  // Headed like a REST operation: the title when there is one, with the
+  // protocol beside the address where a method would sit — "WSS /v2/{language}".
   const webhook = endpoint.operations.some((o) => o.kind === "request-response" && o.isWebhook);
+  const titled = endpoint.docs.title !== undefined;
   return (
     <C.Section
       kind="endpoint"
       id={endpoint.slug}
-      title={<C.Code>{endpoint.address}</C.Code>}
+      title={endpoint.docs.title ?? <C.Code>{endpoint.address}</C.Code>}
       subtitle={
         <>
-          {webhook && <C.Badge tone="note">webhook</C.Badge>}
-          {webhook && endpoint.protocols.length > 0 && " "}
-          <Protocols endpoint={endpoint} />
+          {webhook && <><C.Badge tone="note">webhook</C.Badge> </>}
+          {endpoint.protocols.map((protocol) => (
+            <Fragment key={protocol}>
+              <C.Badge tone="protocol" value={protocol}>{protocol.toUpperCase()}</C.Badge>{" "}
+            </Fragment>
+          ))}
+          {titled && <C.Code>{endpoint.address}</C.Code>}
         </>
       }
       level={level}
@@ -549,5 +557,25 @@ export function Endpoint(props: EndpointProps): ReactNode {
         ))
       )}
     </C.Section>
+  );
+}
+
+export interface EntryProps {
+  /** From `useEntries()` or `apiEntries(ir)`. */
+  entry: ApiEntry;
+  /** Heading level for the entry's own section. Defaults to the provider's. */
+  level?: number;
+}
+
+/**
+ * One API reference entry, as its page body: a REST operation standing alone,
+ * or a channel with its send and receive. What a site renders per page.
+ */
+export function Entry({ entry, level }: EntryProps): ReactNode {
+  const lvl = level !== undefined ? { level } : {};
+  return entry.kind === "operation" ? (
+    <Operation endpoint={entry.endpoint} operation={entry.operation} {...lvl} />
+  ) : (
+    <Endpoint endpoint={entry.endpoint} {...lvl} />
   );
 }

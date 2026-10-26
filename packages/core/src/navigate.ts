@@ -38,6 +38,41 @@ export function listedEndpoints(ir: Pick<ApiIR, "endpoints">): Endpoint[] {
 }
 
 /**
+ * One entry in an API reference — the unit a site gives a page and a sidebar
+ * link.
+ *
+ * A REST operation is an entry of its own: `POST /projects` is a page. A
+ * channel is one entry holding all its operations: `WSS /v2/{language}` is a
+ * page, with its send and receive inside. The asymmetry is the point. A
+ * request/response pair is self-contained, so method + path is the natural
+ * key; a channel's operations only make sense together, as the two directions
+ * of one connection — so for a channel the protocol stands where a method
+ * would, and the send and receive play the part a request and response play
+ * on a REST page.
+ */
+export type ApiEntry =
+  | { kind: "operation"; endpoint: Endpoint; operation: Operation }
+  | { kind: "channel"; endpoint: Endpoint };
+
+/**
+ * Every entry, in document order: one per operation on a path (webhooks
+ * included), one per channel with operations. Built on `listedEndpoints`, so a
+ * reply-only channel is not an entry.
+ */
+export function apiEntries(ir: Pick<ApiIR, "endpoints">): ApiEntry[] {
+  return listedEndpoints(ir).flatMap((endpoint): ApiEntry[] =>
+    endpoint.addressKind === "channel"
+      ? [{ kind: "channel", endpoint }]
+      : endpoint.operations.map((operation) => ({ kind: "operation", endpoint, operation })),
+  );
+}
+
+/** The anchor an entry renders at: its operation's slug, or its channel's. */
+export function entrySlug(entry: ApiEntry): string {
+  return entry.kind === "operation" ? entry.operation.slug : entry.endpoint.slug;
+}
+
+/**
  * Where a reply arrives, for a reader: the runtime address when the spec gives
  * one (`$message.header#/replyTo`), else the address of the channel it names.
  *

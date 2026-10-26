@@ -8,7 +8,8 @@ import { buildAsyncApi } from "@speculoos/asyncapi";
 import type { ApiIR, TypeDef } from "@speculoos/core";
 import {
   Endpoint,
-  EndpointList,
+  Entry,
+  EntryList,
   Operation,
   OperationList,
   SchemaTable,
@@ -361,7 +362,18 @@ describe("Endpoint", () => {
     // The channel's own description. Before <Endpoint> nothing rendered it.
     expect(html).toContain("<x-md>The transcription socket.</x-md>");
     expect(count(html, "Address parameters")).toBe(1);
-    expect(count(html, ">wss</x-badge>")).toBe(1);
+    expect(count(html, ">WSS</x-badge>")).toBe(1);
+  });
+
+  it("heads a titled channel by its title, with protocol and address beside like a method and path", () => {
+    const titled: ApiIR = {
+      ...ws,
+      endpoints: ws.endpoints.map((e) => ({ ...e, docs: { ...e.docs, title: "Realtime" } })),
+    };
+    const html = render(<Endpoint id="/v2/{language}" />, titled);
+    expect(html).toContain(
+      '<x-title>Realtime</x-title><x-subtitle><x-badge data-tone="protocol">WSS</x-badge> <x-code>/v2/{language}</x-code></x-subtitle>',
+    );
   });
 
   it("heads a channel's operations by what the reader does, with the title beside", () => {
@@ -403,39 +415,51 @@ describe("Endpoint", () => {
   });
 });
 
-describe("EndpointList", () => {
-  it("links each endpoint, then its operations, without repeating the address", () => {
-    const html = render(<EndpointList />, rest);
-    expect(html).toContain('data-href="#jobs"');
+describe("EntryList", () => {
+  const text = (html: string) => html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+
+  it("lists each REST operation as its own entry, method then summary", () => {
+    const html = render(<EntryList />, rest);
+    expect(text(html)).toContain("GET List jobs POST Create a job");
     expect(html).toContain('data-href="#list-jobs"');
-    const t = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
-    expect(t).toContain("/jobs GET List jobs POST Create a job");
+    expect(html).toContain('data-href="#create-job"');
   });
 
-  it("names a channel's untitled operations by what the reader does", () => {
-    const untitled: ApiIR = {
-      ...ws,
-      endpoints: ws.endpoints.map((e) => ({
-        ...e,
-        operations: e.operations.map((o) => ({ ...o, docs: {} })),
-      })),
-    };
-    const t = render(<EndpointList />, untitled).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
-    expect(t).toContain("client → server Send");
-    expect(t).toContain("server → client Receive");
+  it("falls back to the path when an operation has no summary", () => {
+    expect(text(render(<EntryList />, rest))).toContain("GET /jobs/{id}");
   });
 
-  it("leaves out a reply-only address, which the operation expecting the reply already names", async () => {
+  it("lists a channel once, its protocol standing where a method would", () => {
+    const html = render(<EntryList />, ws);
+    expect(text(html)).toBe("WSS /v2/{language}");
+    expect(html).toContain('<x-badge data-tone="protocol">WSS</x-badge>');
+    expect(html).toContain('data-href="#v2-language"');
+  });
+
+  it("leaves out a reply-only channel, which the operation expecting the reply already names", async () => {
     const reply = buildAsyncApi({
       project: await load({ root: specDir, documents: [{ name: "rt", path: "reply-v3.yaml" }] }),
     });
-    expect(render(<EndpointList />, reply)).not.toContain("/pong");
+    expect(render(<EntryList />, reply)).not.toContain("/pong");
     expect(render(<Endpoint id="ping" />, reply)).toContain("Reply on /pong");
     expect(render(<Endpoint id="pong" />, reply)).toContain("<x-empty>No operations</x-empty>");
   });
+});
 
-  it("lists addresses alone when asked", () => {
-    expect(render(<EndpointList addressesOnly />, rest)).not.toContain("List jobs");
+describe("Entry", () => {
+  it("renders a REST entry as its operation, standing alone", () => {
+    const entry = { kind: "operation" as const, endpoint: rest.endpoints[0]!, operation: rest.endpoints[0]!.operations[0]! };
+    expect(render(<Entry entry={entry} />, rest)).toBe(
+      render(<Operation endpoint={entry.endpoint} operation={entry.operation} />, rest),
+    );
+  });
+
+  it("renders a channel entry as the channel, with its send and receive", () => {
+    const entry = { kind: "channel" as const, endpoint: ws.endpoints[0]! };
+    const html = render(<Entry entry={entry} level={1} />, ws);
+    expect(html).toBe(render(<Endpoint endpoint={entry.endpoint} level={1} />, ws));
+    expect(html).toContain("<x-title>Send</x-title>");
+    expect(html).toContain("<x-title>Receive</x-title>");
   });
 });
 

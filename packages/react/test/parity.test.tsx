@@ -22,7 +22,7 @@ import { load } from "@speculoos/loader";
 import { buildOpenApi } from "@speculoos/openapi";
 import { buildAsyncApi } from "@speculoos/asyncapi";
 import { renderEndpoint, renderNav, renderOperation, renderTypes } from "@speculoos/html";
-import { Endpoint, EndpointList, Operation, SpeculoosProvider, TypeSections } from "../src/index.js";
+import { Endpoint, EntryList, Operation, SpeculoosProvider, TypeSections } from "../src/index.js";
 import { boxy } from "./fake.js";
 
 let rest: ApiIR;
@@ -107,7 +107,7 @@ describe("the same endpoints, two renderers", () => {
 
   it("navigates to the same places", () => {
     for (const ir of [rest, ws]) {
-      expect(hrefs(renderNav(ir))).toEqual(hrefs(viaReact(ir, <EndpointList />)));
+      expect(hrefs(renderNav(ir))).toEqual(hrefs(viaReact(ir, <EntryList />)));
     }
   });
 });

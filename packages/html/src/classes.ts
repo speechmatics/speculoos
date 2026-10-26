@@ -133,7 +133,7 @@ export const CLASSES: Record<string, readonly string[]> = {
   "group-body": [],
 
   /** The modifier says what the list is of. */
-  list: ["endpoints", "operations", "servers", "security", "tags", "callbacks", "links", "deprecated"],
+  list: ["entries", "operations", "servers", "security", "tags", "callbacks", "links", "deprecated"],
   "list-item": ["deprecated"],
   "server-variables": [],
   "server-variable": [],

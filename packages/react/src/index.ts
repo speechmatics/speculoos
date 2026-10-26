@@ -11,8 +11,8 @@
  *   ./context.tsx     `SpeculoosProvider` and the site-level options
  *   ./hooks.ts        `useFieldTree`, `useFieldRows`, `useOperation`, …
  *   ./fields.tsx      `SchemaTable` — a node as rows
- *   ./operation.tsx   `Endpoint` — a path or channel; `Operation` — either operation shape
- *   ./navigation.tsx  `EndpointList`, `OperationList`, `TypeSection`, `TypeSections`
+ *   ./operation.tsx   `Entry` — one reference entry; `Endpoint` — a path or channel; `Operation`
+ *   ./navigation.tsx  `EntryList`, `OperationList`, `TypeSection`, `TypeSections`
  */
 
 export {
@@ -31,6 +31,7 @@ export {
   useFieldRows,
   useEndpoint,
   useEndpoints,
+  useEntries,
   useOperation,
   useOperations,
   useTagGroups,
@@ -40,13 +41,19 @@ export {
 } from "./hooks.js";
 
 export { SchemaTable, FieldRows, DocsBody, type SchemaTableProps, type FieldRowsProps } from "./fields.js";
-export { Endpoint, Operation, type EndpointProps, type OperationProps } from "./operation.js";
 export {
-  EndpointList,
+  Endpoint,
+  Entry,
+  Operation,
+  type EndpointProps,
+  type EntryProps,
+  type OperationProps,
+} from "./operation.js";
+export {
+  EntryList,
   OperationList,
   TypeSection,
   TypeSections,
-  type EndpointListProps,
   type OperationListProps,
   type TypeSectionProps,
   type TypeSectionsProps,
@@ -73,3 +80,4 @@ export type {
   Tab,
   TabsProps,
 } from "./components.js";
+export type { ApiEntry } from "@speculoos/core";

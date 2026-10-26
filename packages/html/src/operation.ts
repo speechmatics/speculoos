@@ -14,6 +14,7 @@
 
 import { DIRECTION_LABEL, DIRECTION_VERB, parametersNode, propertiesNode } from "@speculoos/core";
 import type {
+  ApiEntry,
   ApiIR,
   Endpoint,
   Example,
@@ -467,16 +468,20 @@ export function renderEndpointById(id: string, ir: ApiIR, options: RenderEndpoin
 }
 
 export function endpointSection(c: Ctx, endpoint: Endpoint, level: number): Html {
+  // Headed like a REST operation: the title when there is one, with the
+  // protocol beside the address where a method would sit — "WSS /v2/{language}".
   const webhook = endpoint.operations.some((o) => o.kind === "request-response" && o.isWebhook);
+  const title = endpoint.docs.title;
   return section(
     c,
     {
       kind: "endpoint",
       id: endpoint.slug,
-      title: code(c, endpoint.address),
+      title: title !== undefined ? text(title) : code(c, endpoint.address),
       subtitle: inline(
         webhook ? badge(c, "note", text("webhook")) : undefined,
-        ...endpoint.protocols.map((protocol) => badge(c, "protocol", text(protocol), protocol)),
+        ...endpoint.protocols.map((protocol) => badge(c, "protocol", text(protocol.toUpperCase()), protocol)),
+        title !== undefined ? code(c, endpoint.address) : undefined,
       ),
       level,
     },
@@ -486,4 +491,18 @@ export function endpointSection(c: Ctx, endpoint: Endpoint, level: number): Html
       ? empty(c, "No operations")
       : join(endpoint.operations.map((operation) => operationSection(c, { endpoint, operation }, level + 1, true))),
   );
+}
+
+/**
+ * One API reference entry, as its page body: a REST operation standing alone,
+ * or a channel with its send and receive. What a site renders per page;
+ * iterate `apiEntries(ir)` from core to make one each.
+ */
+export function renderEntry(entry: ApiEntry, ir: ApiIR, options: RenderEndpointOptions = {}): Html {
+  const c: Ctx = { ir, o: resolve(options) };
+  return entrySection(c, entry, options.level ?? c.o.headingLevel);
+}
+
+export function entrySection(c: Ctx, entry: ApiEntry, level: number): Html {
+  return entry.kind === "operation" ? operationSection(c, entry, level) : endpointSection(c, entry.endpoint, level);
 }

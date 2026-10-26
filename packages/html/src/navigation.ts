@@ -7,13 +7,13 @@
  * dead anchors.
  */
 
-import { allOperations, groupByTag, listedEndpoints } from "@speculoos/core";
-import type { ApiIR, Endpoint, Operation, OperationEntry, TypeDef } from "@speculoos/core";
+import { allOperations, apiEntries, groupByTag } from "@speculoos/core";
+import type { ApiEntry, ApiIR, OperationEntry, TypeDef } from "@speculoos/core";
 import { h, text, type Html } from "./escape.js";
 import { schemaTable } from "./fields.js";
 import { resolve, type HtmlOptions } from "./options.js";
 import { badge, code, docsBody, inline, link, section, type Ctx } from "./parts.js";
-import { DIRECTION_LABEL, DIRECTION_VERB } from "@speculoos/core";
+import { DIRECTION_LABEL } from "@speculoos/core";
 
 /** The label a navigation entry shows: method and path, or direction and address. */
 function entryLabel(c: Ctx, entry: OperationEntry): Html {
@@ -31,26 +31,28 @@ function entryLabel(c: Ctx, entry: OperationEntry): Html {
 
 export interface NavOptions extends HtmlOptions {
   /**
-   * "endpoint": each path or channel, linking to itself, with its operations
-   * beneath. "tag": operations under the document's declared tags. "none": one
-   * flat list of operations. Default "endpoint".
+   * "entry": one link per REST operation and one per channel — the API
+   * reference's entries, see `apiEntries` in core. "tag": operations under the
+   * document's declared tags. "none": one flat list of operations. Default
+   * "entry".
    */
-  groupBy?: "endpoint" | "tag" | "none";
+  groupBy?: "entry" | "tag" | "none";
   level?: number;
 }
 
 /**
- * The index. Grouped by endpoint by default, matching `renderApi`: a path or
- * channel is the unit a reader looks for and the one a site most often gives a
- * page. "tag" keeps the document's declared order, for documents that use it.
+ * The index. By entry by default, matching `renderApi`: `POST /projects` and
+ * `WSS /v2/{language}` are the units a reader looks for and the ones a site
+ * gives a page. "tag" keeps the document's declared grouping, for documents
+ * that use it.
  */
 export function renderNav(ir: ApiIR, options: NavOptions = {}): Html {
   const c: Ctx = { ir, o: resolve(options) };
   const level = options.level ?? c.o.headingLevel;
-  const groupBy = options.groupBy ?? "endpoint";
+  const groupBy = options.groupBy ?? "entry";
 
-  if (groupBy === "endpoint") {
-    return h("nav", { class: c.o.cls("nav") }, endpointList(c, listedEndpoints(ir)));
+  if (groupBy === "entry") {
+    return h("nav", { class: c.o.cls("nav") }, entryList(c, apiEntries(ir)));
   }
   if (groupBy === "none") {
     return h("nav", { class: c.o.cls("nav") }, operationList(c, allOperations(ir)));
@@ -70,53 +72,51 @@ export function renderNav(ir: ApiIR, options: NavOptions = {}): Html {
 }
 
 /**
- * An operation's label under its endpoint: the mark and the title, without the
- * address the endpoint already shows. Mirrors `@speculoos/react`'s
- * `NestedOperationLabel`.
+ * An entry's label. A REST operation leads with its method and then its
+ * summary, falling back to its path; a channel leads with its protocol, where a
+ * method would stand, and then its title, falling back to its address. Mirrors
+ * `@speculoos/react`'s `EntryLabel`.
  */
-function nestedLabel(c: Ctx, operation: Operation): Html {
-  if (operation.kind === "request-response") {
+function apiEntryLabel(c: Ctx, entry: ApiEntry): Html {
+  if (entry.kind === "operation") {
+    const { endpoint, operation } = entry;
     return inline(
-      badge(c, "method", text(operation.method.toUpperCase()), operation.method),
-      operation.isWebhook ? badge(c, "note", text("webhook")) : undefined,
+      operation.kind === "request-response"
+        ? badge(c, "method", text(operation.method.toUpperCase()), operation.method)
+        : badge(c, "direction", text(DIRECTION_LABEL[operation.direction]), operation.direction),
+      operation.kind === "request-response" && operation.isWebhook ? badge(c, "note", text("webhook")) : undefined,
       operation.docs.title !== undefined
         ? h("span", { class: c.o.cls("nav-title") }, text(operation.docs.title))
-        : undefined,
+        : code(c, endpoint.address),
     );
   }
+  const { endpoint } = entry;
   return inline(
-    badge(c, "direction", text(DIRECTION_LABEL[operation.direction]), operation.direction),
-    h("span", { class: c.o.cls("nav-title") }, text(operation.docs.title ?? DIRECTION_VERB[operation.direction])),
+    ...endpoint.protocols.map((protocol) => badge(c, "protocol", text(protocol.toUpperCase()), protocol)),
+    endpoint.docs.title !== undefined
+      ? h("span", { class: c.o.cls("nav-title") }, text(endpoint.docs.title))
+      : code(c, endpoint.address),
   );
 }
 
-function endpointList(c: Ctx, endpoints: Endpoint[]): Html {
+function entryList(c: Ctx, entries: ApiEntry[]): Html {
   return h(
     "ul",
-    { class: c.o.cls("list", "endpoints") },
-    ...endpoints.map((endpoint) =>
-      h(
+    { class: c.o.cls("list", "entries") },
+    ...entries.map((entry) => {
+      const deprecated = entry.kind === "operation" && entry.operation.deprecated;
+      return h(
         "li",
-        { class: c.o.cls("list-item") },
-        link(c, { kind: "endpoint", id: endpoint.id, endpoint }, code(c, endpoint.address)),
-        endpoint.operations.length > 0
-          ? h(
-              "ul",
-              { class: c.o.cls("list", "operations") },
-              ...endpoint.operations.map((operation) =>
-                h(
-                  "li",
-                  {
-                    class: c.o.cls("list-item", operation.deprecated && "deprecated"),
-                    ...(operation.deprecated ? { "data-deprecated": true } : {}),
-                  },
-                  link(c, { kind: "operation", id: operation.id, operation, endpoint }, nestedLabel(c, operation)),
-                ),
-              ),
-            )
-          : undefined,
-      ),
-    ),
+        { class: c.o.cls("list-item", deprecated && "deprecated"), ...(deprecated ? { "data-deprecated": true } : {}) },
+        link(
+          c,
+          entry.kind === "operation"
+            ? { kind: "operation", id: entry.operation.id, operation: entry.operation, endpoint: entry.endpoint }
+            : { kind: "endpoint", id: entry.endpoint.id, endpoint: entry.endpoint },
+          apiEntryLabel(c, entry),
+        ),
+      );
+    }),
   );
 }
 

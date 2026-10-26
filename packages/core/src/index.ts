@@ -42,11 +42,14 @@ export {
 } from "./diagnostics.js";
 export {
   allOperations,
+  apiEntries,
+  entrySlug,
   groupByTag,
   listedEndpoints,
   replyAddress,
   resolveRef,
   walk,
+  type ApiEntry,
   type OperationEntry,
   type TagGroup,
 } from "./navigate.js";
