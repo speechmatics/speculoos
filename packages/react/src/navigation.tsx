@@ -15,6 +15,13 @@ import { useTagGroups } from "./hooks.js";
 import { DocsBody, SchemaTable } from "./fields.js";
 import { DIRECTION_LABEL } from "./labels.js";
 
+/**
+ * Method, path and title, as inline siblings with a space between each.
+ *
+ * The spaces are not styling. This label usually sits inside a `Link`, which
+ * is inline, so a map's layout cannot separate its parts — without them it
+ * reads "GET/jobsList jobs", which is what the Radix Themes map showed.
+ */
 function OperationLabel({ endpoint, operation }: { endpoint: Endpoint; operation: IROperation }): ReactNode {
   const C = useComponents();
   return (
@@ -25,8 +32,8 @@ function OperationLabel({ endpoint, operation }: { endpoint: Endpoint; operation
         <C.Badge tone="direction" value={operation.direction}>{DIRECTION_LABEL[operation.direction]}</C.Badge>
       )}
       {operation.kind === "request-response" && operation.isWebhook && (
-        <C.Badge tone="note">webhook</C.Badge>
-      )}
+        <> <C.Badge tone="note">webhook</C.Badge></>
+      )}{" "}
       <C.Code>{endpoint.address}</C.Code>
       {operation.docs.title !== undefined && <> {operation.docs.title}</>}
     </>

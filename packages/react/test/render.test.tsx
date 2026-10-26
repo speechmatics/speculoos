@@ -298,6 +298,13 @@ describe("OperationList", () => {
     expect(html).toContain('data-href="#create-job"');
   });
 
+  it("separates a label's method, path and title with spaces, not only with layout", () => {
+    // The label sits inside a Link, which is inline: no map can gap its parts.
+    const text = render(<OperationList />, rest).replace(/<[^>]+>/g, "");
+    expect(text).toContain("GET /jobs List jobs");
+    expect(text).toContain("POST webhook jobFinished");
+  });
+
   it("renames the untagged bucket when asked", () => {
     const html = render(<OperationList />, rest, boxy, { untaggedLabel: "Webhooks" });
     expect(html).toContain("<x-title>Webhooks</x-title>");
