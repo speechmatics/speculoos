@@ -120,5 +120,6 @@ SPECULOOS_SPEC=path/to/spec.yaml pnpm --filter @speculoos/map-radix-themes dev
 ```
 
 Every fixture through real Radix Themes, with layout and appearance switchable
-in the sidebar. "Pages: per-endpoint" routes each endpoint to its own page using
-nothing but an `href` function — what a site with a page per path would do. The dev server is not shipped.
+in the sidebar. "Pages: per-entry" routes each entry — a REST operation, or a
+channel with its send and receive — to its own page using nothing but an `href`
+function, as a Fern-style reference would. The dev server is not shipped.

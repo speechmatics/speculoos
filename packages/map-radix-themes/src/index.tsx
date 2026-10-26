@@ -84,7 +84,7 @@ const HEADING_SIZE = { 1: "8", 2: "6", 3: "5", 4: "4", 5: "3", 6: "2" } as const
 const MAJOR: ReadonlySet<SectionKind> = new Set(["api", "tag", "endpoint", "operation", "type"]);
 
 const LIST_GAP: Record<ListProps["kind"], "1" | "2" | "3"> = {
-  endpoints: "3",
+  entries: "2",
   operations: "2",
   servers: "3",
   security: "2",
@@ -248,9 +248,8 @@ export function radixThemes(options: RadixThemesOptions): Components {
   }
 
   /**
-   * A column of items. A list inside a list item — an endpoint's operations
-   * under its address — takes the full width, so it starts on its own line,
-   * and indents.
+   * A column of items. A list inside a list item takes the full width, so it
+   * starts on its own line, and indents.
    */
   function List({ kind, children }: ListProps): ReactNode {
     const nested = useContext(InList);

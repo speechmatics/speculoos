@@ -973,6 +973,11 @@ channel once with its operations beneath, headed "Send" / "Receive" for messages
 HTML renderer groups by endpoint by default. Parity extends to endpoints. §13 of the M6
 plan.
 
+*Then entries became the unit.* A reference's page and sidebar unit is verb + address: one
+per REST operation (`POST /projects`), one per channel (`WSS /v2/{language}`, holding its
+send and receive). `apiEntries` in core, `<Entry>` / `<EntryList>` / `useEntries` in React,
+`renderEntry` and `groupBy: "entry"` in HTML; `EndpointList` is gone. §14 of the M6 plan.
+
 **Post-1.0:** example synthesis and code samples (OD-2); further framework bindings; an
 MDX/Docusaurus/Astro integration package; a playground app.
 

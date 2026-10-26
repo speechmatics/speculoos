@@ -328,7 +328,7 @@ missing keys but does **not** validate DOM nesting; only react-dom's client does
 So nesting has its own structural test (now on `<dl>`), and the dev server's
 browser console was checked clean in every fixture and mode.
 
-## 13. Endpoints as the unit
+## 13. Endpoints as the unit (partly superseded — see §14)
 
 *Also surfaced by looking at the map, and wider than the map: it changed both
 renderers.*
@@ -387,3 +387,41 @@ for sidebar sections (Swagger UI, Redoc) and per-tag client classes, typically
 spanning several paths. Still supported (`groupBy: "tag"`, `OperationList`), but
 no longer a default anywhere, and nothing more is built for them until there is a
 UI use case — most likely section headings over endpoint pages.
+
+## 14. Entries, not endpoints, are the page unit
+
+*§13 made the endpoint the page unit for both dialects. That conflated two things.*
+
+**The model.** Reference sites like Fern list one sidebar entry, and one page, per
+REST operation — `POST /projects` — and one per WebSocket channel, `WSS /realtime`,
+whose page holds its send and receive. So the key is *verb + address*, where for a
+channel the protocol is the verb. The asymmetry is real: a request/response pair is
+self-contained, while a channel's operations only make sense together, as the two
+directions of one connection. On the page, a channel's send/receive play the part a
+REST operation's request/response play.
+
+**What changed** — small, because both page bodies already existed:
+
+- Core: `ApiEntry` = `{ kind: "operation", endpoint, operation }` for each operation
+  on a path (webhooks included) | `{ kind: "channel", endpoint }` for each channel
+  with operations. `apiEntries(ir)` lists them in document order, on top of
+  `listedEndpoints`; `entrySlug(entry)` is the anchor.
+- React: `useEntries()`, `<Entry>` (renders `<Operation>` or `<Endpoint>`), and
+  `<EntryList>`, which **replaces `EndpointList`**. HTML: `renderEntry`; `renderApi`
+  and `renderNav` default to `groupBy: "entry"`. `ListProps.kind` and the HTML
+  catalogue's `"endpoints"` list became `"entries"`.
+- Labels follow Fern: a REST entry is method + summary, falling back to the path; a
+  channel is protocol + title, falling back to the address.
+- A channel's page is now headed like a REST operation's: its title when it has one,
+  with `WSS /v2/{language}` beside it as `POST /jobs` would be.
+- Unchanged: `<Endpoint>` (now the channel page, and still usable for a whole REST
+  path), Send/Receive headings, the endpoint link target, `listedEndpoints`,
+  `replyAddress`. The link targets needed nothing new: an operation's target already
+  carries its endpoint, so one `href` sends a channel's operation to the channel's
+  page and anchor.
+
+**Tags, again.** Fern's categories are tags in all but name, so the parked UI use
+case is now concrete: category headings over the entry list. REST entries would take
+their operation's tags; a channel its own or its operations'. Still parked until the
+flat list has been used.
+

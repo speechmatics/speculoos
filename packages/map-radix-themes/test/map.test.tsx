@@ -23,7 +23,7 @@ import { buildAsyncApi } from "@speculoos/asyncapi";
 import { allOperations, type ApiIR } from "@speculoos/core";
 import {
   Endpoint,
-  EndpointList,
+  EntryList,
   Operation,
   OperationList,
   SpeculoosProvider,
@@ -72,7 +72,7 @@ function render(ui: ReactNode, api: ApiIR, components: Components, options?: Spe
 
 const everything = (api: ApiIR) => (
   <>
-    <EndpointList />
+    <EntryList />
     {api.endpoints.map((endpoint) => (
       <Endpoint key={endpoint.id} endpoint={endpoint} />
     ))}

@@ -9,12 +9,13 @@ import ReactMarkdown from "react-markdown";
 import rehypeSanitize from "rehype-sanitize";
 import { Box, Code, Flex, Heading, Link, ScrollArea, SegmentedControl, Select, Separator, Text, Theme } from "@radix-ui/themes";
 import "@radix-ui/themes/styles.css";
+import { entrySlug } from "@speculoos/core";
 import {
-  Endpoint,
-  EndpointList,
+  Entry,
+  EntryList,
   SpeculoosProvider,
   TypeSections,
-  useEndpoints,
+  useEntries,
   useSpeculoos,
   type HrefTarget,
   type MarkdownProps,
@@ -60,7 +61,7 @@ function useParam<T extends string>(key: string, initial: T): [T, (value: T) => 
   return [value, set];
 }
 
-type Pages = "one" | "per-endpoint";
+type Pages = "one" | "per-entry";
 
 /**
  * A URL in this dev page, keeping the current settings and changing `page`.
@@ -73,17 +74,24 @@ function pageUrl(page: string, hash?: string): string {
 }
 
 /**
- * One page per endpoint, plus a page of types, from nothing but an `href`
- * function. This is the whole of the routing story: Speculoos asks where each
- * target lives, and the site answers. An operation's target carries its
- * endpoint, so "that endpoint's page, at this operation" needs no lookup.
+ * One page per API reference entry — `POST /projects`, `WSS /v2/{language}` —
+ * plus a page of types, from nothing but an `href` function. Speculoos asks
+ * where each target lives and the site answers. A REST operation is a page; an
+ * operation on a channel lives on its channel's page, at its own anchor.
  */
-const perEndpointHref = (target: HrefTarget): string | undefined => {
+const perEntryHref = (target: HrefTarget): string | undefined => {
   switch (target.kind) {
     case "endpoint":
-      return pageUrl(target.endpoint.slug);
+      // A channel is a page. A REST path is not, so it goes to its first operation.
+      return target.endpoint.addressKind === "channel"
+        ? pageUrl(target.endpoint.slug)
+        : target.endpoint.operations[0] === undefined
+          ? undefined
+          : pageUrl(target.endpoint.operations[0].slug);
     case "operation":
-      return pageUrl(target.endpoint.slug, target.operation.slug);
+      return target.endpoint.addressKind === "channel"
+        ? pageUrl(target.endpoint.slug, target.operation.slug)
+        : pageUrl(target.operation.slug);
     case "type":
       return target.def === undefined ? undefined : pageUrl("types", target.def.slug);
     case "tag":
@@ -93,17 +101,17 @@ const perEndpointHref = (target: HrefTarget): string | undefined => {
   }
 };
 
-/** Everything on one page: every endpoint, then every type. */
+/** Everything on one page: every entry, then every type. */
 function OnePage(): ReactNode {
   const { ir } = useSpeculoos();
-  const endpoints = useEndpoints();
+  const entries = useEntries();
   return (
     <>
       <Heading as="h1" size="8">
         {ir.info.title} <Text color="gray">{ir.info.version}</Text>
       </Heading>
-      {endpoints.map((endpoint) => (
-        <Endpoint key={endpoint.id} endpoint={endpoint} />
+      {entries.map((entry) => (
+        <Entry key={entrySlug(entry)} entry={entry} />
       ))}
       <Separator size="4" my="7" />
       <Heading as="h2" size="7">
@@ -114,9 +122,9 @@ function OnePage(): ReactNode {
   );
 }
 
-/** One endpoint, or the types, as its own page — what a routed site would render. */
+/** One entry, or the types, as its own page — what a routed site would render. */
 function RoutedPage({ page }: { page: string }): ReactNode {
-  const endpoints = useEndpoints();
+  const entries = useEntries();
   if (page === "types") {
     return (
       <>
@@ -127,8 +135,8 @@ function RoutedPage({ page }: { page: string }): ReactNode {
       </>
     );
   }
-  const endpoint = endpoints.find((e) => e.slug === page) ?? endpoints[0];
-  return endpoint === undefined ? <Text>No endpoints.</Text> : <Endpoint endpoint={endpoint} level={1} />;
+  const entry = entries.find((e) => entrySlug(e) === page) ?? entries[0];
+  return entry === undefined ? <Text>No entries.</Text> : <Entry entry={entry} level={1} />;
 }
 
 function App(): ReactNode {
@@ -141,7 +149,7 @@ function App(): ReactNode {
   const current = specs.find((s) => s.name === spec) ?? specs[0];
   const components = useMemo(() => radixThemes({ markdown: Markdown }), []);
   const options = useMemo(
-    () => (pages === "per-endpoint" ? { layout, href: perEndpointHref } : { layout }),
+    () => (pages === "per-entry" ? { layout, href: perEntryHref } : { layout }),
     [layout, pages],
   );
   // A routed page that was scrolled to an anchor before React rendered it.
@@ -168,19 +176,19 @@ function App(): ReactNode {
                     ))}
                   </Select.Content>
                 </Select.Root>
-                <Control label="Pages" value={pages} values={["one", "per-endpoint"]} onChange={setPages} />
+                <Control label="Pages" value={pages} values={["one", "per-entry"]} onChange={setPages} />
                 <Control label="Layout" value={layout} values={["tree", "rows"]} onChange={setLayout} />
                 <Control label="Appearance" value={appearance} values={["light", "dark"]} onChange={setAppearance} />
                 <Separator size="4" />
-                <EndpointList />
-                {pages === "per-endpoint" && <Link href={pageUrl("types")}>Types</Link>}
+                <EntryList />
+                {pages === "per-entry" && <Link href={pageUrl("types")}>Types</Link>}
               </Flex>
             </ScrollArea>
           </Box>
           <Box flexGrow="1">
             <ScrollArea>
               <Box p="6" maxWidth="1100px">
-                {pages === "per-endpoint" ? <RoutedPage page={page} /> : <OnePage />}
+                {pages === "per-entry" ? <RoutedPage page={page} /> : <OnePage />}
               </Box>
             </ScrollArea>
           </Box>
