@@ -21,6 +21,10 @@ export type HrefTarget =
   // it, so a link target legitimately arrives with nothing behind it.
   | { kind: "type"; id: TypeId; def?: TypeDef | undefined }
   | { kind: "operation"; id: string; operation: Operation; endpoint: Endpoint }
+  // A path or channel, with every operation on it. The unit a site most often
+  // gives a page of its own — so an operation's `endpoint` is also how its href
+  // can say "that page, at this anchor".
+  | { kind: "endpoint"; id: string; endpoint: Endpoint }
   | { kind: "tag"; name: string; def?: TagDef | undefined }
   | { kind: "external"; url: string };
 
@@ -38,6 +42,8 @@ export function defaultHref(target: HrefTarget): string | undefined {
       return target.def ? `#${target.def.slug}` : undefined;
     case "operation":
       return `#${target.operation.slug}`;
+    case "endpoint":
+      return `#${target.endpoint.slug}`;
     case "tag":
       return `#${slugify(target.name)}`;
     case "external":

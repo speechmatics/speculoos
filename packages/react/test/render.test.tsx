@@ -7,6 +7,8 @@ import { buildOpenApi } from "@speculoos/openapi";
 import { buildAsyncApi } from "@speculoos/asyncapi";
 import type { ApiIR, TypeDef } from "@speculoos/core";
 import {
+  Endpoint,
+  EndpointList,
   Operation,
   OperationList,
   SchemaTable,
@@ -346,6 +348,94 @@ describe("options", () => {
       maxDepth: 1,
     });
     expect(shallow).toContain('data-href="#transcription-config"');
+  });
+});
+
+describe("Endpoint", () => {
+  const count = (html: string, needle: string) => html.split(needle).length - 1;
+  const text = (html: string) => html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
+
+  it("heads a channel with its address and shows what it shares once", () => {
+    const html = render(<Endpoint id="/v2/{language}" />, ws);
+    expect(html).toContain('<x-section data-kind="endpoint" data-level="2" id="v2-language"><x-title><x-code>/v2/{language}</x-code>');
+    // The channel's own description. Before <Endpoint> nothing rendered it.
+    expect(html).toContain("<x-md>The transcription socket.</x-md>");
+    expect(count(html, "Address parameters")).toBe(1);
+    expect(count(html, ">wss</x-badge>")).toBe(1);
+  });
+
+  it("heads a channel's operations by what the reader does, with the title beside", () => {
+    const t = text(render(<Endpoint id="/v2/{language}" />, ws));
+    expect(t).toContain("Send client → server Messages the client sends.");
+    expect(t).toContain("Receive server → client Messages the server sends.");
+  });
+
+  it("heads a path's operations by their titles, without repeating the path", () => {
+    const html = render(<Endpoint id="/jobs" />, rest);
+    expect(count(html, "<x-code>/jobs</x-code>")).toBe(1);
+    expect(html).toContain('<x-title>List jobs</x-title><x-subtitle><x-badge data-tone="method">GET</x-badge>');
+    // A path-level header parameter, shown once on the endpoint rather than in
+    // each of its two operations.
+    expect(count(html, ">X-Request-Id<")).toBe(1);
+  });
+
+  it("nests operation headings one level below the endpoint", () => {
+    const html = render(<Endpoint id="/jobs" />, rest, boxy, { headingLevel: 3 });
+    expect(html).toMatch(/data-kind="endpoint" data-level="3"/);
+    expect(html).toMatch(/data-kind="operation" data-level="4" id="list-jobs"/);
+  });
+
+  it("covers every operation exactly once across every endpoint", () => {
+    for (const ir of [rest, ws]) {
+      const html = render(<>{ir.endpoints.map((e) => <Endpoint key={e.id} endpoint={e} />)}</>, ir);
+      for (const e of ir.endpoints) for (const o of e.operations) expect(count(html, `id="${o.slug}"`)).toBe(1);
+    }
+  });
+
+  it("leaves a standalone Operation as it was, address and shared parameters included", () => {
+    const html = render(<Operation id="listJobs" />, rest);
+    expect(html).toContain("<x-code>/jobs</x-code>");
+    expect(html).toContain(">X-Request-Id<");
+  });
+
+  it("falls back to Empty for an unknown id", () => {
+    expect(render(<Endpoint id="nope" />, rest)).toContain("<x-empty>No endpoint nope</x-empty>");
+  });
+});
+
+describe("EndpointList", () => {
+  it("links each endpoint, then its operations, without repeating the address", () => {
+    const html = render(<EndpointList />, rest);
+    expect(html).toContain('data-href="#jobs"');
+    expect(html).toContain('data-href="#list-jobs"');
+    const t = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
+    expect(t).toContain("/jobs GET List jobs POST Create a job");
+  });
+
+  it("names a channel's untitled operations by what the reader does", () => {
+    const untitled: ApiIR = {
+      ...ws,
+      endpoints: ws.endpoints.map((e) => ({
+        ...e,
+        operations: e.operations.map((o) => ({ ...o, docs: {} })),
+      })),
+    };
+    const t = render(<EndpointList />, untitled).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
+    expect(t).toContain("client → server Send");
+    expect(t).toContain("server → client Receive");
+  });
+
+  it("leaves out a reply-only address, which the operation expecting the reply already names", async () => {
+    const reply = buildAsyncApi({
+      project: await load({ root: specDir, documents: [{ name: "rt", path: "reply-v3.yaml" }] }),
+    });
+    expect(render(<EndpointList />, reply)).not.toContain("/pong");
+    expect(render(<Endpoint id="ping" />, reply)).toContain("Reply on /pong");
+    expect(render(<Endpoint id="pong" />, reply)).toContain("<x-empty>No operations</x-empty>");
+  });
+
+  it("lists addresses alone when asked", () => {
+    expect(render(<EndpointList addressesOnly />, rest)).not.toContain("List jobs");
   });
 });
 

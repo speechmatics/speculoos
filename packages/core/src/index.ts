@@ -24,6 +24,7 @@ export {
   typeLabel,
   formatValue,
   DIRECTION_LABEL,
+  DIRECTION_VERB,
   type LabelContext,
   type LabelOptions,
 } from "./label.js";
@@ -42,6 +43,8 @@ export {
 export {
   allOperations,
   groupByTag,
+  listedEndpoints,
+  replyAddress,
   resolveRef,
   walk,
   type OperationEntry,

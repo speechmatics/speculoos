@@ -182,7 +182,7 @@ export interface TabsProps {
 }
 
 export interface ListProps {
-  kind: "operations" | "servers" | "security" | "tags" | "callbacks" | "links";
+  kind: "endpoints" | "operations" | "servers" | "security" | "tags" | "callbacks" | "links";
   children: ReactNode;
 }
 

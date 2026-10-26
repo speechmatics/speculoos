@@ -10,9 +10,11 @@ import { useMemo } from "react";
 import {
   allOperations,
   groupByTag,
+  listedEndpoints,
   toRows,
   toTree,
   typeLabel,
+  type Endpoint,
   type FieldNode,
   type LabelOptions,
   type Node,
@@ -65,6 +67,22 @@ export function useFieldRows(node: Node, opts?: FieldOptions): FieldNode[] {
 export function useOperation(id: string): OperationEntry | undefined {
   const { ir } = useSpeculoos();
   return useMemo(() => allOperations(ir).find((e) => e.operation.id === id), [ir, id]);
+}
+
+/**
+ * Every endpoint with at least one operation — path or channel — in document
+ * order. One page each, if a site wants that. An endpoint with no operations
+ * (a reply-only address) is left out; see `listedEndpoints` in core.
+ */
+export function useEndpoints(): Endpoint[] {
+  const { ir } = useSpeculoos();
+  return useMemo(() => listedEndpoints(ir), [ir]);
+}
+
+/** Looks an endpoint up by id: the path, the channel id, or "webhook:name". */
+export function useEndpoint(id: string): Endpoint | undefined {
+  const { ir } = useSpeculoos();
+  return useMemo(() => ir.endpoints.find((e) => e.id === id), [ir, id]);
 }
 
 /** Every operation in document order. */

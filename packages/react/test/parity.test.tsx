@@ -21,8 +21,8 @@ import { specDir } from "@speculoos/fixtures";
 import { load } from "@speculoos/loader";
 import { buildOpenApi } from "@speculoos/openapi";
 import { buildAsyncApi } from "@speculoos/asyncapi";
-import { renderOperation, renderTypes } from "@speculoos/html";
-import { Operation, SpeculoosProvider, TypeSections } from "../src/index.js";
+import { renderEndpoint, renderNav, renderOperation, renderTypes } from "@speculoos/html";
+import { Endpoint, EndpointList, Operation, SpeculoosProvider, TypeSections } from "../src/index.js";
 import { boxy } from "./fake.js";
 
 let rest: ApiIR;
@@ -90,6 +90,25 @@ describe("the same operations, two renderers", () => {
       0,
     );
     expect(total).toBeGreaterThan(20);
+  });
+});
+
+describe("the same endpoints, two renderers", () => {
+  it("shows the same fields and links in every endpoint of both dialects", () => {
+    for (const ir of [rest, ws]) {
+      for (const endpoint of ir.endpoints) {
+        const react = viaReact(ir, <Endpoint endpoint={endpoint} />);
+        const html = renderEndpoint(endpoint, ir);
+        expect(keys(html), endpoint.id).toEqual(keys(react));
+        expect(hrefs(html), endpoint.id).toEqual(hrefs(react));
+      }
+    }
+  });
+
+  it("navigates to the same places", () => {
+    for (const ir of [rest, ws]) {
+      expect(hrefs(renderNav(ir))).toEqual(hrefs(viaReact(ir, <EndpointList />)));
+    }
   });
 });
 

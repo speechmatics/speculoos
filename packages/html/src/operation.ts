@@ -1,5 +1,6 @@
 /**
- * One operation, whichever dialect it came from.
+ * One operation, whichever dialect it came from — and one endpoint, a path or
+ * channel with every operation on it.
  *
  * The two operation shapes stay distinct all the way to the page: a
  * request/response operation has a method, a body and statuses; a message
@@ -11,12 +12,13 @@
  * the second renderer exists to test.
  */
 
-import { DIRECTION_LABEL, parametersNode, propertiesNode } from "@speculoos/core";
+import { DIRECTION_LABEL, DIRECTION_VERB, parametersNode, propertiesNode } from "@speculoos/core";
 import type {
   ApiIR,
   Endpoint,
   Example,
   MediaVariant,
+  MessageOperation,
   Operation,
   OperationEntry,
   Parameter,
@@ -24,7 +26,7 @@ import type {
   SecurityRequirements,
   WsMessage,
 } from "@speculoos/core";
-import { allOperations } from "@speculoos/core";
+import { allOperations, replyAddress } from "@speculoos/core";
 import { h, join, text, type Html } from "./escape.js";
 import { schemaTable } from "./fields.js";
 import { resolve, type HtmlOptions } from "./options.js";
@@ -128,13 +130,24 @@ function security(c: Ctx, requirements: SecurityRequirements, level: number): Ht
   );
 }
 
-function parameters(c: Ctx, endpoint: Endpoint, operation: Operation, level: number): Html {
-  // Endpoint parameters come first: they are shared by every operation here, so
-  // they are the ones a reader has probably already met.
-  const all = [
-    ...endpoint.parameters,
-    ...(operation.kind === "request-response" ? operation.parameters : []),
-  ];
+/**
+ * Which parameters an operation section shows. Standing alone, it shows the
+ * endpoint's as well as its own — endpoint ones first, since they are shared by
+ * every operation there and a reader has probably met them already. Under an
+ * endpoint section, which has shown the shared ones once, only its own.
+ */
+function operationParameters(endpoint: Endpoint, operation: Operation, nested: boolean): Parameter[] {
+  const own = operation.kind === "request-response" ? operation.parameters : [];
+  return nested ? own : [...endpoint.parameters, ...own];
+}
+
+function parameters(
+  c: Ctx,
+  endpoint: Endpoint,
+  all: Parameter[],
+  source: Operation["source"],
+  level: number,
+): Html {
   if (all.length === 0) return "";
   return join(
     PARAM_GROUPS.map(({ in: location, title, channelTitle }) => {
@@ -145,7 +158,7 @@ function parameters(c: Ctx, endpoint: Endpoint, operation: Operation, level: num
       return section(
         c,
         { kind: "parameters", title: text(heading), level },
-        schemaTable(c, parametersNode(members, operation.source), {
+        schemaTable(c, parametersNode(members, source), {
           kind: "parameters",
           expandRefs: "always",
           location,
@@ -276,21 +289,53 @@ function links(c: Ctx, operation: Operation, level: number): Html {
   );
 }
 
-function subtitle(c: Ctx, endpoint: Endpoint, operation: Operation): Html {
-  if (operation.kind === "request-response") {
-    return inline(
-      badge(c, "method", text(operation.method.toUpperCase()), operation.method),
-      // `endpoint.id` namespaces a webhook as "webhook:name" so it cannot
-      // collide with a path. That is identity, not a label, so the page gets
-      // the address and a badge saying which it is.
-      operation.isWebhook ? badge(c, "note", text("webhook")) : undefined,
-      code(c, endpoint.address),
-    );
+/**
+ * The heading and the marks beside it.
+ *
+ * Standing alone, an operation is headed by its title, with the method or
+ * direction and the address beside it. Under an endpoint section, the address
+ * is the endpoint's heading, so it is not repeated: a REST operation is headed
+ * by its title (or its method), and a message operation by what the reader
+ * does — "Send", "Receive" — because that is what tells a channel's operations
+ * apart. Mirrors `@speculoos/react`'s `useHeading`.
+ */
+function heading(c: Ctx, endpoint: Endpoint, operation: Operation, nested: boolean): { title: Html; subtitle: Html } {
+  const mark =
+    operation.kind === "request-response"
+      ? inline(
+          badge(c, "method", text(operation.method.toUpperCase()), operation.method),
+          // `endpoint.id` namespaces a webhook as "webhook:name" so it cannot
+          // collide with a path. That is identity, not a label, so the page gets
+          // the address and a badge saying which it is.
+          operation.isWebhook ? badge(c, "note", text("webhook")) : undefined,
+        )
+      : badge(c, "direction", text(DIRECTION_LABEL[operation.direction]), operation.direction);
+  if (!nested) {
+    return { title: text(operation.docs.title ?? operation.id), subtitle: inline(mark, code(c, endpoint.address)) };
   }
-  return inline(
-    badge(c, "direction", text(DIRECTION_LABEL[operation.direction]), operation.direction),
-    code(c, endpoint.address),
-  );
+  if (operation.kind === "request-response") {
+    return { title: text(operation.docs.title ?? operation.method.toUpperCase()), subtitle: mark };
+  }
+  return {
+    title: text(DIRECTION_VERB[operation.direction]),
+    subtitle: inline(mark, operation.docs.title !== undefined ? text(operation.docs.title) : undefined),
+  };
+}
+
+/** "Reply on /pong", or "Reply" when it arrives on the operation's own channel. */
+function replyTitle(reply: NonNullable<MessageOperation["reply"]>, ir: ApiIR): string {
+  const where = replyAddress(reply, ir);
+  return where === undefined ? "Reply" : `Reply on ${where}`;
+}
+
+function protocols(c: Ctx, endpoint: Endpoint): Html {
+  return endpoint.protocols.length > 0
+    ? h(
+        "p",
+        { class: c.o.cls("protocols") },
+        inline(...endpoint.protocols.map((protocol) => badge(c, "protocol", text(protocol), protocol))),
+      )
+    : "";
 }
 
 export interface RenderOperationOptions extends HtmlOptions {
@@ -320,9 +365,14 @@ export function renderOperationById(
   return operationSection(c, entry, options.level ?? c.o.headingLevel);
 }
 
-/** The internal form, so nested callbacks reuse one resolved context. */
-export function operationSection(c: Ctx, entry: OperationEntry, level: number): Html {
+/**
+ * The internal form, so nested callbacks reuse one resolved context. `nested`
+ * is set under an endpoint section, which has already shown the address,
+ * protocols and shared parameters.
+ */
+export function operationSection(c: Ctx, entry: OperationEntry, level: number, nested = false): Html {
   const { endpoint, operation } = entry;
+  const { title, subtitle } = heading(c, endpoint, operation, nested);
 
   // An operation with no security of its own inherits the document default.
   // Showing the inherited one is the point: "which key do I send" must be
@@ -334,21 +384,15 @@ export function operationSection(c: Ctx, entry: OperationEntry, level: number): 
     {
       kind: "operation",
       id: operation.slug,
-      title: text(operation.docs.title ?? operation.id),
-      subtitle: subtitle(c, endpoint, operation),
+      title,
+      subtitle,
       level,
       deprecated: operation.deprecated,
     },
     docsBody(c, operation.docs),
-    endpoint.protocols.length > 0
-      ? h(
-          "p",
-          { class: c.o.cls("protocols") },
-          inline(...endpoint.protocols.map((protocol) => badge(c, "protocol", text(protocol), protocol))),
-        )
-      : undefined,
+    nested ? undefined : protocols(c, endpoint),
     security(c, requirements, level + 1),
-    parameters(c, endpoint, operation, level + 1),
+    parameters(c, endpoint, operationParameters(endpoint, operation, nested), operation.source, level + 1),
     operation.kind === "request-response"
       ? join([
           operation.requestBody !== undefined
@@ -387,12 +431,59 @@ export function operationSection(c: Ctx, entry: OperationEntry, level: number): 
                 c,
                 operation.reply.messages,
                 level + 1,
-                operation.reply.address === undefined
-                  ? "Reply"
-                  : `Reply on ${operation.reply.address}`,
+                replyTitle(operation.reply, c.ir),
                 "reply",
               )
             : undefined,
         ]),
+  );
+}
+
+export interface RenderEndpointOptions extends HtmlOptions {
+  /** Heading level for the endpoint's own section. Defaults to `headingLevel`. */
+  level?: number;
+}
+
+/**
+ * A path or channel, with every operation on it.
+ *
+ * The address is the heading, and what every operation there shares — the
+ * protocol, the endpoint's own description, its parameters — is shown once,
+ * above them. This is the unit a site most often gives a page of its own: one
+ * REST path, or one WebSocket channel with its send and receive. Iterate
+ * `listedEndpoints(ir)` (from core) to make one each.
+ */
+export function renderEndpoint(endpoint: Endpoint, ir: ApiIR, options: RenderEndpointOptions = {}): Html {
+  const c: Ctx = { ir, o: resolve(options) };
+  return endpointSection(c, endpoint, options.level ?? c.o.headingLevel);
+}
+
+/** Looks an endpoint up by id: the path, the channel id, or "webhook:name". */
+export function renderEndpointById(id: string, ir: ApiIR, options: RenderEndpointOptions = {}): Html {
+  const c: Ctx = { ir, o: resolve(options) };
+  const endpoint = ir.endpoints.find((e) => e.id === id);
+  if (endpoint === undefined) return empty(c, `No endpoint ${id}`);
+  return endpointSection(c, endpoint, options.level ?? c.o.headingLevel);
+}
+
+export function endpointSection(c: Ctx, endpoint: Endpoint, level: number): Html {
+  const webhook = endpoint.operations.some((o) => o.kind === "request-response" && o.isWebhook);
+  return section(
+    c,
+    {
+      kind: "endpoint",
+      id: endpoint.slug,
+      title: code(c, endpoint.address),
+      subtitle: inline(
+        webhook ? badge(c, "note", text("webhook")) : undefined,
+        ...endpoint.protocols.map((protocol) => badge(c, "protocol", text(protocol), protocol)),
+      ),
+      level,
+    },
+    docsBody(c, endpoint.docs),
+    parameters(c, endpoint, endpoint.parameters, endpoint.source, level + 1),
+    endpoint.operations.length === 0
+      ? empty(c, "No operations")
+      : join(endpoint.operations.map((operation) => operationSection(c, { endpoint, operation }, level + 1, true))),
   );
 }

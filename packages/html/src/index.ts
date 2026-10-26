@@ -19,7 +19,14 @@
  */
 
 export { renderApi, type RenderApiOptions } from "./api.js";
-export { renderOperation, renderOperationById, type RenderOperationOptions } from "./operation.js";
+export {
+  renderEndpoint,
+  renderEndpointById,
+  renderOperation,
+  renderOperationById,
+  type RenderEndpointOptions,
+  type RenderOperationOptions,
+} from "./operation.js";
 export { renderNav, renderType, renderTypes, type NavOptions, type TypeOptions } from "./navigation.js";
 export { renderSchema, type SchemaOptions } from "./fields.js";
 export { CLASSES, INTEROP_CLASSES, classNames } from "./classes.js";

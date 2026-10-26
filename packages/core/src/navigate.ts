@@ -7,7 +7,7 @@
  * operation would mean two places to keep in sync, so the pair is the unit.
  */
 
-import type { ApiIR, Endpoint, Operation, TagDef } from "./document.js";
+import type { ApiIR, Endpoint, MessageOperation, Operation, TagDef } from "./document.js";
 import type { Node, TypeDef, TypeId, TypeRegistry } from "./schema.js";
 
 /** An operation together with the endpoint it hangs off. */
@@ -20,6 +20,39 @@ export interface TagGroup {
   /** Synthesised for operations carrying no tag; `source` points at the document. */
   tag: TagDef;
   entries: OperationEntry[];
+}
+
+/**
+ * The endpoints worth listing: those with at least one operation, in document
+ * order.
+ *
+ * An endpoint with none has nothing a reader can do there. The usual case is
+ * an AsyncAPI 3 reply address — `reply.channel` names a channel that exists
+ * only for a reply to land on — and the reply is already shown, messages and
+ * address, inside the operation that expects it. Listing it again would be a
+ * section saying "No operations". It is left out of listings only: it is still
+ * in `ir.endpoints`, and still renders when asked for by id.
+ */
+export function listedEndpoints(ir: Pick<ApiIR, "endpoints">): Endpoint[] {
+  return ir.endpoints.filter((endpoint) => endpoint.operations.length > 0);
+}
+
+/**
+ * Where a reply arrives, for a reader: the runtime address when the spec gives
+ * one (`$message.header#/replyTo`), else the address of the channel it names.
+ *
+ * The second case matters because that channel is usually reply-only and so
+ * left out of `listedEndpoints` — this heading is then the one place the page
+ * says where the reply lands. Undefined when the reply arrives on the
+ * operation's own channel.
+ */
+export function replyAddress(
+  reply: NonNullable<MessageOperation["reply"]>,
+  ir: Pick<ApiIR, "endpoints">,
+): string | undefined {
+  if (reply.address !== undefined) return reply.address;
+  if (reply.channel === undefined) return undefined;
+  return ir.endpoints.find((e) => e.id === reply.channel)?.address;
 }
 
 /** Every operation in the document, in endpoint then source order. */

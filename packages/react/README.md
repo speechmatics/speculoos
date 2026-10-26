@@ -14,12 +14,42 @@ a component map you supply.
 
 ```tsx
 <SpeculoosProvider ir={ir} components={components} options={{ maxDepth: 2 }}>
-  <OperationList />
+  <EndpointList />
+  <Endpoint id="/jobs" />
   <Operation id="createJob" />
   <SchemaTable typeId="batch#/components/schemas/TranscriptionConfig" />
   <TypeSections />
 </SpeculoosProvider>
 ```
+
+## Endpoints
+
+An `<Endpoint>` is a path or a channel with every operation on it: the address
+is the heading, and what the operations share — protocol, description,
+parameters — is shown once above them. Under it, a REST operation is headed by
+its summary and a message operation by what the reader does, "Send" or
+"Receive". It is the unit most sites give a page of its own, so routing one page
+per endpoint is two pieces:
+
+```tsx
+// Pages: one per endpoint that has operations (listedEndpoints, from @speculoos/core).
+listedEndpoints(ir).map((e) => ({ path: `/api/${e.slug}`, render: () => <Endpoint endpoint={e} /> }));
+
+// Links: tell Speculoos where things live. An operation's target carries its
+// endpoint, so it can point at that page's anchor.
+const href = (t: HrefTarget) =>
+  t.kind === "endpoint" ? `/api/${t.endpoint.slug}`
+  : t.kind === "operation" ? `/api/${t.endpoint.slug}#${t.operation.slug}`
+  : t.kind === "type" && t.def ? `/api/types#${t.def.slug}`
+  : t.kind === "external" ? t.url
+  : undefined;
+```
+
+`<EndpointList>` is the matching navigation. Listings — it, `useEndpoints`,
+`listedEndpoints` — leave out endpoints with no operations, such as an AsyncAPI
+reply-only address, whose reply is already shown inside the operation that
+expects it; `<Endpoint id>` still renders one if asked. `<Operation>` still renders one
+operation standalone, with its address and the endpoint's parameters included.
 
 ## The component map
 
@@ -68,7 +98,7 @@ const Field = ({ f }: { f: FieldNode }) => (
 
 | Option | Default | What it decides |
 |---|---|---|
-| `href` | `#slug` | Where links point. Replace this and nothing else for a page-per-operation site. |
+| `href` | `#slug` | Where links point. Replace this and nothing else for a page-per-endpoint site — see Endpoints. |
 | `layout` | `"tree"` | `"rows"` hands `Fields` a flat pre-order list carrying `depth`, for design systems that cannot nest a row inside a row. |
 | `expandRefs` | `"never"` | `"depth"` or `"always"` inline referenced types instead of linking to them. |
 | `maxDepth` | `2` | Only consulted when `expandRefs` is `"depth"`. |
@@ -77,7 +107,7 @@ const Field = ({ f }: { f: FieldNode }) => (
 
 ## Hooks
 
-`useFieldTree`, `useFieldRows`, `useOperation`, `useOperations`, `useTagGroups`,
+`useFieldTree`, `useFieldRows`, `useEndpoint`, `useEndpoints`, `useOperation`, `useOperations`, `useTagGroups`,
 `useTypeLabel`, `useTypeDef`. Everything the shipped components do goes through
 these, so writing your own markup entirely is not a lesser path:
 `SchemaTable` is forty lines over `useFieldTree`.

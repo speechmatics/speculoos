@@ -77,7 +77,7 @@ export const CLASSES: Record<string, readonly string[]> = {
     "note",
   ],
   /** The modifier is the link target's kind. */
-  link: ["type", "operation", "tag", "external"],
+  link: ["type", "operation", "endpoint", "tag", "external"],
   empty: [],
   "external-docs": [],
   protocols: [],
@@ -133,7 +133,7 @@ export const CLASSES: Record<string, readonly string[]> = {
   "group-body": [],
 
   /** The modifier says what the list is of. */
-  list: ["operations", "servers", "security", "tags", "callbacks", "links", "deprecated"],
+  list: ["endpoints", "operations", "servers", "security", "tags", "callbacks", "links", "deprecated"],
   "list-item": ["deprecated"],
   "server-variables": [],
   "server-variable": [],

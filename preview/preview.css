@@ -98,6 +98,8 @@ body {
 }
 .spec-section--operation > .spec-heading { font-size: 1.3rem; letter-spacing: -0.01em; }
 .spec-section--tag > .spec-heading { font-size: 1.6rem; margin-top: 2.5rem; }
+.spec-section--endpoint > .spec-heading { font-size: 1.6rem; margin-top: 2.5rem; }
+.spec-section--endpoint > .spec-heading .spec-code { background: transparent; padding: 0; }
 .spec-section--type { padding: 1rem 1.25rem; margin: 1rem 0; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); scroll-margin-top: 1rem; }
 .spec-section--deprecated > .spec-heading .spec-heading-title { text-decoration: line-through; opacity: 0.65; }
 
@@ -242,6 +244,8 @@ body {
 .spec-list { margin: 0.4rem 0; padding: 0; list-style: none; display: grid; gap: 0.4rem; }
 .spec-list-item { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.4rem; }
 .spec-list--operations .spec-list-item { gap: 0.5rem; }
+.spec-list--endpoints > .spec-list-item { display: block; margin-bottom: 0.75rem; }
+.spec-list--endpoints .spec-list--operations { margin: 0.25rem 0 0 0.75rem; }
 .spec-list-item--deprecated { opacity: 0.55; }
 .spec-server-variables { margin: 0.35rem 0 0 1rem; padding: 0; list-style: none; font-size: 0.9em; color: var(--muted); }
 

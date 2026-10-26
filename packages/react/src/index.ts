@@ -11,8 +11,8 @@
  *   ./context.tsx     `SpeculoosProvider` and the site-level options
  *   ./hooks.ts        `useFieldTree`, `useFieldRows`, `useOperation`, …
  *   ./fields.tsx      `SchemaTable` — a node as rows
- *   ./operation.tsx   `Operation` — either operation shape
- *   ./navigation.tsx  `OperationList`, `TypeSection`, `TypeSections`
+ *   ./operation.tsx   `Endpoint` — a path or channel; `Operation` — either operation shape
+ *   ./navigation.tsx  `EndpointList`, `OperationList`, `TypeSection`, `TypeSections`
  */
 
 export {
@@ -29,6 +29,8 @@ export {
 export {
   useFieldTree,
   useFieldRows,
+  useEndpoint,
+  useEndpoints,
   useOperation,
   useOperations,
   useTagGroups,
@@ -38,17 +40,19 @@ export {
 } from "./hooks.js";
 
 export { SchemaTable, FieldRows, DocsBody, type SchemaTableProps, type FieldRowsProps } from "./fields.js";
-export { Operation, type OperationProps } from "./operation.js";
+export { Endpoint, Operation, type EndpointProps, type OperationProps } from "./operation.js";
 export {
+  EndpointList,
   OperationList,
   TypeSection,
   TypeSections,
+  type EndpointListProps,
   type OperationListProps,
   type TypeSectionProps,
   type TypeSectionsProps,
 } from "./navigation.js";
 export { propertiesNode, parametersNode, parameterProperty } from "./synth.js";
-export { DIRECTION_LABEL } from "./labels.js";
+export { DIRECTION_LABEL, DIRECTION_VERB } from "./labels.js";
 
 export type {
   BadgeProps,

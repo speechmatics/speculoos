@@ -43,8 +43,10 @@ stylesheet link. Paste it into whatever is already building your pages.
 
 | Function | Renders |
 |---|---|
-| `renderApi(ir, opts)` | Title, servers, every operation grouped by tag, every named type |
-| `renderNav(ir, opts)` | The operation index, grouped by tag |
+| `renderApi(ir, opts)` | Title, servers, every endpoint with its operations, every named type. `groupBy: "tag"` groups operations by tag instead |
+| `renderNav(ir, opts)` | The index: each endpoint and its operations. `groupBy: "tag"` or `"none"` for an operation list |
+| `renderEndpoint(endpoint, ir, opts)` | One path or channel: address, description and shared parameters once, then each operation. One page each — iterate `listedEndpoints(ir)` from core, which skips reply-only addresses |
+| `renderEndpointById(id, ir, opts)` | The same, looked up by `endpoint.id` |
 | `renderOperation(entry, ir, opts)` | One operation and everything hanging off it |
 | `renderOperationById(id, ir, opts)` | The same, looked up by `operation.id` |
 | `renderType(def, ir, opts)` | One named type, as the section its links point at |

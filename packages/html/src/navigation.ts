@@ -7,13 +7,13 @@
  * dead anchors.
  */
 
-import { allOperations, groupByTag } from "@speculoos/core";
-import type { ApiIR, OperationEntry, TypeDef } from "@speculoos/core";
+import { allOperations, groupByTag, listedEndpoints } from "@speculoos/core";
+import type { ApiIR, Endpoint, Operation, OperationEntry, TypeDef } from "@speculoos/core";
 import { h, text, type Html } from "./escape.js";
 import { schemaTable } from "./fields.js";
 import { resolve, type HtmlOptions } from "./options.js";
 import { badge, code, docsBody, inline, link, section, type Ctx } from "./parts.js";
-import { DIRECTION_LABEL } from "@speculoos/core";
+import { DIRECTION_LABEL, DIRECTION_VERB } from "@speculoos/core";
 
 /** The label a navigation entry shows: method and path, or direction and address. */
 function entryLabel(c: Ctx, entry: OperationEntry): Html {
@@ -30,21 +30,29 @@ function entryLabel(c: Ctx, entry: OperationEntry): Html {
 }
 
 export interface NavOptions extends HtmlOptions {
-  /** Group the list under tag headings. Default true. */
-  byTag?: boolean;
+  /**
+   * "endpoint": each path or channel, linking to itself, with its operations
+   * beneath. "tag": operations under the document's declared tags. "none": one
+   * flat list of operations. Default "endpoint".
+   */
+  groupBy?: "endpoint" | "tag" | "none";
   level?: number;
 }
 
 /**
- * The operation index. Grouped by tag by default, because `ir.tags` is the
- * document's own declared navigation order and ignoring it loses information
- * the spec author put there deliberately.
+ * The index. Grouped by endpoint by default, matching `renderApi`: a path or
+ * channel is the unit a reader looks for and the one a site most often gives a
+ * page. "tag" keeps the document's declared order, for documents that use it.
  */
 export function renderNav(ir: ApiIR, options: NavOptions = {}): Html {
   const c: Ctx = { ir, o: resolve(options) };
   const level = options.level ?? c.o.headingLevel;
+  const groupBy = options.groupBy ?? "endpoint";
 
-  if (options.byTag === false) {
+  if (groupBy === "endpoint") {
+    return h("nav", { class: c.o.cls("nav") }, endpointList(c, listedEndpoints(ir)));
+  }
+  if (groupBy === "none") {
     return h("nav", { class: c.o.cls("nav") }, operationList(c, allOperations(ir)));
   }
   return h(
@@ -56,6 +64,57 @@ export function renderNav(ir: ApiIR, options: NavOptions = {}): Html {
         { kind: "tag", id: undefined, title: text(g.tag.name), level },
         docsBody(c, g.tag.docs),
         operationList(c, g.entries),
+      ),
+    ),
+  );
+}
+
+/**
+ * An operation's label under its endpoint: the mark and the title, without the
+ * address the endpoint already shows. Mirrors `@speculoos/react`'s
+ * `NestedOperationLabel`.
+ */
+function nestedLabel(c: Ctx, operation: Operation): Html {
+  if (operation.kind === "request-response") {
+    return inline(
+      badge(c, "method", text(operation.method.toUpperCase()), operation.method),
+      operation.isWebhook ? badge(c, "note", text("webhook")) : undefined,
+      operation.docs.title !== undefined
+        ? h("span", { class: c.o.cls("nav-title") }, text(operation.docs.title))
+        : undefined,
+    );
+  }
+  return inline(
+    badge(c, "direction", text(DIRECTION_LABEL[operation.direction]), operation.direction),
+    h("span", { class: c.o.cls("nav-title") }, text(operation.docs.title ?? DIRECTION_VERB[operation.direction])),
+  );
+}
+
+function endpointList(c: Ctx, endpoints: Endpoint[]): Html {
+  return h(
+    "ul",
+    { class: c.o.cls("list", "endpoints") },
+    ...endpoints.map((endpoint) =>
+      h(
+        "li",
+        { class: c.o.cls("list-item") },
+        link(c, { kind: "endpoint", id: endpoint.id, endpoint }, code(c, endpoint.address)),
+        endpoint.operations.length > 0
+          ? h(
+              "ul",
+              { class: c.o.cls("list", "operations") },
+              ...endpoint.operations.map((operation) =>
+                h(
+                  "li",
+                  {
+                    class: c.o.cls("list-item", operation.deprecated && "deprecated"),
+                    ...(operation.deprecated ? { "data-deprecated": true } : {}),
+                  },
+                  link(c, { kind: "operation", id: operation.id, operation, endpoint }, nestedLabel(c, operation)),
+                ),
+              ),
+            )
+          : undefined,
       ),
     ),
   );

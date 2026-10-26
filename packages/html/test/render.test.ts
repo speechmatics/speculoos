@@ -11,6 +11,8 @@ import { allOperations, type ApiIR } from "@speculoos/core";
 import {
   renderApi,
   renderNav,
+  renderEndpoint,
+  renderEndpointById,
   renderOperation,
   renderOperationById,
   renderSchema,
@@ -219,15 +221,73 @@ describe("types", () => {
   });
 });
 
+describe("endpoints", () => {
+  const count = (html: string, needle: string) => html.split(needle).length - 1;
+  const asText = (html: string) => html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
+
+  it("heads a channel with its address and shows what it shares once", () => {
+    const html = renderEndpointById("/v2/{language}", ws);
+    expect(html).toMatch(/^<section class="spec-section spec-section--endpoint" id="v2-language"/);
+    // The channel's own description, which no page showed before.
+    expect(html).toContain("The transcription socket.");
+    expect(count(html, "Address parameters")).toBe(1);
+    expect(count(html, 'data-value="wss"')).toBe(1);
+  });
+
+  it("heads a channel's operations by what the reader does", () => {
+    const text = asText(renderEndpointById("/v2/{language}", ws));
+    expect(text).toContain("Send client → server Messages the client sends.");
+    expect(text).toContain("Receive server → client Messages the server sends.");
+  });
+
+  it("does not repeat a path's address or shared parameters in each operation", () => {
+    const html = renderEndpointById("/jobs", rest);
+    expect(count(html, ">/jobs</code>")).toBe(1);
+    expect(count(html, `data-key="X-Request-Id"`)).toBe(1);
+  });
+
+  it("renders each operation once when the page is grouped by endpoint", () => {
+    const html = renderApi(rest);
+    for (const { operation } of allOperations(rest)) expect(count(html, `id="${operation.slug}"`)).toBe(1);
+    expect(html).not.toContain("spec-section--tag");
+  });
+
+  it("still groups by tag when asked", () => {
+    expect(renderApi(rest, { groupBy: "tag" })).toContain("spec-section--tag");
+  });
+
+  it("links the nav to each endpoint and its operations", () => {
+    const html = renderNav(rest);
+    expect(html).toContain('class="spec-link spec-link--endpoint" href="#jobs"');
+    expect(html).toContain('href="#list-jobs"');
+  });
+
+  it("leaves a reply-only address out of the page and the nav, but renders it by id", async () => {
+    const reply = await wsIR("reply-v3.yaml");
+    // `pong` exists only for `ping`'s reply to land on, and the reply is shown
+    // inside `ping`. A section of its own would say "No operations".
+    expect(renderApi(reply)).not.toContain('id="pong"');
+    expect(renderApi(reply)).toContain("Reply on /pong");
+    expect(renderNav(reply)).not.toContain("/pong</code></a>");
+    expect(renderEndpointById("pong", reply)).toContain("No operations");
+  });
+
+  it("finds an endpoint by id, and says so when it cannot", () => {
+    const endpoint = rest.endpoints[0]!;
+    expect(renderEndpointById(endpoint.id, rest)).toBe(renderEndpoint(endpoint, rest));
+    expect(renderEndpointById("nope", rest)).toContain("No endpoint nope");
+  });
+});
+
 describe("navigation", () => {
   it("groups by tag in the document's own order", () => {
-    const html = renderNav(rest);
+    const html = renderNav(rest, { groupBy: "tag" });
     const order = rest.tags.map((t) => html.indexOf(t.name)).filter((i) => i >= 0);
     expect(order).toEqual([...order].sort((a, b) => a - b));
   });
 
   it("lists every operation when told not to group", () => {
-    const html = renderNav(rest, { byTag: false });
+    const html = renderNav(rest, { groupBy: "none" });
     expect((html.match(/<li /g) ?? []).length).toBe(allOperations(rest).length);
   });
 });
@@ -252,8 +312,12 @@ describe("legible without CSS", () => {
   });
 
   it("separates an operation's method from its address", () => {
-    const text = asText(renderApi(rest));
+    const text = asText(renderOperationById("listJobs", rest));
     expect(text).toMatch(/GET \/jobs/);
+  });
+
+  it("separates a nav entry's method from its title", () => {
+    expect(asText(renderNav(rest))).toContain("GET List jobs");
   });
 
   it("separates a heading's title from its subtitle", () => {

@@ -22,7 +22,9 @@ beforeAll(async () => {
     renderApi(rest),
     renderApi(ws),
     renderNav(rest),
-    renderNav(ws, { byTag: false }),
+    renderNav(ws, { groupBy: "none" }),
+    renderNav(rest, { groupBy: "tag" }),
+    renderApi(rest, { groupBy: "tag" }),
     renderTypes(rest),
     renderApi(rest, { layout: "rows" }),
   ].join("\n");

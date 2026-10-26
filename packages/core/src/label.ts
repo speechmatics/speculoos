@@ -141,3 +141,16 @@ export const DIRECTION_LABEL = {
   "client-sends": "client → server",
   "server-sends": "server → client",
 } as const;
+
+/**
+ * Direction as what the reader does: they send, or they receive.
+ *
+ * Under an endpoint heading, a message operation is headed by this rather than
+ * by its own title. A channel usually carries one operation each way, and
+ * "Send" / "Receive" is what tells them apart at a glance; the title, when the
+ * document has one, moves into the subtitle.
+ */
+export const DIRECTION_VERB = {
+  "client-sends": "Send",
+  "server-sends": "Receive",
+} as const;

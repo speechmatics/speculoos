@@ -11,9 +11,9 @@
 import type { ReactNode } from "react";
 import type { Endpoint, Operation as IROperation, TypeId } from "@speculoos/core";
 import { useComponents, useSpeculoos } from "./context.js";
-import { useTagGroups } from "./hooks.js";
+import { useEndpoints, useTagGroups } from "./hooks.js";
 import { DocsBody, SchemaTable } from "./fields.js";
-import { DIRECTION_LABEL } from "./labels.js";
+import { DIRECTION_LABEL, DIRECTION_VERB } from "./labels.js";
 
 /**
  * Method, path and title, as inline siblings with a space between each.
@@ -37,6 +37,73 @@ function OperationLabel({ endpoint, operation }: { endpoint: Endpoint; operation
       <C.Code>{endpoint.address}</C.Code>
       {operation.docs.title !== undefined && <> {operation.docs.title}</>}
     </>
+  );
+}
+
+/**
+ * An operation's label under its endpoint in `EndpointList`: the mark and the
+ * title, without the address the endpoint already shows. A message operation
+ * with no title says what the reader does, "Send" / "Receive".
+ */
+function NestedOperationLabel({ operation }: { operation: IROperation }): ReactNode {
+  const C = useComponents();
+  return operation.kind === "request-response" ? (
+    <>
+      <C.Badge tone="method" value={operation.method}>{operation.method.toUpperCase()}</C.Badge>
+      {operation.isWebhook && <> <C.Badge tone="note">webhook</C.Badge></>}
+      {operation.docs.title !== undefined && <> {operation.docs.title}</>}
+    </>
+  ) : (
+    <>
+      <C.Badge tone="direction" value={operation.direction}>{DIRECTION_LABEL[operation.direction]}</C.Badge>{" "}
+      {operation.docs.title ?? DIRECTION_VERB[operation.direction]}
+    </>
+  );
+}
+
+export interface EndpointListProps {
+  /** Leave out each endpoint's operations, listing only the addresses. Default false. */
+  addressesOnly?: boolean;
+}
+
+/**
+ * Every endpoint, in document order, each linking to itself and listing its
+ * operations beneath. The navigation for a site with a page per endpoint.
+ */
+export function EndpointList({ addressesOnly = false }: EndpointListProps = {}): ReactNode {
+  const C = useComponents();
+  const { options } = useSpeculoos();
+  const endpoints = useEndpoints();
+
+  if (endpoints.length === 0) return <C.Empty>No endpoints</C.Empty>;
+
+  return (
+    <C.List kind="endpoints">
+      {endpoints.map((endpoint) => {
+        const target = { kind: "endpoint" as const, id: endpoint.id, endpoint };
+        const href = options.href(target);
+        const address = <C.Code>{endpoint.address}</C.Code>;
+        return (
+          <C.ListItem key={endpoint.id}>
+            {href === undefined ? address : <C.Link href={href} target={target}>{address}</C.Link>}
+            {!addressesOnly && endpoint.operations.length > 0 && (
+              <C.List kind="operations">
+                {endpoint.operations.map((operation) => {
+                  const opTarget = { kind: "operation" as const, id: operation.id, operation, endpoint };
+                  const opHref = options.href(opTarget);
+                  const label = <NestedOperationLabel operation={operation} />;
+                  return (
+                    <C.ListItem key={operation.id}>
+                      {opHref === undefined ? label : <C.Link href={opHref} target={opTarget}>{label}</C.Link>}
+                    </C.ListItem>
+                  );
+                })}
+              </C.List>
+            )}
+          </C.ListItem>
+        );
+      })}
+    </C.List>
   );
 }
 

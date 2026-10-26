@@ -11,12 +11,12 @@
  * so a site that wants a sidebar and a page per operation can call the pieces.
  */
 
-import { groupByTag } from "@speculoos/core";
+import { groupByTag, listedEndpoints } from "@speculoos/core";
 import type { ApiIR, Server } from "@speculoos/core";
 import { h, join, text, type Html } from "./escape.js";
 import { resolve, type HtmlOptions } from "./options.js";
 import { badge, code, docsBody, inline, markdown, section, type Ctx } from "./parts.js";
-import { operationSection } from "./operation.js";
+import { endpointSection, operationSection } from "./operation.js";
 import { renderTypes } from "./navigation.js";
 
 function servers(c: Ctx, list: Server[], level: number): Html {
@@ -64,9 +64,15 @@ export interface RenderApiOptions extends HtmlOptions {
   includeTypes?: boolean;
   /** Include the document title, description and servers. Default true. */
   includeInfo?: boolean;
+  /**
+   * "endpoint" renders each path or channel once, with its operations under it.
+   * "tag" groups operations under the document's declared tags, repeating an
+   * operation's address in each. Default "endpoint".
+   */
+  groupBy?: "endpoint" | "tag";
 }
 
-/** Every operation, grouped by tag, plus the type sections its links point at. */
+/** Every operation, grouped by endpoint or tag, plus the type sections its links point at. */
 export function renderApi(ir: ApiIR, options: RenderApiOptions = {}): Html {
   const c: Ctx = { ir, o: resolve(options) };
   const level = c.o.headingLevel;
@@ -88,14 +94,17 @@ export function renderApi(ir: ApiIR, options: RenderApiOptions = {}): Html {
           servers(c, ir.servers, level + 1),
         ]);
 
-  const groups = groupByTag(ir, c.o.untaggedLabel).map((g) =>
-    section(
-      c,
-      { kind: "tag", title: text(g.tag.name), level: level + 1 },
-      docsBody(c, g.tag.docs),
-      ...g.entries.map((entry) => operationSection(c, entry, level + 2)),
-    ),
-  );
+  const groups =
+    options.groupBy === "tag"
+      ? groupByTag(ir, c.o.untaggedLabel).map((g) =>
+          section(
+            c,
+            { kind: "tag", title: text(g.tag.name), level: level + 1 },
+            docsBody(c, g.tag.docs),
+            ...g.entries.map((entry) => operationSection(c, entry, level + 2)),
+          ),
+        )
+      : listedEndpoints(ir).map((endpoint) => endpointSection(c, endpoint, level + 1));
 
   return h(
     "div",

@@ -1,5 +1,6 @@
 /**
- * `<Operation>` — one operation, whichever dialect it came from.
+ * `<Operation>` — one operation, whichever dialect it came from — and
+ * `<Endpoint>`, a path or channel with every operation on it.
  *
  * The two operation shapes stay distinct all the way to the page: a
  * request/response operation has a method, a body and statuses, and a message
@@ -8,10 +9,13 @@
  */
 
 import { useMemo, type ReactNode } from "react";
+import { replyAddress } from "@speculoos/core";
 import type {
-  Endpoint,
+  ApiIR,
+  Endpoint as IREndpoint,
   Example,
   MediaVariant,
+  MessageOperation,
   Operation as IROperation,
   Parameter,
   RestResponse,
@@ -19,11 +23,11 @@ import type {
   WsMessage,
 } from "@speculoos/core";
 import { useComponents, useSpeculoos } from "./context.js";
-import { useOperation } from "./hooks.js";
+import { useEndpoint, useOperation } from "./hooks.js";
 import { DocsBody, SchemaTable } from "./fields.js";
 import { parametersNode, propertiesNode } from "./synth.js";
 import type { Tab } from "./components.js";
-import { DIRECTION_LABEL } from "./labels.js";
+import { DIRECTION_LABEL, DIRECTION_VERB } from "./labels.js";
 
 /**
  * `in: "path"` covers both an OAS path parameter and an AsyncAPI channel address
@@ -127,25 +131,29 @@ function Security({ security, level }: { security: SecurityRequirements; level: 
   );
 }
 
+/**
+ * Which parameters an operation section shows. Standing alone, it shows the
+ * endpoint's as well as its own — endpoint ones first, since they are shared by
+ * every operation there and a reader has probably met them already. Under an
+ * `<Endpoint>`, which has shown the shared ones once, only its own.
+ */
+function operationParameters(endpoint: IREndpoint, operation: IROperation, nested: boolean): Parameter[] {
+  const own = operation.kind === "request-response" ? operation.parameters : [];
+  return nested ? own : [...endpoint.parameters, ...own];
+}
+
 function Parameters({
   endpoint,
-  operation,
+  parameters: all,
+  source,
   level,
 }: {
-  endpoint: Endpoint;
-  operation: IROperation;
+  endpoint: IREndpoint;
+  parameters: Parameter[];
+  source: IROperation["source"];
   level: number;
 }): ReactNode {
   const C = useComponents();
-  // Endpoint parameters come first: they are shared by every operation here, so
-  // they are the ones a reader has probably already met.
-  const all = useMemo(
-    () => [
-      ...endpoint.parameters,
-      ...(operation.kind === "request-response" ? operation.parameters : []),
-    ],
-    [endpoint.parameters, operation],
-  );
   if (all.length === 0) return null;
   return (
     <>
@@ -157,7 +165,7 @@ function Parameters({
         return (
           <C.Section key={location} kind="parameters" title={heading} level={level}>
             <SchemaTable
-              node={parametersNode(group, operation.source)}
+              node={parametersNode(group, source)}
               kind="parameters"
               expandRefs="always"
             />
@@ -258,40 +266,92 @@ export interface OperationProps {
   /** Operation id. Give this, or `operation` plus `endpoint`. */
   id?: string;
   operation?: IROperation;
-  endpoint?: Endpoint;
+  endpoint?: IREndpoint;
   /** Heading level for this operation's own section. Defaults to the provider's. */
   level?: number;
 }
 
-/** One operation, with everything hanging off it. */
+/** One operation, with everything hanging off it, including its endpoint's address and parameters. */
 export function Operation(props: OperationProps): ReactNode {
   const C = useComponents();
-  const { ir, options } = useSpeculoos();
+  const { options } = useSpeculoos();
   const found = useOperation(props.id ?? "");
   const endpoint = props.endpoint ?? found?.endpoint;
   const operation = props.operation ?? found?.operation;
-  const level = props.level ?? options.headingLevel;
 
   if (endpoint === undefined || operation === undefined) {
     return <C.Empty>{`No operation ${props.id ?? ""}`}</C.Empty>;
   }
+  return (
+    <OperationSection
+      endpoint={endpoint}
+      operation={operation}
+      level={props.level ?? options.headingLevel}
+      nested={false}
+    />
+  );
+}
 
-  const subtitle =
+/**
+ * The heading and the marks beside it.
+ *
+ * Standing alone, an operation is headed by its title, with the method or
+ * direction and the address beside it. Under an `<Endpoint>`, the address is
+ * the endpoint's heading, so it is not repeated: a REST operation is headed by
+ * its title (or its method), and a message operation by what the reader does —
+ * "Send", "Receive" — because that is what tells a channel's operations apart.
+ */
+function useHeading(endpoint: IREndpoint, operation: IROperation, nested: boolean): { title: ReactNode; subtitle: ReactNode } {
+  const C = useComponents();
+  const mark =
     operation.kind === "request-response" ? (
       <>
         <C.Badge tone="method" value={operation.method}>{operation.method.toUpperCase()}</C.Badge>
         {/* `endpoint.id` namespaces a webhook as "webhook:name" so it cannot
             collide with a path. That is identity, not a label, so the page gets
             the address and a badge saying which it is. */}
-        {operation.isWebhook && <C.Badge tone="note">webhook</C.Badge>}
-        <C.Code>{endpoint.address}</C.Code>
+        {operation.isWebhook && <> <C.Badge tone="note">webhook</C.Badge></>}
       </>
     ) : (
-      <>
-        <C.Badge tone="direction" value={operation.direction}>{DIRECTION_LABEL[operation.direction]}</C.Badge>
-        <C.Code>{endpoint.address}</C.Code>
-      </>
+      <C.Badge tone="direction" value={operation.direction}>{DIRECTION_LABEL[operation.direction]}</C.Badge>
     );
+  if (!nested) {
+    return {
+      title: operation.docs.title ?? operation.id,
+      subtitle: (
+        <>
+          {mark} <C.Code>{endpoint.address}</C.Code>
+        </>
+      ),
+    };
+  }
+  if (operation.kind === "request-response") {
+    return { title: operation.docs.title ?? operation.method.toUpperCase(), subtitle: mark };
+  }
+  return {
+    title: DIRECTION_VERB[operation.direction],
+    subtitle: (
+      <>
+        {mark}
+        {operation.docs.title !== undefined && <> {operation.docs.title}</>}
+      </>
+    ),
+  };
+}
+
+function OperationSection({ endpoint, operation, level, nested }: {
+  endpoint: IREndpoint;
+  operation: IROperation;
+  level: number;
+  nested: boolean;
+}): ReactNode {
+  const C = useComponents();
+  const { ir, options } = useSpeculoos();
+  const { title, subtitle } = useHeading(endpoint, operation, nested);
+  const parameters = useMemo(
+    () => operationParameters(endpoint, operation, nested),
+    [endpoint, operation, nested],
+  );
 
   // An operation with no security of its own inherits the document default.
   // Showing the inherited one is the point: "which key do I send" must be
@@ -302,19 +362,15 @@ export function Operation(props: OperationProps): ReactNode {
     <C.Section
       kind="operation"
       id={operation.slug}
-      title={operation.docs.title ?? operation.id}
+      title={title}
       subtitle={subtitle}
       level={level}
       deprecated={operation.deprecated}
     >
       <DocsBody docs={operation.docs} />
-      {endpoint.protocols.map((protocol) => (
-        <C.Badge key={protocol} tone="protocol" value={protocol}>
-          {protocol}
-        </C.Badge>
-      ))}
+      {!nested && <Protocols endpoint={endpoint} />}
       <Security security={security} level={level + 1} />
-      <Parameters endpoint={endpoint} operation={operation} level={level + 1} />
+      <Parameters endpoint={endpoint} parameters={parameters} source={operation.source} level={level + 1} />
 
       {operation.kind === "request-response" ? (
         <>
@@ -402,15 +458,95 @@ export function Operation(props: OperationProps): ReactNode {
             <Messages
               messages={operation.reply.messages}
               level={level + 1}
-              title={
-                operation.reply.address === undefined
-                  ? "Reply"
-                  : `Reply on ${operation.reply.address}`
-              }
+              title={replyTitle(operation.reply, ir)}
               kind="reply"
             />
           )}
         </>
+      )}
+    </C.Section>
+  );
+}
+
+/** "Reply on /pong", or "Reply" when it arrives on the operation's own channel. */
+function replyTitle(reply: NonNullable<MessageOperation["reply"]>, ir: ApiIR): string {
+  const where = replyAddress(reply, ir);
+  return where === undefined ? "Reply" : `Reply on ${where}`;
+}
+
+function Protocols({ endpoint }: { endpoint: IREndpoint }): ReactNode {
+  const C = useComponents();
+  return (
+    <>
+      {endpoint.protocols.map((protocol) => (
+        <C.Badge key={protocol} tone="protocol" value={protocol}>
+          {protocol}
+        </C.Badge>
+      ))}
+    </>
+  );
+}
+
+export interface EndpointProps {
+  /** Endpoint id — the path, the channel id, or "webhook:name". Give this or `endpoint`. */
+  id?: string;
+  endpoint?: IREndpoint;
+  /** Heading level for the endpoint's own section. Defaults to the provider's. */
+  level?: number;
+}
+
+/**
+ * A path or channel, with every operation on it.
+ *
+ * The address is the heading, and what every operation there shares — the
+ * protocol, the endpoint's own description, its parameters — is shown once,
+ * above them, rather than repeated in each. This is the unit a site most often
+ * gives a page of its own: one REST path, or one WebSocket channel with its
+ * send and receive. Enumerate them with `useEndpoints()`.
+ */
+export function Endpoint(props: EndpointProps): ReactNode {
+  const C = useComponents();
+  const { options } = useSpeculoos();
+  const found = useEndpoint(props.id ?? "");
+  const endpoint = props.endpoint ?? found;
+  const level = props.level ?? options.headingLevel;
+
+  if (endpoint === undefined) return <C.Empty>{`No endpoint ${props.id ?? ""}`}</C.Empty>;
+
+  const webhook = endpoint.operations.some((o) => o.kind === "request-response" && o.isWebhook);
+  return (
+    <C.Section
+      kind="endpoint"
+      id={endpoint.slug}
+      title={<C.Code>{endpoint.address}</C.Code>}
+      subtitle={
+        <>
+          {webhook && <C.Badge tone="note">webhook</C.Badge>}
+          {webhook && endpoint.protocols.length > 0 && " "}
+          <Protocols endpoint={endpoint} />
+        </>
+      }
+      level={level}
+    >
+      <DocsBody docs={endpoint.docs} />
+      <Parameters
+        endpoint={endpoint}
+        parameters={endpoint.parameters}
+        source={endpoint.source}
+        level={level + 1}
+      />
+      {endpoint.operations.length === 0 ? (
+        <C.Empty>No operations</C.Empty>
+      ) : (
+        endpoint.operations.map((operation) => (
+          <OperationSection
+            key={operation.id}
+            endpoint={endpoint}
+            operation={operation}
+            level={level + 1}
+            nested
+          />
+        ))
       )}
     </C.Section>
   );
