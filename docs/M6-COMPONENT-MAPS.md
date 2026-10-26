@@ -1,6 +1,7 @@
 # M6 — Shipped component maps
 
-**Status:** in progress. §4.1 and §4.2 done; §4.3 (versioning) open.
+**Status:** map built and looked at (§12). Open: versioning (§4.3, parked), maintenance policy, and
+exit criterion 2 — trying it on the Speechmatics docs site.
 **Pilot:** Radix Themes, because it is the basis of the Speechmatics design system.
 
 This is a working plan, written to be picked up cold. It assumes nothing about
@@ -205,6 +206,16 @@ the point of the exercise.
 Note the harness has `--serve`; `preview/build.mjs` writes to `preview/out/`
 (gitignored) and `pnpm preview:serve` serves it on :8137.
 
+*Done differently.* The map got its own Vite dev server instead
+(`pnpm preview:radix`, :8138, source in `packages/map-radix-themes/dev/`). Static
+`renderToStaticMarkup` pages would have shown dead tabs — Radix `Tabs` needs
+hydration — and would not have run React's client-side DOM-nesting checks,
+which are exactly the ones a Table map needs (§8). The dev server builds the
+IRs in Node and hands them to the page as a virtual module, reloads on edit,
+and switches layout and light/dark from the sidebar.
+`SPECULOOS_SPEC=path.yaml` previews any spec. `preview/build.mjs` is unchanged
+and stays the HTML renderer's harness.
+
 ## 8. Testing a map (different from testing the renderer)
 
 The existing renderer tests prove Speculoos emits *no* markup. A map is supposed
@@ -214,8 +225,10 @@ to emit markup, so those techniques do not transfer. What does:
 2. **Renders every fixture** — every operation of both dialects and every type
    section, without throwing. This is the test that actually catches things.
 3. **No React warnings** — capture `console.error` during render and assert it
-   is empty, in **both** layouts. Catches missing keys and invalid DOM nesting,
-   which is exactly the `<tr>`-in-`<tr>` failure mode §4.2 relies on avoiding.
+   is empty, in **both** layouts. Catches missing keys and unknown props.
+   **Not** invalid DOM nesting: `renderToStaticMarkup` does not validate it
+   (checked — only react-dom's client does), so the `<tr>`-in-`<tr>` case §4.2
+   relies on avoiding needs its own structural assertion.
 4. **Snapshot one operation per dialect** — to make review of changes readable.
 5. **Heading levels descend** — `level` is passed through, so a map that
    hard-codes `h2` is a real accessibility bug.
@@ -234,7 +247,8 @@ the pattern.
 - **Maintenance policy.** One map is a pilot; three means owning three upgrade
   cycles. Write down what qualifies a second map — real demand, or a contributor
   who owns it — before it becomes an unfunded mandate by drift.
-- **`CodeBlock`** has no natural Radix equivalent. Decide from rendered output.
+- ~~**`CodeBlock`** has no natural Radix equivalent.~~ Ghost `Code` in a `<pre>` on a `Card`, in a
+  horizontal `ScrollArea`. Reads well; see §12.
 
 ## 10. Exit criteria
 
@@ -250,11 +264,67 @@ the pattern.
 
 1. ~~§4.1 `BadgeProps.value` (+ the `@speculoos/html` equivalent).~~ Done.
 2. ~~§4.2 decide and implement the provider-options story.~~ Resolved by renaming `Table` → `Fields`.
-3. Scaffold `packages/map-radix-themes` — copy `packages/html`'s tsconfig/tsup setup.
-4. The twelve components, Table mode first.
-5. Wire into the preview harness; **look at it**.
-6. `DataList` mode; compare; pick a default.
-7. Tests (§8), README, PLAN.md entry.
+3. ~~Scaffold `packages/map-radix-themes`.~~
+4. ~~The twelve components, Table mode first.~~
+5. ~~Wire into a preview; **look at it**.~~ Dev server — see §7.
+6. ~~`DataList` mode; compare; pick a default.~~ `DataList`, and the option removed — see §12.
+7. ~~Tests (§8), README, PLAN.md entry.~~
 
 Both rendering defects in M5 were found by looking at output, not by reading
 code. Get to step 5 quickly.
+
+## 12. What building it found
+
+*Recorded after the fact, for whoever picks this up next.*
+
+**The map** is `radixThemes(options)` in `packages/map-radix-themes`: ~520 lines
+including comments, more than the 150–250 estimated, mostly because colours are
+data. Its build imports only `@radix-ui/themes` and
+`react/jsx-runtime` — `@speculoos/react` is used for types alone, so the
+one-way dependency is visible in the bundle. 31 tests.
+
+**Signature, as built.** As §5 proposed, minus `fields` (below), and colours are one nested option,
+`colors: { method, status, direction, tone }`, instead of `methodColors` and
+`toneColors`. Statuses colour by class (2xx green, 5xx red) and directions by
+value; two flat options could not express either. `linkAs` takes a component
+receiving `href` and `children`, and applies to internal links only.
+
+**Looking at it found three things, none visible in code or tests:**
+
+1. *A renderer defect.* The operation list read "GET/jobs List jobs".
+   `OperationLabel` in `@speculoos/react` put the method badge and the path
+   side by side with no whitespace, and because the label sits inside a
+   `Link` — inline — no map's layout could separate them. The same class of
+   defect M5 found in the HTML renderer. Fixed in the renderer, with a test
+   that strips tags and reads the text.
+2. *Every type looked clickable.* Radix `Code` is accent-coloured and filled,
+   so `integer` and a linked `JobStatus` were indistinguishable. `Code` is now
+   a ghost, which inherits colour: link-coloured inside a `Link`, body text
+   elsewhere.
+3. *Tables did not line up.* Auto layout sized each table's columns to its own
+   content. Fixed layout, 28% / 32% / rest.
+
+**Table or DataList: DataList, and no option.** Both were built and compared in the
+browser. `DataList` read better for everything — schemas, parameters and headers
+alike — and the `Table`'s column headers bought nothing a reader needed, so the
+`fields` option and the Table code were removed rather than kept as a second
+path to maintain. The sibling-rows technique from §4.2 still matters: it is
+what lets the map ignore `layout`.
+
+**Messages are alternatives, not tabs.** Tabbing a channel's messages hid the
+thing a reader is doing — comparing what they may send. The map renders `Tabs`
+with `kind: "message"` as a stack of `Card`s with "or" between; media types,
+statuses and examples stay tabs. No renderer change: `kind` exists for exactly
+this. (A card's title is bold text, not a heading, because `TabsProps` carries
+no `level`. If that matters for navigation, `level` is an additive prop.)
+
+**DataList does not nest either.** A `<dl>` could, but a row cannot tell which
+layout it is in — `children` is absent on a tree leaf and on every row in "rows"
+— so nesting in one and indenting in the other would indent twice. Both modes
+return nested rows as indented siblings.
+
+**What §8's warning test can and cannot see.** `renderToStaticMarkup` reports
+missing keys but does **not** validate DOM nesting; only react-dom's client does.
+So nesting has its own structural test (now on `<dl>`), and the dev server's
+browser console was checked clean in every fixture and mode.
+

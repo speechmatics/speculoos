@@ -931,7 +931,7 @@ and reshaping, not adding. So OD-2 stays descoped with the path genuinely open.
 *Still open:* the reference integration is still a fake component library rather than the
 Speechmatics design system. Unchanged from M4, and still a consumer task.
 
-**M6 — Shipped component maps. Planned.** A Radix Themes map, as a package rather than an
+**M6 — Shipped component maps. In progress: map built and looked at.** A Radix Themes map, as a package rather than an
 example, with a factory taking options and spread for wholesale replacement. Twelve
 components, not a renderer: there is one React renderer and a map per library. Closes the
 reference-integration item carried since M4. Full plan in
@@ -954,6 +954,16 @@ it is the container for field rows and is now called `Fields`. Only a `<table>`-
 meets the nesting constraint, and it can meet it without help by returning a `FieldRow`'s
 nested rows as siblings after its own. No provider API was added. Both changes were free
 only because no map had shipped yet.
+
+*Built.* `@speculoos/map-radix-themes` exports `radixThemes({ markdown, size, colors, linkAs })`:
+field rows as a Radix `DataList` (a `Table` mode was built, compared and dropped), and a
+channel's messages as stacked cards rather than tabs. A Vite dev server
+(`pnpm preview:radix`) renders every fixture through real Radix in either layout and
+appearance. Looking at it found a renderer
+defect — the operation list's label read "GET/jobs List jobs", unseparated inside an
+inline `Link` — now fixed in `@speculoos/react`. Details, and what remains, in §12 of the
+M6 plan. Open: versioning, the maintenance policy for a second map, and trying it on the
+Speechmatics docs site.
 
 **Post-1.0:** example synthesis and code samples (OD-2); further framework bindings; an
 MDX/Docusaurus/Astro integration package; a playground app.
