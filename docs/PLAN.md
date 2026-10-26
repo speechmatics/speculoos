@@ -965,6 +965,14 @@ inline `Link` — now fixed in `@speculoos/react`. Details, and what remains, in
 M6 plan. Open: versioning, the maintenance policy for a second map, and trying it on the
 Speechmatics docs site.
 
+*Endpoints became the unit.* Looking at the map also showed both renderers were
+operation-first: a channel's address and parameters repeated under each operation, and
+`endpoint.docs` rendered nowhere. `<Endpoint>` / `renderEndpoint` now render a path or
+channel once with its operations beneath, headed "Send" / "Receive" for messages;
+`HrefTarget` gains `endpoint`, so one `href` function routes a page per endpoint; and the
+HTML renderer groups by endpoint by default. Parity extends to endpoints. §13 of the M6
+plan.
+
 **Post-1.0:** example synthesis and code samples (OD-2); further framework bindings; an
 MDX/Docusaurus/Astro integration package; a playground app.
 

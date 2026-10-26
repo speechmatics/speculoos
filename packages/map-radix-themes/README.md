@@ -101,6 +101,8 @@ const components = { ...radixThemes({ markdown }), Badge: MyBadge };
 - **`Code` is a ghost.** Monospace with no fill and no colour of its own, so a
   linked type (`JobStatus`) takes the link colour and a plain one (`integer`)
   reads as text. A filled `Code` made every type look clickable.
+- **Direction badges carry an arrow** — ↑ for what the reader sends, ↓ for what
+  they receive — so a channel's two operations tell apart at a glance.
 - **Messages are cards, not tabs.** The messages on a channel are alternatives
   a reader compares, so `Tabs` with `kind: "message"` stacks them, one `Card`
   each, with "or" between. Media types, statuses and examples stay tabs.
@@ -118,4 +120,5 @@ SPECULOOS_SPEC=path/to/spec.yaml pnpm --filter @speculoos/map-radix-themes dev
 ```
 
 Every fixture through real Radix Themes, with layout and appearance switchable
-in the sidebar. The dev server is not shipped.
+in the sidebar. "Pages: per-endpoint" routes each endpoint to its own page using
+nothing but an `href` function — what a site with a page per path would do. The dev server is not shipped.

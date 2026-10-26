@@ -22,6 +22,8 @@ import { buildOpenApi } from "@speculoos/openapi";
 import { buildAsyncApi } from "@speculoos/asyncapi";
 import { allOperations, type ApiIR } from "@speculoos/core";
 import {
+  Endpoint,
+  EndpointList,
   Operation,
   OperationList,
   SpeculoosProvider,
@@ -70,6 +72,10 @@ function render(ui: ReactNode, api: ApiIR, components: Components, options?: Spe
 
 const everything = (api: ApiIR) => (
   <>
+    <EndpointList />
+    {api.endpoints.map((endpoint) => (
+      <Endpoint key={endpoint.id} endpoint={endpoint} />
+    ))}
     <OperationList />
     {allOperations(api).map(({ endpoint, operation }) => (
       <Operation key={`${endpoint.id}:${operation.id}`} endpoint={endpoint} operation={operation} />
@@ -218,15 +224,22 @@ describe("replacement", () => {
   });
 });
 
+describe("direction badges", () => {
+  it("carry an arrow — up for what the reader sends, down for what they receive", () => {
+    const html = render(<Endpoint id="/v2/{language}" />, ir("realtime-v3.yaml"), radixThemes({ markdown: Markdown }));
+    expect(html).toContain('<span aria-hidden="true">↑</span>client → server');
+    expect(html).toContain('<span aria-hidden="true">↓</span>server → client');
+  });
+});
+
 describe("snapshots", () => {
-  it("one request/response operation", () => {
-    expect(render(<Operation id="createJob" />, ir("batch.yaml"), radixThemes({ markdown: Markdown }))).toMatchSnapshot();
+  it("one REST path", () => {
+    expect(render(<Endpoint id="/jobs" />, ir("batch.yaml"), radixThemes({ markdown: Markdown }))).toMatchSnapshot();
   });
 
-  it("one message operation", () => {
-    const first = allOperations(ir("realtime-v3.yaml"))[0]!;
+  it("one channel", () => {
     expect(
-      render(<Operation id={first.operation.id} />, ir("realtime-v3.yaml"), radixThemes({ markdown: Markdown })),
+      render(<Endpoint id="/v2/{language}" />, ir("realtime-v3.yaml"), radixThemes({ markdown: Markdown })),
     ).toMatchSnapshot();
   });
 });

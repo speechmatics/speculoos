@@ -16,7 +16,7 @@
  *   ./fields.tsx  `Fields` and `FieldRow`, as a DataList
  */
 
-import { Fragment, type ComponentType, type ReactNode } from "react";
+import { createContext, Fragment, useContext, type ComponentType, type ReactNode } from "react";
 import {
   Badge,
   Box,
@@ -84,6 +84,7 @@ const HEADING_SIZE = { 1: "8", 2: "6", 3: "5", 4: "4", 5: "3", 6: "2" } as const
 const MAJOR: ReadonlySet<SectionKind> = new Set(["api", "tag", "endpoint", "operation", "type"]);
 
 const LIST_GAP: Record<ListProps["kind"], "1" | "2" | "3"> = {
+  endpoints: "3",
   operations: "2",
   servers: "3",
   security: "2",
@@ -91,6 +92,16 @@ const LIST_GAP: Record<ListProps["kind"], "1" | "2" | "3"> = {
   callbacks: "3",
   links: "3",
 };
+
+/**
+ * Up for what the reader sends, down for what they receive. Prefixed to a
+ * direction badge, so "client → server" reads at a glance even in a narrow
+ * sidebar.
+ */
+const DIRECTION_ARROW: Record<string, string> = { "client-sends": "↑", "server-sends": "↓" };
+
+/** Whether a `List` sits inside another, so a nested one can indent. */
+const InList = createContext(false);
 
 function clampLevel(level: number): 1 | 2 | 3 | 4 | 5 | 6 {
   return Math.min(Math.max(Math.round(level), 1), 6) as 1 | 2 | 3 | 4 | 5 | 6;
@@ -160,8 +171,10 @@ export function radixThemes(options: RadixThemesOptions): Components {
   }
 
   function SpecBadge({ tone, value, children }: BadgeProps): ReactNode {
+    const arrow = tone === "direction" && value !== undefined ? DIRECTION_ARROW[value] : undefined;
     return (
       <Badge color={badgeColor(colors, { tone, value })} size={size === "3" ? "2" : "1"}>
+        {arrow !== undefined && <span aria-hidden="true">{arrow}</span>}
         {children}
       </Badge>
     );
@@ -234,11 +247,17 @@ export function radixThemes(options: RadixThemesOptions): Components {
     );
   }
 
+  /**
+   * A column of items. A list inside a list item — an endpoint's operations
+   * under its address — takes the full width, so it starts on its own line,
+   * and indents.
+   */
   function List({ kind, children }: ListProps): ReactNode {
+    const nested = useContext(InList);
     return (
-      <Flex asChild direction="column" gap={LIST_GAP[kind]} my="3" p="0">
+      <Flex asChild direction="column" gap={LIST_GAP[kind]} my={nested ? "1" : "3"} p="0" pl={nested ? "3" : "0"} width="100%">
         <ul style={{ listStyle: "none" }} data-kind={kind}>
-          {children}
+          <InList.Provider value={true}>{children}</InList.Provider>
         </ul>
       </Flex>
     );

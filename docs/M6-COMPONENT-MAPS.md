@@ -328,3 +328,62 @@ missing keys but does **not** validate DOM nesting; only react-dom's client does
 So nesting has its own structural test (now on `<dl>`), and the dev server's
 browser console was checked clean in every fixture and mode.
 
+## 13. Endpoints as the unit
+
+*Also surfaced by looking at the map, and wider than the map: it changed both
+renderers.*
+
+**What was wrong.** Both renderers were operation-first. A channel with a send and
+a receive showed its address, protocol and address parameters twice, and a REST
+path with GET and POST did the same. And nothing rendered `endpoint.docs` at all —
+a channel's own description ("The transcription socket.") was in the IR and on no
+page. The IR had the right shape all along: an OpenAPI path and an AsyncAPI channel
+both lower to `Endpoint`, which owns its address, docs, parameters and operations.
+Only the renderers ignored that level.
+
+**What changed.**
+
+- `<Endpoint>` / `renderEndpoint`: the address is the heading; protocol,
+  description and shared parameters are shown once; each operation follows one
+  level down without repeating them. Same for both dialects.
+- Under an endpoint, a REST operation is headed by its summary (or method), and a
+  message operation by `DIRECTION_VERB` — "Send" / "Receive", new in core — with
+  the direction badge and the title beside it. Speechmatics' common case is one
+  channel, two operations, and the verb is what tells them apart.
+- `HrefTarget` gains `{ kind: "endpoint" }`, and `defaultHref` maps it to the
+  endpoint's slug. With an operation's target already carrying its endpoint, one
+  `href` function routes a page per endpoint with an anchor per operation. That is
+  the Speechmatics requirement: one page per REST path, routed upstream.
+- `useEndpoints` / `useEndpoint`, and `EndpointList` for navigation.
+  `@speculoos/html`'s `renderApi` and `renderNav` now group by endpoint by
+  default (`groupBy: "tag"` keeps the old behaviour); `renderNav`'s `byTag`
+  boolean became `groupBy: "endpoint" | "tag" | "none"`.
+- `ListProps.kind` gains `"endpoints"`; the HTML catalogue gains
+  `spec-link--endpoint` and `spec-list--endpoints`.
+- `<Operation>` standing alone is unchanged.
+
+**Parity holds.** The cross-renderer test now also compares every endpoint of both
+dialects, and the endpoint navigation, for the same field keys and link targets.
+
+**In the map.** Direction badges carry ↑ (send) / ↓ (receive). The dev page's
+"Pages: per-endpoint" mode routes each endpoint to its own page through an `href`
+function alone, as a site would.
+
+**Endpoints with no operations are left out of listings.** In AsyncAPI 3 a channel
+is an address plus the messages that *can* travel on it, and an operation is what
+the application does there; `reply` can name a different channel for the response
+to land on. So a reply-only channel (`pong` in `reply-v3.yaml`) has no operation of
+its own, and its message is already shown inside the operation that expects it.
+`listedEndpoints(ir)` in core — used by `renderApi`, `renderNav`, `useEndpoints`
+and `EndpointList` — skips such endpoints; they remain in `ir.endpoints` and render
+by id ("No operations"). This exposed a gap: both renderers headed a reply by
+`reply.address` only, which the adapter sets just for a runtime address, so a reply
+on a declared channel said "Reply" and nothing told the reader where it arrives.
+`replyAddress` in core now falls back to the named channel's address: "Reply on
+/pong".
+
+**Tags: parked.** Standard in both specs — a subject-area label on operations, used
+for sidebar sections (Swagger UI, Redoc) and per-tag client classes, typically
+spanning several paths. Still supported (`groupBy: "tag"`, `OperationList`), but
+no longer a default anywhere, and nothing more is built for them until there is a
+UI use case — most likely section headings over endpoint pages.
