@@ -32,7 +32,7 @@ style decision taken on your behalf and it hides a slot you forgot to fill.
 | `Markdown` | Descriptions. **Sanitise here.** |
 | `Code` | Short literals: a field name, a type, a path template |
 | `CodeBlock` | Example payloads |
-| `Badge` | Constraint chips, methods, statuses, direction, media types |
+| `Badge` | Constraint chips, methods, statuses, direction, media types. `tone` says which kind; `value` says which one (`"get"`, `"200"`) |
 | `Link` | Type links, operation links, external docs |
 | `Table` | Wraps a set of field rows |
 | `FieldRow` | One property, parameter or response header |

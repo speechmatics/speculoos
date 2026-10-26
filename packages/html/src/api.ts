@@ -33,7 +33,7 @@ function servers(c: Ctx, list: Server[], level: number): Html {
           { class: c.o.cls("list-item"), "data-protocol": server.protocol },
           // Templated segments are left intact in the IR precisely so they can
           // be shown; the variable table below says what goes in them.
-          inline(code(c, server.url), badge(c, "protocol", text(server.protocol))),
+          inline(code(c, server.url), badge(c, "protocol", text(server.protocol), server.protocol)),
           docsBody(c, server.docs),
           server.variables.length > 0
             ? h(

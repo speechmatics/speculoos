@@ -118,8 +118,13 @@ export function codeBlock(c: Ctx, value: string, language?: string): Html {
   );
 }
 
-export function badge(c: Ctx, tone: BadgeTone, content: Html): Html {
-  return h("span", { class: c.o.cls("badge", tone) }, content);
+/**
+ * `value` is the raw value behind the badge — "get", "200", "client-sends" — as
+ * `data-value`. The modifier says a badge is a method; this says which, so a
+ * stylesheet can colour GET and DELETE differently without a class per method.
+ */
+export function badge(c: Ctx, tone: BadgeTone, content: Html, value?: string): Html {
+  return h("span", { class: c.o.cls("badge", tone), "data-value": value }, content);
 }
 
 /** An anchor when the target resolves, the bare content when it does not. */

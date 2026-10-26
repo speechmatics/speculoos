@@ -20,9 +20,9 @@ function OperationLabel({ endpoint, operation }: { endpoint: Endpoint; operation
   return (
     <>
       {operation.kind === "request-response" ? (
-        <C.Badge tone="method">{operation.method.toUpperCase()}</C.Badge>
+        <C.Badge tone="method" value={operation.method}>{operation.method.toUpperCase()}</C.Badge>
       ) : (
-        <C.Badge tone="direction">{DIRECTION_LABEL[operation.direction]}</C.Badge>
+        <C.Badge tone="direction" value={operation.direction}>{DIRECTION_LABEL[operation.direction]}</C.Badge>
       )}
       {operation.kind === "request-response" && operation.isWebhook && (
         <C.Badge tone="note">webhook</C.Badge>

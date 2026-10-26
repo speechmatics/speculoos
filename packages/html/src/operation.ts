@@ -74,7 +74,7 @@ function examples(c: Ctx, list: Example[], idPrefix: string, level: number): Htm
 function content(c: Ctx, variants: MediaVariant[], idPrefix: string, level: number): Html {
   const items: GroupItem[] = variants.map((variant) => ({
     id: `${idPrefix}-${variant.mediaType}`,
-    label: badge(c, "mediaType", text(variant.mediaType)),
+    label: badge(c, "mediaType", text(variant.mediaType), variant.mediaType),
     body: join([
       schemaTable(c, variant.node, { view: variant.view }),
       examples(c, variant.examples, `${idPrefix}-${variant.mediaType}`, level + 1),
@@ -118,6 +118,7 @@ function security(c: Ctx, requirements: SecurityRequirements, level: number): Ht
                     c,
                     "securityScheme",
                     text(req.scopes.length === 0 ? label : `${label}: ${req.scopes.join(", ")}`),
+                    req.scheme,
                   );
                 }),
               ),
@@ -158,7 +159,7 @@ function responses(c: Ctx, list: RestResponse[], level: number, idPrefix: string
   if (list.length === 0) return "";
   const items: GroupItem[] = list.map((response) => ({
     id: `${idPrefix}-${response.status}`,
-    label: badge(c, "status", text(response.status)),
+    label: badge(c, "status", text(response.status), response.status),
     body: join([
       docsBody(c, response.docs),
       response.headers.length > 0
@@ -186,7 +187,7 @@ function wsMessage(c: Ctx, message: WsMessage, level: number): Html {
     docsBody(c, message.docs),
     inline(
       message.contentType !== undefined
-        ? badge(c, "mediaType", text(message.contentType))
+        ? badge(c, "mediaType", text(message.contentType), message.contentType)
         : undefined,
       message.discriminatorValue !== undefined
         ? badge(c, "constraint", text(format(message.discriminatorValue)))
@@ -278,7 +279,7 @@ function links(c: Ctx, operation: Operation, level: number): Html {
 function subtitle(c: Ctx, endpoint: Endpoint, operation: Operation): Html {
   if (operation.kind === "request-response") {
     return inline(
-      badge(c, "method", text(operation.method.toUpperCase())),
+      badge(c, "method", text(operation.method.toUpperCase()), operation.method),
       // `endpoint.id` namespaces a webhook as "webhook:name" so it cannot
       // collide with a path. That is identity, not a label, so the page gets
       // the address and a badge saying which it is.
@@ -287,7 +288,7 @@ function subtitle(c: Ctx, endpoint: Endpoint, operation: Operation): Html {
     );
   }
   return inline(
-    badge(c, "direction", text(DIRECTION_LABEL[operation.direction])),
+    badge(c, "direction", text(DIRECTION_LABEL[operation.direction]), operation.direction),
     code(c, endpoint.address),
   );
 }
@@ -343,7 +344,7 @@ export function operationSection(c: Ctx, entry: OperationEntry, level: number): 
       ? h(
           "p",
           { class: c.o.cls("protocols") },
-          inline(...endpoint.protocols.map((protocol) => badge(c, "protocol", text(protocol)))),
+          inline(...endpoint.protocols.map((protocol) => badge(c, "protocol", text(protocol), protocol))),
         )
       : undefined,
     security(c, requirements, level + 1),

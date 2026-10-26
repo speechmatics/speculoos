@@ -20,8 +20,8 @@ function entryLabel(c: Ctx, entry: OperationEntry): Html {
   const { endpoint, operation } = entry;
   const mark =
     operation.kind === "request-response"
-      ? badge(c, "method", text(operation.method.toUpperCase()))
-      : badge(c, "direction", text(DIRECTION_LABEL[operation.direction]));
+      ? badge(c, "method", text(operation.method.toUpperCase()), operation.method)
+      : badge(c, "direction", text(DIRECTION_LABEL[operation.direction]), operation.direction);
   return inline(
     mark,
     h("span", { class: c.o.cls("nav-title") }, text(operation.docs.title ?? operation.id)),

@@ -99,6 +99,18 @@ like a table — and those six lines are yours, which is the point.
 Each field carries `data-key`, `data-path`, `data-depth`, and `data-in` for a
 parameter.
 
+### Badges
+
+`spec-badge--method` says a badge is an HTTP method; `data-value` says which —
+`get`, `delete`. Status, direction, protocol, media type and security scheme
+badges carry it too, so colouring by value is an attribute selector rather than
+a class per method:
+
+```css
+.spec-badge--method[data-value="get"]    { background: #e6f6ec; }
+.spec-badge--method[data-value="delete"] { background: #fdecec; }
+```
+
 ### Tabs
 
 There are none. HTML has no tabs without script, and shipping script would make

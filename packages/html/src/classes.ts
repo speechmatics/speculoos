@@ -58,7 +58,12 @@ export const CLASSES: Record<string, readonly string[]> = {
   /** A short literal: a type name, a default value, a path template. */
   code: [],
   codeblock: [],
-  /** The modifier is the badge's tone. Styling hint only; the text is the content. */
+  /**
+   * The modifier is the badge's tone. Styling hint only; the text is the
+   * content. Carries `data-value` with the raw value behind it — `get`, `200`,
+   * `client-sends`, `wss` — so `[data-value="delete"]` can be red without a class
+   * per method.
+   */
   badge: [
     "method",
     "status",

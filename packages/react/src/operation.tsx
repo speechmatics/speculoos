@@ -77,7 +77,7 @@ function Content({ content, idPrefix }: { content: MediaVariant[]; idPrefix: str
   if (content.length === 0) return null;
   const tabs: Tab[] = content.map((variant) => ({
     id: `${idPrefix}-${variant.mediaType}`,
-    label: <C.Badge tone="mediaType">{variant.mediaType}</C.Badge>,
+    label: <C.Badge tone="mediaType" value={variant.mediaType}>{variant.mediaType}</C.Badge>,
     content: (
       <>
         <SchemaTable node={variant.node} view={variant.view} />
@@ -114,7 +114,7 @@ function Security({ security, level }: { security: SecurityRequirements; level: 
                     ? req.scheme
                     : `${req.scheme} (${kind})`;
                 return (
-                  <C.Badge key={req.scheme} tone="securityScheme">
+                  <C.Badge key={req.scheme} tone="securityScheme" value={req.scheme}>
                     {req.scopes.length === 0 ? label : `${label}: ${req.scopes.join(", ")}`}
                   </C.Badge>
                 );
@@ -177,7 +177,7 @@ function Responses({ responses, level, idPrefix }: {
   if (responses.length === 0) return null;
   const tabs: Tab[] = responses.map((response) => ({
     id: `${idPrefix}-${response.status}`,
-    label: <C.Badge tone="status">{response.status}</C.Badge>,
+    label: <C.Badge tone="status" value={response.status}>{response.status}</C.Badge>,
     content: (
       <>
         <DocsBody docs={response.docs} />
@@ -207,7 +207,7 @@ function Message({ message, level }: { message: WsMessage; level: number }): Rea
     <>
       <DocsBody docs={message.docs} />
       {message.contentType !== undefined && (
-        <C.Badge tone="mediaType">{message.contentType}</C.Badge>
+        <C.Badge tone="mediaType" value={message.contentType}>{message.contentType}</C.Badge>
       )}
       {message.discriminatorValue !== undefined && (
         <C.Badge tone="constraint">{format(message.discriminatorValue)}</C.Badge>
@@ -279,7 +279,7 @@ export function Operation(props: OperationProps): ReactNode {
   const subtitle =
     operation.kind === "request-response" ? (
       <>
-        <C.Badge tone="method">{operation.method.toUpperCase()}</C.Badge>
+        <C.Badge tone="method" value={operation.method}>{operation.method.toUpperCase()}</C.Badge>
         {/* `endpoint.id` namespaces a webhook as "webhook:name" so it cannot
             collide with a path. That is identity, not a label, so the page gets
             the address and a badge saying which it is. */}
@@ -288,7 +288,7 @@ export function Operation(props: OperationProps): ReactNode {
       </>
     ) : (
       <>
-        <C.Badge tone="direction">{DIRECTION_LABEL[operation.direction]}</C.Badge>
+        <C.Badge tone="direction" value={operation.direction}>{DIRECTION_LABEL[operation.direction]}</C.Badge>
         <C.Code>{endpoint.address}</C.Code>
       </>
     );
@@ -309,7 +309,7 @@ export function Operation(props: OperationProps): ReactNode {
     >
       <DocsBody docs={operation.docs} />
       {endpoint.protocols.map((protocol) => (
-        <C.Badge key={protocol} tone="protocol">
+        <C.Badge key={protocol} tone="protocol" value={protocol}>
           {protocol}
         </C.Badge>
       ))}

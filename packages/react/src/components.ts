@@ -90,6 +90,13 @@ export interface BadgeProps {
   children: ReactNode;
   /** Present when the badge came from a constraint chip, for custom formatting. */
   chip?: Chip | undefined;
+  /**
+   * The raw value behind the badge — "get", "200", "client-sends", "wss" — for maps
+   * that colour by it. `tone: "method"` says a badge is a method; this says
+   * which, so a map never has to read `children` as a string. Absent where the
+   * text is fixed ("required", "webhook"), and on a constraint, which has `chip`.
+   */
+  value?: string | undefined;
 }
 
 export interface LinkProps {

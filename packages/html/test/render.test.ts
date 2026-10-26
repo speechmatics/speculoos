@@ -162,6 +162,14 @@ describe("operations", () => {
     expect(html).toContain("spec-badge--note");
   });
 
+  it("says which method a method badge is, not only that it is one", () => {
+    const html = renderOperationById("listJobs", rest);
+    expect(html).toContain('<span class="spec-badge spec-badge--method" data-value="get">GET</span>');
+    expect(html).toContain('class="spec-badge spec-badge--status" data-value="200"');
+    const first = allOperations(ws)[0]!;
+    expect(renderOperation(first, ws)).toMatch(/spec-badge--direction" data-value="(client-sends|server-sends)"/);
+  });
+
   it("starts headings at the requested level and counts down", () => {
     const entry = allOperations(rest)[0]!;
     const html = renderOperation(entry, rest, { level: 3 });

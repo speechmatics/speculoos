@@ -229,6 +229,28 @@ describe("Operation", () => {
   it("falls back to Empty for an unknown id", () => {
     expect(render(<Operation id="nope" />, rest)).toContain("<x-empty>No operation nope</x-empty>");
   });
+
+  it("tells a badge which value it shows, so a map need not parse its text", () => {
+    // `tone: "method"` cannot say GET from DELETE. A map colouring by method
+    // would otherwise be reading `children` as a string.
+    const valued: Components = {
+      ...boxy,
+      Badge: ({ tone, value, children }) => (
+        <x-badge data-tone={tone} {...(value !== undefined ? { "data-value": value } : {})}>
+          {children}
+        </x-badge>
+      ),
+    };
+    const html = render(<Operation id="listJobs" />, rest, valued);
+    expect(html).toContain('<x-badge data-tone="method" data-value="get">GET</x-badge>');
+    expect(html).toContain('<x-badge data-tone="status" data-value="200">200</x-badge>');
+    expect(html).toContain('<x-badge data-tone="securityScheme" data-value="bearer">bearer</x-badge>');
+
+    const first = ws.endpoints.flatMap((e) => e.operations)[0]!;
+    expect(render(<Operation id={first.id} />, ws, valued)).toMatch(
+      /<x-badge data-tone="direction" data-value="(client-sends|server-sends)">/,
+    );
+  });
 });
 
 describe("message operations", () => {
