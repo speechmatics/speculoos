@@ -35,7 +35,7 @@ export const boxy: Components = {
   ),
   Badge: ({ tone, children }) => <x-badge data-tone={tone}>{children}</x-badge>,
   Link: ({ href, children }) => <x-link data-href={href}>{children}</x-link>,
-  Table: ({ kind, children }) => <x-table data-kind={kind}>{children}</x-table>,
+  Fields: ({ kind, children }) => <x-fields data-kind={kind}>{children}</x-fields>,
   FieldRow: ({ field, depth, name, type, chips, docs, required, deprecated, location, variantsLabel, children }) => (
     <x-row data-depth={String(depth)} data-key={field.key}>
       <x-name>{name}</x-name>
@@ -77,7 +77,7 @@ export const terse: Components = {
   CodeBlock: ({ children }) => <y-lit>{children}</y-lit>,
   Badge: ({ children }) => <y-tag>{children}</y-tag>,
   Link: ({ children }) => <y-a>{children}</y-a>,
-  Table: ({ children }) => <y-dl>{children}</y-dl>,
+  Fields: ({ children }) => <y-dl>{children}</y-dl>,
   FieldRow: ({ field, name, type }) => (
     <y-dt data-depth={String(field.depth)}>
       {name}

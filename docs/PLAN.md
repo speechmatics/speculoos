@@ -574,9 +574,9 @@ invalid IR is caught with a message naming which pass did it. ✅ 36 tests.
 </SpeculoosProvider>
 ```
 
-`components` is a map the consumer supplies from their own library — `Table`, `Row`, `Cell`,
-`Badge`, `Code`, `Markdown`, `Link`, `Disclosure`, `Tabs`. Every one is required; there are
-no defaults to accidentally inherit.
+`components` is a map the consumer supplies from their own library — `Section`, `Markdown`,
+`Code`, `CodeBlock`, `Badge`, `Link`, `Fields`, `FieldRow`, `Tabs`, `List`, `ListItem`,
+`Empty`. Every one is required; there are no defaults to accidentally inherit.
 
 Recursion stays in the consumer's hands, because `FieldNode.children` is already resolved by
 core — no renderer implements a depth budget or cycle detection:
@@ -944,12 +944,16 @@ the least differentiated and hardest-to-get-right part of adoption, so shipping 
 cliff without compromising anything, *provided* dependency direction stays one-way.
 `@speculoos/react` must never know a design system exists.
 
-*Two things the pilot surfaced before a line was written.* `BadgeProps` cannot say which HTTP
-method a method badge is for, so a map cannot colour GET green and DELETE red without parsing
-`children` — and `@speculoos/html` has the same gap. And a map can have requirements on the
-*provider* options: a Radix `Table` map needs `layout: "rows"`, because `<tr>` cannot nest,
-but nothing lets it say so. Both are additive fixes, and both are free only until a map ships
-and `Components` becomes a public implementation contract rather than a consumer-facing one.
+*Two things the pilot surfaced before a line was written.* `BadgeProps` could not say which
+HTTP method a method badge is for, so a map could not colour GET green and DELETE red without
+parsing `children` — and `@speculoos/html` had the same gap. Fixed: `BadgeProps.value` and
+`data-value`. The second looked like "a map can have requirements on the *provider*
+options" — a Radix `Table` map needing `layout: "rows"` because `<tr>` cannot nest — but it
+was a naming problem. The slot was called `Table`, which invited filling it with a table;
+it is the container for field rows and is now called `Fields`. Only a `<table>`-based map
+meets the nesting constraint, and it can meet it without help by returning a `FieldRow`'s
+nested rows as siblings after its own. No provider API was added. Both changes were free
+only because no map had shipped yet.
 
 **Post-1.0:** example synthesis and code samples (OD-2); further framework bindings; an
 MDX/Docusaurus/Astro integration package; a playground app.

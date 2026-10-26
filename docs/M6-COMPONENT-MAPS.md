@@ -1,6 +1,6 @@
 # M6 — Shipped component maps
 
-**Status:** planned, not started.
+**Status:** in progress. §4.1 and §4.2 done; §4.3 (versioning) open.
 **Pilot:** Radix Themes, because it is the basis of the Speechmatics design system.
 
 This is a working plan, written to be picked up cold. It assumes nothing about
@@ -52,7 +52,7 @@ ships, `Components` stops being a consumer-facing interface and becomes a public
 *implementation* contract: adding a required component becomes breaking for
 every map in existence.
 
-### 4.1 `BadgeProps` cannot express which method it is
+### 4.1 `BadgeProps` cannot express which method it is — ✅ done
 
 `BadgeProps` is `{ tone, children, chip? }`. The most universal convention in
 API documentation is colouring by HTTP method — GET green, DELETE red — but
@@ -77,30 +77,45 @@ it emits `spec-badge--method` with no indication of which method — so add a
 `data-value` attribute there in the same change, and a `badge` entry to
 `CLASSES` if the catalogue needs it.
 
-### 4.2 A map may have requirements on the provider options
+*Done.* Set on method, status, direction, protocol, media-type and
+security-scheme badges in both renderers. Direction values are the IR's own,
+`client-sends` / `server-sends`. Not set on constraint badges, which already
+carry `chip` (and `data-chip` in HTML), nor where the text is fixed
+(`required`, `webhook`). Documented on the `badge` entry in `CLASSES`.
 
-This surfaced before a line was written and is the more interesting of the two.
+### 4.2 The `Table` slot was misnamed — ✅ done, renamed `Fields`
 
-Radix's Table is `Table.Root > Table.Body > Table.Row > Table.Cell`, built on
-real `<table>`/`<tr>`/`<td>`. **You cannot nest a `Table.Row` inside a
-`Table.Row`**, so a Table-based map requires `layout: "rows"` — the flat
-pre-order list where every `FieldRow` carries `depth`. (This is exactly why that
-option exists, and the `terse` fake map in `packages/react/test/fake.tsx` is
-built flat-row, so the path is real and tested.)
+The original worry here was "a map may have requirements on the provider
+options": Radix's `Table.Row` cannot nest inside a `Table.Row`, so a
+Table-based map would need `layout: "rows"`, which is a `SpeculoosProvider`
+option, not a property of the map. Two fixes were proposed — the package
+exporting `radixThemesOptions`, or the provider accepting map defaults.
 
-But `layout` is a **`SpeculoosProvider` option**, not a property of the map. A
-consumer can set `layout: "tree"` and get invalid HTML with no warning.
+Neither was needed. The worry came from the slot's *name*: it was called
+`Table`, which reads as "fill this with a table". It is only the container
+around a set of `FieldRow`s, and a definition list, a grid or a stack of rows
+fits it just as well. Only a `<table>`-based map meets the nesting constraint,
+and that map can work around it alone. In `layout: "tree"`, `FieldRow` gets its
+nested rows as `children`; those are `FieldRow`s carrying their own `depth`, so
+the map returns them *after* its own row as siblings:
 
-Recommended fix, least invasive: the package exports its preferred options
-alongside the map, and the README shows both being passed.
-
-```ts
-export const radixThemesOptions: SpeculoosOptions = { layout: "rows" };
+```tsx
+FieldRow: ({ depth, name, type, docs, children }) => (
+  <>
+    <Table.Row>…</Table.Row>
+    {children}
+  </>
+)
 ```
 
-Alternative worth considering: let `SpeculoosProvider` accept
-`{ components, options }` so a map can carry its own defaults, with explicit
-provider options winning. More invasive; decide before building.
+Valid HTML in either layout, with no provider API. So the slot is now `Fields`
+(`FieldsProps`), the `FieldRowProps.children` doc comment says the above, and
+nothing was added to `SpeculoosProvider`. If a later map has a requirement it
+genuinely cannot meet alone, design for it then, against a real case.
+
+(Most nesting is rare anyway: with the default `expandRefs: "never"`, a `$ref`
+property is one row with a link. Children appear only for inline objects,
+arrays of inline objects and union branches.)
 
 ### 4.3 State the React API's stability
 
@@ -120,8 +135,8 @@ Twelve components. Expect 150–250 lines.
 | `CodeBlock` | `pre` + `Code variant="ghost"`, maybe in `ScrollArea` | Radix has no code block; this needs deciding. |
 | `Badge` | `Badge color variant` | `variant` defaults to `"soft"`; `color` from the tone/value map. |
 | `Link` | `Link` | Offer an `asChild` escape so a router `Link` can be slotted in. |
-| `Table` | `Table.Root`/`Table.Body`, or `DataList.Root` | Two modes — see below. |
-| `FieldRow` | `Table.Row` + `Table.Cell`, or `DataList.Item` | Indent from `depth` via `pl`. |
+| `Fields` | `Table.Root`/`Table.Body`, or `DataList.Root` | Two modes — see below. `kind` separates parameters/headers (genuinely tabular) from schema fields. |
+| `FieldRow` | `Table.Row` + `Table.Cell`, or `DataList.Item` | Indent from `depth` via `pl`. In Table mode, return `children` as siblings — see §4.2. |
 | `Tabs` | `Tabs.Root`/`List`/`Trigger`/`Content` | `defaultValue={tabs[0].id}`; `Trigger value={tab.id}`. |
 | `List` | `Flex direction="column"` | `kind` drives gap. |
 | `ListItem` | `Box` | |
@@ -199,8 +214,8 @@ to emit markup, so those techniques do not transfer. What does:
 2. **Renders every fixture** — every operation of both dialects and every type
    section, without throwing. This is the test that actually catches things.
 3. **No React warnings** — capture `console.error` during render and assert it
-   is empty. Catches missing keys and invalid DOM nesting, which is exactly the
-   `<tr>`-in-`<tr>` failure mode.
+   is empty, in **both** layouts. Catches missing keys and invalid DOM nesting,
+   which is exactly the `<tr>`-in-`<tr>` failure mode §4.2 relies on avoiding.
 4. **Snapshot one operation per dialect** — to make review of changes readable.
 5. **Heading levels descend** — `level` is passed through, so a map that
    hard-codes `h2` is a real accessibility bug.
@@ -220,7 +235,6 @@ the pattern.
   cycles. Write down what qualifies a second map — real demand, or a contributor
   who owns it — before it becomes an unfunded mandate by drift.
 - **`CodeBlock`** has no natural Radix equivalent. Decide from rendered output.
-- **Provider options**: exported constant (§4.2) or `SpeculoosProvider` change?
 
 ## 10. Exit criteria
 
@@ -234,8 +248,8 @@ the pattern.
 
 ## 11. Suggested order
 
-1. §4.1 `BadgeProps.value` (+ the `@speculoos/html` equivalent) — additive, free now.
-2. §4.2 decide and implement the provider-options story.
+1. ~~§4.1 `BadgeProps.value` (+ the `@speculoos/html` equivalent).~~ Done.
+2. ~~§4.2 decide and implement the provider-options story.~~ Resolved by renaming `Table` → `Fields`.
 3. Scaffold `packages/map-radix-themes` — copy `packages/html`'s tsconfig/tsup setup.
 4. The twelve components, Table mode first.
 5. Wire into the preview harness; **look at it**.

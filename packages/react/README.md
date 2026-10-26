@@ -34,7 +34,7 @@ style decision taken on your behalf and it hides a slot you forgot to fill.
 | `CodeBlock` | Example payloads |
 | `Badge` | Constraint chips, methods, statuses, direction, media types. `tone` says which kind; `value` says which one (`"get"`, `"200"`) |
 | `Link` | Type links, operation links, external docs |
-| `Table` | Wraps a set of field rows |
+| `Fields` | Wraps a set of field rows. A table, a grid or a definition list — your call |
 | `FieldRow` | One property, parameter or response header |
 | `Tabs` | Media types, response statuses, message variants, examples |
 | `List` / `ListItem` | Operation lists, security alternatives, back-links |
@@ -69,7 +69,7 @@ const Field = ({ f }: { f: FieldNode }) => (
 | Option | Default | What it decides |
 |---|---|---|
 | `href` | `#slug` | Where links point. Replace this and nothing else for a page-per-operation site. |
-| `layout` | `"tree"` | `"rows"` hands `Table` a flat pre-order list carrying `depth`, for design systems that cannot nest a row inside a row. |
+| `layout` | `"tree"` | `"rows"` hands `Fields` a flat pre-order list carrying `depth`, for design systems that cannot nest a row inside a row. |
 | `expandRefs` | `"never"` | `"depth"` or `"always"` inline referenced types instead of linking to them. |
 | `maxDepth` | `2` | Only consulted when `expandRefs` is `"depth"`. |
 | `headingLevel` | `2` | The level the outermost `Section` renders at; nested sections count up. |

@@ -8,7 +8,7 @@
  * takes down the build.
  *
  * `toTree` is the nested shape; `toRows` is the same nodes flattened pre-order for
- * design systems whose Table takes a row array and cannot nest <tr> inside <tr>.
+ * design systems whose table component takes a row array and cannot nest <tr> inside <tr>.
  */
 
 import type { Docs, Node, Property, TypeId, TypeRegistry, View } from "./schema.js";

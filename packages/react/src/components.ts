@@ -105,7 +105,15 @@ export interface LinkProps {
   children: ReactNode;
 }
 
-export interface TableProps {
+/**
+ * The container around a set of `FieldRow`s — a schema's properties, an
+ * operation's parameters or a response's headers.
+ *
+ * Not necessarily a table. A grid, a definition list or a plain stack of rows
+ * all fit; only a `<table>` brings the constraint that a row cannot nest inside
+ * a row, and `FieldRowProps.children` says how to live with that.
+ */
+export interface FieldsProps {
   /** Lets one component serve all three, or three components serve one each. */
   kind: "fields" | "parameters" | "headers";
   children: ReactNode;
@@ -138,7 +146,13 @@ export interface FieldRowProps {
   variantsLabel?: string | undefined;
   /** Set for a parameter row: "path" | "query" | "header" | "cookie". */
   location?: Parameter["in"] | undefined;
-  /** Nested rows, in `layout: "tree"`. Always absent in `layout: "rows"`. */
+  /**
+   * Nested rows, in `layout: "tree"`. Always absent in `layout: "rows"`.
+   *
+   * These are `FieldRow`s too, each carrying its own `depth`, so a map built on
+   * `<tr>` — which cannot contain a `<tr>` — can return them *after* its own
+   * row as siblings rather than inside it, and work in either layout.
+   */
   children?: ReactNode | undefined;
 }
 
@@ -188,7 +202,7 @@ export interface Components {
   CodeBlock: ComponentType<CodeBlockProps>;
   Badge: ComponentType<BadgeProps>;
   Link: ComponentType<LinkProps>;
-  Table: ComponentType<TableProps>;
+  Fields: ComponentType<FieldsProps>;
   FieldRow: ComponentType<FieldRowProps>;
   Tabs: ComponentType<TabsProps>;
   List: ComponentType<ListProps>;

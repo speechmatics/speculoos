@@ -50,7 +50,7 @@ node packages/cli/dist/cli.js build  path/to/openapi.yaml --tag Jobs --hide-inte
 ```
 
 `yourComponents` is a map of twelve components from your own library — `Section`,
-`Markdown`, `Code`, `Badge`, `Link`, `Table`, `FieldRow`, `Tabs`, and a few more.
+`Markdown`, `Code`, `Badge`, `Link`, `Fields`, `FieldRow`, `Tabs`, and a few more.
 All required; there are no defaults, because a default is a style decision taken
 on your behalf. See [`packages/react/README.md`](packages/react/README.md).
 

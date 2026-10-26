@@ -16,7 +16,7 @@ export interface SpeculoosOptions {
   /** Only consulted when `expandRefs` is "depth". Default 2. */
   maxDepth?: number;
   /**
-   * "tree" nests rows inside their parent; "rows" hands your `Table` a flat
+   * "tree" nests rows inside their parent; "rows" hands your `Fields` a flat
    * pre-order list carrying `depth`, for design systems that cannot put a
    * table row inside a table row. Default "tree".
    */

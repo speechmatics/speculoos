@@ -238,9 +238,9 @@ function SchemaTableBody({ node, kind, nested, view, expandRefs, maxDepth, empty
     <>
       {composedFrom.length > 0 && <Composition ids={composedFrom} />}
       {fields.length > 0 && (
-        <C.Table kind={kind}>
+        <C.Fields kind={kind}>
           <FieldRows fields={fields} nested={nested} />
-        </C.Table>
+        </C.Fields>
       )}
     </>
   );

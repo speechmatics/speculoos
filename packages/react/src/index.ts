@@ -58,6 +58,7 @@ export type {
   Components,
   EmptyProps,
   FieldRowProps,
+  FieldsProps,
   HrefTarget,
   LinkProps,
   ListItemProps,
@@ -66,6 +67,5 @@ export type {
   SectionKind,
   SectionProps,
   Tab,
-  TableProps,
   TabsProps,
 } from "./components.js";
