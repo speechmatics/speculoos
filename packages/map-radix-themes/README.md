@@ -114,6 +114,12 @@ const components = { ...radixThemes({ markdown }), Badge: MyBadge };
   messages are its vocabulary and prose links to them. The map draws it as a
   `Card` with a smaller heading at the real level. Media types, statuses and
   examples are tabs.
+- **Gathered examples are a list, not tabs.** `Tabs` with `kind: "examples"`
+  (from `<EntryExamples>`) is one card of rows, each opening in place —
+  Deepgram's panel. Their labels are too long to sit side by side as tabs.
+- **A row with no name is headed by its type.** An enum's documented values,
+  a union's branches and a scalar payload have no name; `"invalid_model"` or
+  `string<binary>` stands in the name column rather than a dash.
 - **"required" is red text, not a badge.** It is on most rows; a badge on most
   rows is noise, and it pushed each row onto a second line.
 - **`CodeBlock`** — Radix has none. It is a ghost `Code` in a `<pre>` on a

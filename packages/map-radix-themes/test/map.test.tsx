@@ -20,12 +20,14 @@ import { specDir } from "@speculoos/fixtures";
 import { load } from "@speculoos/loader";
 import { buildOpenApi } from "@speculoos/openapi";
 import { buildAsyncApi } from "@speculoos/asyncapi";
-import { allOperations, type ApiIR } from "@speculoos/core";
+import { allOperations, apiEntries, type ApiIR } from "@speculoos/core";
 import {
   Endpoint,
+  EntryExamples,
   EntryList,
   Operation,
   OperationList,
+  SchemaTable,
   SpeculoosProvider,
   TypeSections,
   type Components,
@@ -274,5 +276,36 @@ describe("snapshots", () => {
     expect(
       render(<Endpoint id="/v2/{language}" />, ir("realtime-v3.yaml"), radixThemes({ markdown: Markdown })),
     ).toMatchSnapshot();
+  });
+});
+
+describe("rows with no name", () => {
+  it("are headed by their type, not a dash: an enum's documented values read as a list", () => {
+    const source = { document: "d", pointer: "#" };
+    const status = {
+      kind: "enum" as const, source, docs: {}, nullable: false, baseType: "string" as const,
+      members: [{ value: "ok", docs: { description: "Fine." } }, { value: "busy", docs: { description: "Later." } }],
+    };
+    const node = {
+      kind: "object" as const, source, docs: {}, nullable: false, additional: { kind: "any" as const },
+      patternProperties: [], constraints: {}, composedFrom: [],
+      properties: [{ name: "status", node: status, required: false, readOnly: false, writeOnly: false, deprecated: false, docs: {} }],
+    };
+    const html = render(<SchemaTable node={node} />, ir("batch.yaml"), radixThemes({ markdown: Markdown }));
+    const labels = html.split("rt-DataListLabel").slice(1).map((c) => c.slice(0, c.indexOf("</dt>")));
+    expect(labels.some((l) => l.includes("—"))).toBe(false);
+    expect(labels.some((l) => l.includes("&quot;ok&quot;"))).toBe(true);
+  });
+});
+
+describe("gathered examples", () => {
+  it("lists each example as a row that opens in place, not as tabs", () => {
+    const api = ir("realtime-v3.yaml");
+    const channel = apiEntries(api).find((e) => e.kind === "channel")!;
+    const html = render(<EntryExamples entry={channel} />, api, radixThemes({ markdown: Markdown }));
+    expect(html).toMatch(/data-kind="examples"/);
+    expect(html).not.toContain('role="tablist"');
+    expect(html).toMatch(/<button type="button" aria-expanded="false" aria-controls="start-recognition-example-0-body"/);
+    expect(html).toMatch(/<div id="start-recognition-example-0-body" hidden=""/);
   });
 });

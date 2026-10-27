@@ -42,11 +42,18 @@ function indent(depth: number): Space {
 
 /**
  * The field name, in bold. `name` arrives already built from the map's own
- * `Code`, which is a ghost and so takes this weight and colour. An array
- * element has no name; it gets a dash rather than an empty label.
+ * `Code`, which is a ghost and so takes this weight and colour.
+ *
+ * A row with no name — an enum's value, a union's branch, a scalar payload —
+ * is identified by its type instead, so the type takes the name's place:
+ * `"invalid_model"` heads its own description, and a dash would say nothing.
  */
-function Name({ name }: Pick<FieldRowProps, "name">): ReactNode {
-  return name === null || name === undefined ? <Text color="gray">—</Text> : <Text weight="bold">{name}</Text>;
+function Name({ name, type }: Pick<FieldRowProps, "name" | "type">): ReactNode {
+  return <Text weight="bold">{named(name) ? name : type}</Text>;
+}
+
+function named(name: FieldRowProps["name"]): boolean {
+  return name !== null && name !== undefined;
 }
 
 /**
@@ -72,11 +79,14 @@ function toggleLabel(field: FieldRowProps["field"], open: boolean): string {
   return `${open ? "Hide" : "Show"} ${nodes.length} ${plural}`;
 }
 
-/** Type, then "one of", then constraint chips — what the value may be. */
-function TypeLine({ type, variantsLabel, chips }: Pick<FieldRowProps, "type" | "variantsLabel" | "chips">): ReactNode {
+/**
+ * Type, then "one of", then constraint chips — what the value may be. The type
+ * is left out when it already stands in for the name.
+ */
+function TypeLine({ name, type, variantsLabel, chips }: Pick<FieldRowProps, "name" | "type" | "variantsLabel" | "chips">): ReactNode {
   return (
     <Flex gap="2" wrap="wrap" align="center">
-      {type}
+      {named(name) && type}
       {variantsLabel !== undefined && <Text size="1" color="gray">{variantsLabel}</Text>}
       {chips}
     </Flex>
@@ -86,7 +96,9 @@ function TypeLine({ type, variantsLabel, chips }: Pick<FieldRowProps, "type" | "
 export function fields(size: Size) {
   function Fields({ kind, children }: FieldsProps): ReactNode {
     return (
-      <DataList.Root size={size} my="2" data-kind={kind}>
+      // Side by side from the `sm` breakpoint; stacked, name over value, below
+      // it, where two columns leave a value a few characters wide.
+      <DataList.Root size={size} my="2" orientation={{ initial: "vertical", sm: "horizontal" }} data-kind={kind}>
         {children}
       </DataList.Root>
     );
@@ -103,18 +115,23 @@ export function fieldRow(colors: BadgeColors) {
     return (
       <>
         <DataList.Item data-key={field.key} align="start">
-          <DataList.Label minWidth="180px">
+          <DataList.Label minWidth={{ initial: "0", sm: "180px" }}>
             <Box pl={indent(depth)}>
               <Flex gap="2" align="baseline" wrap="wrap">
-                <Name name={name} />
+                <Name name={name} type={props.type} />
                 <Marks required={required} deprecated={deprecated} colors={colors} />
               </Flex>
             </Box>
           </DataList.Label>
-          <DataList.Value>
-            <Flex direction="column" gap="1" align="start">
+          {/* Grid and flex items will not shrink below their content by
+              default, so one wide thing in a description — a table, a long
+              literal — would widen the whole list past its card. Every level
+              opts out, and the description takes the full width, so a wide
+              table scrolls inside its own scroll area instead. */}
+          <DataList.Value style={{ minWidth: 0 }}>
+            <Flex direction="column" gap="1" align="start" minWidth="0" width="100%">
               <TypeLine {...props} />
-              {docs}
+              <Box width="100%">{docs}</Box>
               {hasChildren && (
                 <Button
                   variant="ghost"

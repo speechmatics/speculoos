@@ -16,7 +16,7 @@
  *   ./fields.tsx  `Fields` and `FieldRow`, as a DataList
  */
 
-import { createContext, useContext, type ComponentType, type ReactNode } from "react";
+import { createContext, useContext, useState, type ComponentType, type ReactNode } from "react";
 import {
   Badge,
   Box,
@@ -26,6 +26,7 @@ import {
   Heading,
   Link,
   ScrollArea,
+  Separator,
   Tabs,
   Text,
 } from "@radix-ui/themes";
@@ -240,6 +241,7 @@ export function radixThemes(options: RadixThemesOptions): Components {
    * seeing one at a time is the point.
    */
   function SpecTabs({ kind, tabs }: TabsProps): ReactNode {
+    if (kind === "examples") return <ExampleList tabs={tabs} />;
     const first = tabs[0];
     if (first === undefined) return null;
     return (
@@ -257,6 +259,43 @@ export function radixThemes(options: RadixThemesOptions): Components {
           </Tabs.Content>
         ))}
       </Tabs.Root>
+    );
+  }
+
+  /**
+   * Every example on an entry, as one card of rows a reader scans: each row
+   * its label, opening to the example in place. Tabs would hide all but one
+   * behind labels too long to sit side by side.
+   */
+  function ExampleList({ tabs }: Pick<TabsProps, "tabs">): ReactNode {
+    return (
+      <Card size="1" my="3" data-kind="examples">
+        <Flex direction="column">
+          {tabs.map((tab, i) => (
+            <ExampleRow key={tab.id} tab={tab} first={i === 0} />
+          ))}
+        </Flex>
+      </Card>
+    );
+  }
+
+  function ExampleRow({ tab, first }: { tab: TabsProps["tabs"][number]; first: boolean }): ReactNode {
+    const [open, setOpen] = useState(false);
+    const body = `${tab.id}-body`;
+    return (
+      <Box id={tab.id}>
+        {!first && <Separator size="4" my="1" />}
+        <Flex asChild align="center" gap="2" width="100%" py="1" style={{ cursor: "pointer", background: "none", border: 0, textAlign: "left", font: "inherit", color: "inherit" }}>
+          <button type="button" aria-expanded={open} aria-controls={body} onClick={() => setOpen((o) => !o)}>
+            <Text size="1" color="gray" aria-hidden="true">{open ? "▾" : "▸"}</Text>
+            <Text size="2">{tab.label}</Text>
+          </button>
+        </Flex>
+        {/* A plain div: Radix's Box sets `display`, which beats `hidden`. */}
+        <div id={body} hidden={!open}>
+          {tab.content}
+        </div>
+      </Box>
     );
   }
 
