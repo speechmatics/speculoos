@@ -43,6 +43,7 @@ export {
 export {
   allOperations,
   apiEntries,
+  endpointHandshake,
   endpointUrl,
   entryExamples,
   entrySlug,
@@ -50,9 +51,11 @@ export {
   listedEndpoints,
   replyAddress,
   resolveRef,
+  securityUsage,
   walk,
   type ApiEntry,
   type EntryExample,
+  type Handshake,
   type OperationEntry,
   type TagGroup,
 } from "./navigate.js";

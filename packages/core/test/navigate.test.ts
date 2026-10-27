@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { allOperations, apiEntries, createSlugger, endpointUrl, entryExamples, entrySlug, groupByTag, slugify, toRows, walk } from "../src/index.js";
+import { allOperations, apiEntries, createSlugger, endpointHandshake, endpointUrl, entryExamples, entrySlug, securityUsage, groupByTag, slugify, toRows, walk } from "../src/index.js";
 import { ir, jobRef, schemas } from "./fixture.js";
 
 describe("apiEntries", () => {
@@ -140,5 +140,48 @@ describe("entryExamples", () => {
     expect(kinds[0]).toBe("request");
     expect(kinds.slice(1).every((k) => k === "response")).toBe(true);
     expect(new Set(entryExamples(withExamples).map((e) => e.id)).size).toBe(kinds.length);
+  });
+});
+
+describe("endpointHandshake", () => {
+  const channel = () => apiEntries(ir).find((e) => e.kind === "channel")!.endpoint;
+  const server = {
+    id: "eu", url: "wss://eu.example.com/v2", protocol: "wss", docs: {}, variables: [],
+    security: [[{ scheme: "bearer", scopes: [] }], [{ scheme: "jwt", scopes: [] }]],
+    source: { document: "d", pointer: "#" },
+  };
+
+  it("describes a WebSocket channel's upgrade: GET, the URL, 101, the servers' security", () => {
+    const h = endpointHandshake({ ...channel(), protocols: ["wss"], servers: [], address: "/" }, { servers: [server] });
+    expect(h).toEqual({
+      method: "GET",
+      url: "wss://eu.example.com/v2/",
+      status: "101 Switching Protocols",
+      security: server.security,
+    });
+  });
+
+  it("takes the method from the channel's ws binding", () => {
+    const h = endpointHandshake(
+      { ...channel(), protocols: ["wss"], servers: [], bindings: { ws: { method: "post" } } },
+      { servers: [server] },
+    );
+    expect(h?.method).toBe("POST");
+  });
+
+  it("has nothing to say about a channel that is not a WebSocket, or a REST path", () => {
+    expect(endpointHandshake({ ...channel(), protocols: ["kafka"] }, { servers: [server] })).toBeUndefined();
+    const path = ir.endpoints.find((e) => e.addressKind === "path")!;
+    expect(endpointHandshake(path, { servers: [server] })).toBeUndefined();
+  });
+});
+
+describe("securityUsage", () => {
+  const base = { id: "x", docs: {}, source: { document: "d", pointer: "#" } };
+  it("spells how each kind of credential is sent", () => {
+    expect(securityUsage({ ...base, kind: "http", scheme: "bearer" })).toBe("Authorization: Bearer <token>");
+    expect(securityUsage({ ...base, kind: "apiKey", name: "jwt", in: "query" })).toBe("?jwt=<key>");
+    expect(securityUsage({ ...base, kind: "apiKey", name: "X-Key", in: "header" })).toBe("X-Key: <key>");
+    expect(securityUsage({ ...base, kind: "openIdConnect", openIdConnectUrl: "https://x" })).toBeUndefined();
   });
 });

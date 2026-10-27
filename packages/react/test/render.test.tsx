@@ -540,3 +540,23 @@ describe("EntryExamples", () => {
     expect(gathered).not.toContain('data-kind="example"');
   });
 });
+
+describe("Handshake", () => {
+  it("opens a WebSocket channel with its upgrade request, 101, and how to authenticate", () => {
+    const html = render(<Endpoint id="/v2/{language}" />, ws);
+    expect(html).toContain('<x-section data-kind="handshake" data-level="3"><x-title>Handshake</x-title>');
+    expect(html).toContain('<x-badge data-tone="method">GET</x-badge> <x-code>wss://eu2.rt.example.com/v2/v2/{language}</x-code>');
+    expect(html).toContain('<x-badge data-tone="status">101</x-badge> Switching Protocols');
+    expect(html).toContain('<x-section data-kind="security" data-level="4"><x-title>Authentication</x-title>');
+    expect(html).toContain("<x-code>Authorization: Bearer &lt;token&gt;</x-code>");
+  });
+
+  it("comes before the channel's operations", () => {
+    const html = render(<Endpoint id="/v2/{language}" />, ws);
+    expect(html.indexOf('data-kind="handshake"')).toBeLessThan(html.indexOf('data-kind="operation"'));
+  });
+
+  it("is not shown for a REST path", () => {
+    expect(render(<Endpoint id="/jobs" />, rest)).not.toContain('data-kind="handshake"');
+  });
+});

@@ -399,3 +399,18 @@ describe("renderEntryExamples", () => {
     expect(renderEntry(channel(), ws, { inlineExamples: false })).not.toContain("spec-group--example");
   });
 });
+
+describe("handshake", () => {
+  it("opens a WebSocket channel with its upgrade request, 101, and how to authenticate", () => {
+    const html = renderEndpointById("/v2/{language}", ws);
+    expect(html).toContain('spec-section spec-section--handshake');
+    expect(html).toContain(">wss://eu2.rt.example.com/v2/v2/{language}</code>");
+    expect(html).toContain("Switching Protocols");
+    expect(html).toContain(">Authorization: Bearer &lt;token&gt;</code>");
+    expect(html.indexOf("spec-section--handshake")).toBeLessThan(html.indexOf("spec-section--operation"));
+  });
+
+  it("is not shown for a REST path", () => {
+    expect(renderEndpointById("/jobs", rest)).not.toContain("spec-section--handshake");
+  });
+});

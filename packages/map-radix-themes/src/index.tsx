@@ -103,6 +103,7 @@ const LIST_GAP: Record<ListProps["kind"], "1" | "2" | "3"> = {
   tags: "1",
   callbacks: "3",
   links: "3",
+  handshake: "2",
 };
 
 /**

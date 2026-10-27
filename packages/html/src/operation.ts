@@ -28,7 +28,7 @@ import type {
   SecurityRequirements,
   WsMessage,
 } from "@speculoos/core";
-import { allOperations, endpointUrl, entryExamples, replyAddress } from "@speculoos/core";
+import { allOperations, endpointHandshake, endpointUrl, entryExamples, replyAddress, securityUsage } from "@speculoos/core";
 import { h, join, text, type Html } from "./escape.js";
 import { schemaTable } from "./fields.js";
 import { resolve, type HtmlOptions } from "./options.js";
@@ -462,6 +462,67 @@ export function renderEndpointById(id: string, ir: ApiIR, options: RenderEndpoin
   return endpointSection(c, endpoint, options.level ?? c.o.headingLevel);
 }
 
+/**
+ * How a client opens a WebSocket channel, before any message: the upgrade
+ * request, what success answers, and the credentials it takes. Empty for a
+ * REST path or a non-WebSocket channel.
+ */
+function handshake(c: Ctx, endpoint: Endpoint, level: number): Html {
+  const hs = endpointHandshake(endpoint, c.ir);
+  if (hs === undefined) return "";
+  const item = (...parts: (Html | undefined)[]) => h("li", { class: c.o.cls("list-item") }, inline(...parts));
+  return section(
+    c,
+    { kind: "handshake", title: text("Handshake"), level },
+    h(
+      "ul",
+      { class: c.o.cls("list", "handshake") },
+      item(badge(c, "method", text(hs.method), hs.method.toLowerCase()), code(c, hs.url)),
+      item(badge(c, "status", text("101"), "101"), text("Switching Protocols")),
+    ),
+    authentication(c, hs.security, level + 1),
+  );
+}
+
+/**
+ * Each way to authenticate, with how to send it and what the spec says about
+ * it — where a reader learns what to put in the request, unlike an
+ * operation's `Security` badges.
+ */
+function authentication(c: Ctx, requirements: SecurityRequirements, level: number): Html {
+  if (requirements.length === 0) return "";
+  return section(
+    c,
+    { kind: "security", title: text("Authentication"), level },
+    requirements.length > 1 ? markdown(c, "Any one of:") : undefined,
+    h(
+      "ul",
+      { class: c.o.cls("list", "security") },
+      ...requirements.map((alternative) =>
+        h(
+          "li",
+          { class: c.o.cls("list-item") },
+          alternative.length === 0
+            ? badge(c, "securityScheme", text("none"))
+            : join(
+                alternative.map((req) => {
+                  const scheme = c.ir.securitySchemes[req.scheme];
+                  const usage = scheme === undefined ? undefined : securityUsage(scheme);
+                  return join([
+                    inline(
+                      badge(c, "securityScheme", text(req.scheme), req.scheme),
+                      usage !== undefined ? code(c, usage) : undefined,
+                    ),
+                    scheme !== undefined ? docsBody(c, scheme.docs) : undefined,
+                  ]);
+                }),
+              ),
+        ),
+      ),
+    ),
+  );
+}
+
 export function endpointSection(c: Ctx, endpoint: Endpoint, level: number): Html {
   // Headed like a REST operation: the title when there is one, with the
   // protocol where a method would sit, then where to connect — the full URL
@@ -483,6 +544,7 @@ export function endpointSection(c: Ctx, endpoint: Endpoint, level: number): Html
       level,
     },
     docsBody(c, endpoint.docs),
+    handshake(c, endpoint, level + 1),
     parameters(c, endpoint, endpoint.parameters, endpoint.source, level + 1),
     endpoint.operations.length === 0
       ? empty(c, "No operations")

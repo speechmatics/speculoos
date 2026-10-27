@@ -14,6 +14,8 @@ import type {
   MessageOperation,
   Operation,
   RequestResponseOperation,
+  SecurityRequirements,
+  SecurityScheme,
   TagDef,
   WsMessage,
 } from "./document.js";
@@ -175,6 +177,66 @@ export function entryExamples(entry: ApiEntry): EntryExample[] {
     );
     return [...request, ...responses];
   });
+}
+
+/** How a client opens a WebSocket channel: the upgrade request and what it needs. */
+export interface Handshake {
+  /** "GET" unless the channel's `ws` binding says otherwise. */
+  method: string;
+  /** The full URL when one server applies, else the channel's address. */
+  url: string;
+  /** What a successful upgrade answers with. */
+  status: "101 Switching Protocols";
+  /** The applicable servers' security: any one alternative opens the connection. */
+  security: SecurityRequirements;
+}
+
+/**
+ * The handshake for a WebSocket channel — one served over `ws` or `wss` —
+ * else undefined. For a page's "Handshake" block: what to request, and how to
+ * authenticate it, before any message is sent.
+ */
+export function endpointHandshake(endpoint: Endpoint, ir: Pick<ApiIR, "servers">): Handshake | undefined {
+  if (endpoint.addressKind !== "channel") return undefined;
+  if (!endpoint.protocols.some((p) => p === "ws" || p === "wss")) return undefined;
+  const servers =
+    endpoint.servers.length === 0 ? ir.servers : ir.servers.filter((s) => endpoint.servers.includes(s.id));
+  // Alternatives from every applicable server, once each.
+  const seen = new Set<string>();
+  const security = servers.flatMap((s) => s.security).filter((alternative) => {
+    const key = JSON.stringify(alternative);
+    return seen.has(key) ? false : (seen.add(key), true);
+  });
+  const ws = endpoint.bindings?.["ws"];
+  const method = typeof ws === "object" && ws !== null && typeof (ws as { method?: unknown }).method === "string"
+    ? ((ws as { method: string }).method).toUpperCase()
+    : "GET";
+  return {
+    method,
+    url: endpointUrl(endpoint, ir) ?? endpoint.address,
+    status: "101 Switching Protocols",
+    security,
+  };
+}
+
+/**
+ * How a credential is sent, as a reader would write it: "Authorization: Bearer
+ * <token>", "?jwt=<key>", "X-API-Key: <key>". Undefined for schemes with no
+ * single spelling (OAuth 2 flows, OpenID Connect, AsyncAPI's own kinds).
+ */
+export function securityUsage(scheme: SecurityScheme): string | undefined {
+  switch (scheme.kind) {
+    case "http":
+      return scheme.scheme === "bearer" ? "Authorization: Bearer <token>"
+        : scheme.scheme === "basic" ? "Authorization: Basic <credentials>"
+        : undefined;
+    case "apiKey":
+      return scheme.in === "header" ? `${scheme.name}: <key>`
+        : scheme.in === "query" ? `?${scheme.name}=<key>`
+        : `Cookie: ${scheme.name}=<key>`;
+    default:
+      return undefined;
+  }
 }
 
 /** Every operation in the document, in endpoint then source order. */

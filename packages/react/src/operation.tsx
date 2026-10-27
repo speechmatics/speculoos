@@ -9,7 +9,7 @@
  */
 
 import { Fragment, useMemo, type ReactNode } from "react";
-import { endpointUrl, entryExamples, replyAddress } from "@speculoos/core";
+import { endpointHandshake, endpointUrl, entryExamples, replyAddress, securityUsage } from "@speculoos/core";
 import type {
   ApiEntry,
   ApiIR,
@@ -500,6 +500,69 @@ function Protocols({ endpoint }: { endpoint: IREndpoint }): ReactNode {
   );
 }
 
+/**
+ * How a client opens a WebSocket channel, before any message: the upgrade
+ * request, what success answers, and the credentials it takes. Nothing for a
+ * REST path or a non-WebSocket channel.
+ */
+function Handshake({ endpoint, level }: { endpoint: IREndpoint; level: number }): ReactNode {
+  const C = useComponents();
+  const { ir } = useSpeculoos();
+  const handshake = endpointHandshake(endpoint, ir);
+  if (handshake === undefined) return null;
+  return (
+    <C.Section kind="handshake" title="Handshake" level={level}>
+      <C.List kind="handshake">
+        <C.ListItem>
+          <C.Badge tone="method" value={handshake.method.toLowerCase()}>{handshake.method}</C.Badge>{" "}
+          <C.Code>{handshake.url}</C.Code>
+        </C.ListItem>
+        <C.ListItem>
+          <C.Badge tone="status" value="101">101</C.Badge> Switching Protocols
+        </C.ListItem>
+      </C.List>
+      <Authentication security={handshake.security} level={level + 1} />
+    </C.Section>
+  );
+}
+
+/**
+ * Each way to authenticate, with how to send it and what the spec says about
+ * it. Unlike an operation's `Security` badges, this is where a reader learns
+ * what to put in the request — so the usage and the description are shown.
+ */
+function Authentication({ security, level }: { security: SecurityRequirements; level: number }): ReactNode {
+  const C = useComponents();
+  const { ir } = useSpeculoos();
+  if (security.length === 0) return null;
+  return (
+    <C.Section kind="security" title="Authentication" level={level}>
+      {security.length > 1 && <C.Markdown>Any one of:</C.Markdown>}
+      <C.List kind="security">
+        {security.map((alternative, i) => (
+          <C.ListItem key={i}>
+            {alternative.length === 0 ? (
+              <C.Badge tone="securityScheme">none</C.Badge>
+            ) : (
+              alternative.map((req) => {
+                const scheme = ir.securitySchemes[req.scheme];
+                const usage = scheme === undefined ? undefined : securityUsage(scheme);
+                return (
+                  <Fragment key={req.scheme}>
+                    <C.Badge tone="securityScheme" value={req.scheme}>{req.scheme}</C.Badge>
+                    {usage !== undefined && <> <C.Code>{usage}</C.Code></>}
+                    {scheme !== undefined && <DocsBody docs={scheme.docs} />}
+                  </Fragment>
+                );
+              })
+            )}
+          </C.ListItem>
+        ))}
+      </C.List>
+    </C.Section>
+  );
+}
+
 export interface EndpointProps {
   /** Endpoint id — the path, the channel id, or "webhook:name". Give this or `endpoint`. */
   id?: string;
@@ -551,6 +614,7 @@ export function Endpoint(props: EndpointProps): ReactNode {
       level={level}
     >
       <DocsBody docs={endpoint.docs} />
+      <Handshake endpoint={endpoint} level={level + 1} />
       <Parameters
         endpoint={endpoint}
         parameters={endpoint.parameters}

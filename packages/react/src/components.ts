@@ -43,6 +43,7 @@ export type SectionKind =
   | "security"
   | "servers"
   | "examples"
+  | "handshake"
   | "type";
 
 /** What a badge means. Styling hint only; the text is in `children`. */
@@ -200,7 +201,7 @@ export interface TabsProps {
 }
 
 export interface ListProps {
-  kind: "entries" | "operations" | "servers" | "security" | "tags" | "callbacks" | "links";
+  kind: "entries" | "operations" | "servers" | "security" | "tags" | "callbacks" | "links" | "handshake";
   children: ReactNode;
 }
 

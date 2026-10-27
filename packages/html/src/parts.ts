@@ -49,6 +49,7 @@ export type SectionKind =
   | "security"
   | "servers"
   | "examples"
+  | "handshake"
   | "types"
   | "type";
 

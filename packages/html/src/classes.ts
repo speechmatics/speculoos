@@ -44,6 +44,7 @@ export const CLASSES: Record<string, readonly string[]> = {
     "security",
     "servers",
     "examples",
+    "handshake",
     "types",
     "type",
     "deprecated",
@@ -135,7 +136,7 @@ export const CLASSES: Record<string, readonly string[]> = {
   "group-body": [],
 
   /** The modifier says what the list is of. */
-  list: ["entries", "operations", "servers", "security", "tags", "callbacks", "links", "deprecated"],
+  list: ["entries", "operations", "servers", "security", "tags", "callbacks", "links", "handshake", "deprecated"],
   "list-item": ["deprecated"],
   "server-variables": [],
   "server-variable": [],
