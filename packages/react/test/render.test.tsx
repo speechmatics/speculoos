@@ -5,10 +5,11 @@ import { specDir } from "@speculoos/fixtures";
 import { load } from "@speculoos/loader";
 import { buildOpenApi } from "@speculoos/openapi";
 import { buildAsyncApi } from "@speculoos/asyncapi";
-import type { ApiIR, TypeDef } from "@speculoos/core";
+import { apiEntries, entryExamples, type ApiIR, type TypeDef } from "@speculoos/core";
 import {
   Endpoint,
   Entry,
+  EntryExamples,
   EntryList,
   Operation,
   OperationList,
@@ -507,5 +508,35 @@ describe("the provider", () => {
     expect(() => renderToStaticMarkup(<SchemaTable typeId="x" />)).toThrow(
       /inside a <SpeculoosProvider>/,
     );
+  });
+});
+
+describe("EntryExamples", () => {
+  const channel = () => apiEntries(ws).find((e) => e.kind === "channel")!;
+
+  it("gathers an entry's examples into one section, each labelled by what it is of", () => {
+    const html = render(<EntryExamples entry={channel()} level={3} />, ws);
+    expect(html).toContain('<x-section data-kind="examples" data-level="3"><x-title>Examples</x-title><x-tabs data-kind="examples">');
+    expect(html).toContain('<x-tab data-id="start-recognition-example-0"><x-label><x-badge data-tone="direction">Send</x-badge> Start recognition · minimal</x-label>');
+  });
+
+  it("shows the examples it is given, in the order given", () => {
+    const one = entryExamples(channel())[0]!;
+    const all = [one, { ...one, id: "second" }];
+    const html = render(<EntryExamples entry={channel()} examples={[...all].reverse()} />, ws);
+    const ids = [...html.matchAll(/<x-tab data-id="([^"]+)"/g)].map((m) => m[1]);
+    expect(ids).toEqual([...all].reverse().map((e) => e.id));
+  });
+
+  it("renders nothing for an entry with no examples", () => {
+    const quiet = { ...channel(), endpoint: { ...channel().endpoint, operations: [] } };
+    expect(render(<EntryExamples entry={quiet} />, ws)).toBe("");
+  });
+
+  it("leaves examples out from under their payloads when inlineExamples is off", () => {
+    const inline = render(<Entry entry={channel()} />, ws);
+    const gathered = render(<Entry entry={channel()} />, ws, boxy, { inlineExamples: false });
+    expect(inline).toContain('<x-tabs data-kind="example">');
+    expect(gathered).not.toContain('data-kind="example"');
   });
 });

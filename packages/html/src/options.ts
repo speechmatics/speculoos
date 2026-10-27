@@ -49,6 +49,11 @@ export interface HtmlOptions {
    * and would otherwise collide. Anchors still come from the IR's own slugs.
    */
   idPrefix?: string;
+  /**
+   * Whether examples render under the payload they belong to. Turn it off when
+   * the page gathers them in one place with `renderEntryExamples`. Default true.
+   */
+  inlineExamples?: boolean;
 }
 
 export interface Resolved {
@@ -61,6 +66,7 @@ export interface Resolved {
   layout: "tree" | "rows";
   untaggedLabel: string;
   idPrefix: string;
+  inlineExamples: boolean;
   /** `cls("field", "required")` → "spec-field spec-field--required". */
   cls: (block: string, ...modifiers: (string | false | undefined)[]) => string;
   /** Anchor id, with `idPrefix` applied. */
@@ -88,6 +94,7 @@ export function resolve(options: HtmlOptions = {}): Resolved {
     layout: options.layout ?? "tree",
     untaggedLabel: options.untaggedLabel ?? "Other",
     idPrefix,
+    inlineExamples: options.inlineExamples ?? true,
     cls: (block, ...modifiers) => {
       const base = `${prefix}-${block}`;
       const mods = modifiers.filter((m): m is string => typeof m === "string" && m !== "");

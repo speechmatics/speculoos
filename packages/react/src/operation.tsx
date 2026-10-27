@@ -9,10 +9,11 @@
  */
 
 import { Fragment, useMemo, type ReactNode } from "react";
-import { endpointUrl, replyAddress } from "@speculoos/core";
+import { endpointUrl, entryExamples, replyAddress } from "@speculoos/core";
 import type {
   ApiEntry,
   ApiIR,
+  EntryExample,
   Endpoint as IREndpoint,
   Example,
   MediaVariant,
@@ -54,7 +55,8 @@ function format(value: unknown): string {
 
 function Examples({ examples, idPrefix }: { examples: Example[]; idPrefix: string }): ReactNode {
   const C = useComponents();
-  if (examples.length === 0) return null;
+  const { options } = useSpeculoos();
+  if (examples.length === 0 || !options.inlineExamples) return null;
   const tabs: Tab[] = examples.map((ex, i) => ({
     id: `${idPrefix}-example-${i}`,
     label: ex.name ?? ex.summary ?? `Example ${i + 1}`,
@@ -216,6 +218,7 @@ function Responses({ responses, level, idPrefix }: {
  */
 function Message({ message, level }: { message: WsMessage; level: number }): ReactNode {
   const C = useComponents();
+  const { options } = useSpeculoos();
   return (
     <C.Section
       kind="message"
@@ -239,7 +242,7 @@ function Message({ message, level }: { message: WsMessage; level: number }): Rea
           <SchemaTable node={message.headers} kind="headers" />
         </C.Section>
       )}
-      {message.examples.length > 0 && (
+      {message.examples.length > 0 && options.inlineExamples && (
         <C.Tabs
           kind="example"
           tabs={message.examples.map((ex, i) => ({
@@ -588,5 +591,82 @@ export function Entry({ entry, level }: EntryProps): ReactNode {
     <Operation endpoint={entry.endpoint} operation={entry.operation} {...lvl} />
   ) : (
     <Endpoint endpoint={entry.endpoint} {...lvl} />
+  );
+}
+
+export interface EntryExamplesProps {
+  /** From `useEntries()` or `apiEntries(ir)`. */
+  entry: ApiEntry;
+  /** Heading level for the section. Defaults to the provider's. */
+  level?: number;
+  /** The section's heading. Default "Examples". */
+  title?: string;
+  /**
+   * The examples to show, when not `entryExamples(entry)` as it stands — in
+   * the order a real session runs, say, which a spec cannot express.
+   */
+  examples?: EntryExample[];
+}
+
+/**
+ * Every example on an entry, in one place — for a panel beside the reference,
+ * as Stripe and Deepgram lay theirs out. Pair it with `inlineExamples: false`
+ * so they are not also shown under each payload. Renders nothing when the
+ * entry has no examples.
+ */
+export function EntryExamples({ entry, level, title = "Examples", examples: given }: EntryExamplesProps): ReactNode {
+  const C = useComponents();
+  const { options } = useSpeculoos();
+  const examples = useMemo(() => given ?? entryExamples(entry), [given, entry]);
+  if (examples.length === 0) return null;
+  return (
+    <C.Section kind="examples" title={title} level={level ?? options.headingLevel}>
+      <C.Tabs
+        kind="examples"
+        tabs={examples.map((example) => ({
+          id: example.id,
+          label: <ExampleLabel example={example} />,
+          content: (
+            <>
+              {example.summary !== undefined && <C.Markdown>{example.summary}</C.Markdown>}
+              {example.description !== undefined && <C.Markdown>{example.description}</C.Markdown>}
+              {example.externalValue !== undefined ? (
+                <C.Link href={example.externalValue} target={{ kind: "external", url: example.externalValue }}>
+                  {example.externalValue}
+                </C.Link>
+              ) : (
+                <C.CodeBlock language="json">{format(example.value)}</C.CodeBlock>
+              )}
+            </>
+          ),
+        }))}
+      />
+    </C.Section>
+  );
+}
+
+/**
+ * What an example is of, then its own name if it has one: "Send
+ * StartRecognition · minimal", "Request application/json", "200 Response". The
+ * summary is a sentence, so it goes with the example rather than in the label.
+ */
+function ExampleLabel({ example }: { example: EntryExample }): ReactNode {
+  const C = useComponents();
+  const own = example.name;
+  const of = example.of;
+  return (
+    <>
+      {of.kind === "message" ? (
+        <>
+          <C.Badge tone="direction" value={of.operation.direction}>{DIRECTION_VERB[of.operation.direction]}</C.Badge>{" "}
+          {of.message.title ?? of.message.name}
+        </>
+      ) : of.kind === "request" ? (
+        <>Request <C.Badge tone="mediaType" value={of.mediaType}>{of.mediaType}</C.Badge></>
+      ) : (
+        <><C.Badge tone="status" value={of.status}>{of.status}</C.Badge> Response</>
+      )}
+      {own !== undefined && <> · {own}</>}
+    </>
   );
 }

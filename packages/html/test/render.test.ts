@@ -7,13 +7,14 @@
  * because React happened to paper over it.
  */
 import { beforeAll, describe, expect, it } from "vitest";
-import { allOperations, apiEntries, type ApiIR, type OperationEntry } from "@speculoos/core";
+import { allOperations, apiEntries, entryExamples, type ApiIR, type OperationEntry } from "@speculoos/core";
 import {
   renderApi,
   renderNav,
   renderEndpoint,
   renderEndpointById,
   renderEntry,
+  renderEntryExamples,
   renderOperation,
   renderOperationById,
   renderSchema,
@@ -366,5 +367,35 @@ describe("legible without CSS", () => {
 describe("determinism", () => {
   it("renders byte-identically across runs", () => {
     expect(renderApi(rest)).toBe(renderApi(rest));
+  });
+});
+
+describe("renderEntryExamples", () => {
+  const asText = (html: string) => html.replace(/<[^>]+>/g, "").replace(/\s+/g, " ");
+  const channel = () => apiEntries(ws).find((e) => e.kind === "channel")!;
+
+  it("gathers an entry's examples into one section, each labelled by what it is of", () => {
+    const html = renderEntryExamples(channel(), ws);
+    expect(html).toContain('<section class="spec-section spec-section--examples" data-level="2">');
+    expect(html).toContain('<div class="spec-group spec-group--examples" data-count="1">');
+    expect(html).toContain('id="start-recognition-example-0"');
+    expect(asText(html)).toContain("Send Start recognition · minimal");
+  });
+
+  it("shows the examples it is given, in the order given", () => {
+    const one = entryExamples(channel())[0]!;
+    const all = [one, { ...one, id: "second" }];
+    const html = renderEntryExamples(channel(), ws, { examples: [...all].reverse() });
+    const ids = [...html.matchAll(/class="spec-group-item" id="([^"]+)"/g)].map((m) => m[1]);
+    expect(ids).toEqual([...all].reverse().map((e) => e.id));
+  });
+
+  it("is empty for an entry with no examples", () => {
+    expect(renderEntryExamples({ ...channel(), endpoint: { ...channel().endpoint, operations: [] } }, ws)).toBe("");
+  });
+
+  it("leaves examples out from under their payloads when inlineExamples is off", () => {
+    expect(renderEntry(channel(), ws)).toContain("spec-group--example");
+    expect(renderEntry(channel(), ws, { inlineExamples: false })).not.toContain("spec-group--example");
   });
 });

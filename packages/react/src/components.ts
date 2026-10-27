@@ -42,6 +42,7 @@ export type SectionKind =
   | "links"
   | "security"
   | "servers"
+  | "examples"
   | "type";
 
 /** What a badge means. Styling hint only; the text is in `children`. */
@@ -187,8 +188,13 @@ export interface Tab {
  * reader links to, so each is a `Section` of `kind: "message"` with an anchor.
  */
 export interface TabsProps {
-  /** What the tabs are over, for components that style the sets differently. */
-  kind: "mediaType" | "status" | "example";
+  /**
+   * What the tabs are over, for components that style the sets differently.
+   * "example" is the examples of one payload; "examples" is every example on
+   * an entry, gathered by `<EntryExamples>` — a list a reader scans, where
+   * tabs suit the first and may not suit the second.
+   */
+  kind: "mediaType" | "status" | "example" | "examples";
   tabs: Tab[];
   children?: ReactNode | undefined;
 }

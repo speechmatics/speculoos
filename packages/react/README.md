@@ -58,6 +58,16 @@ const href = (t: HrefTarget) =>
   : undefined;
 ```
 
+### Examples beside the reference
+
+`<EntryExamples entry={e} />` gathers every example on an entry — a REST
+operation's request and response examples, a channel's message examples — into
+one section, each labelled by what it is of ("Send StartRecognition", "200
+Response"). It is for a panel beside the reference, as Stripe and Deepgram lay
+theirs out. Set `inlineExamples: false` on the provider so they are not shown
+under each payload as well. `entryExamples(entry)` in `@speculoos/core` is the
+same list as data.
+
 A channel with no operations — typically an AsyncAPI reply-only address, whose
 reply is already shown inside the operation that expects it — is not an entry,
 though `<Endpoint id>` still renders it. `<Endpoint>` also works on a REST path,
@@ -116,6 +126,7 @@ const Field = ({ f }: { f: FieldNode }) => (
 | `maxDepth` | `2` | Only consulted when `expandRefs` is `"depth"`. |
 | `headingLevel` | `2` | The level the outermost `Section` renders at; nested sections count up. |
 | `untaggedLabel` | `"Other"` | Bucket name for operations carrying no declared tag. |
+| `inlineExamples` | `true` | Render examples under the payload they belong to. Turn off when the page uses `<EntryExamples>`. |
 
 ## Hooks
 

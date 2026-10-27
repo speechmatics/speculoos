@@ -31,6 +31,11 @@ export interface SpeculoosOptions {
   headingLevel?: number;
   /** Bucket name for operations carrying no declared tag. Default "Other". */
   untaggedLabel?: string;
+  /**
+   * Whether examples render under the payload they belong to. Turn it off when
+   * the page gathers them in one place with `<EntryExamples>`. Default true.
+   */
+  inlineExamples?: boolean;
 }
 
 export interface SpeculoosContextValue {
@@ -69,6 +74,7 @@ export function SpeculoosProvider({
         layout: options?.layout ?? "tree",
         headingLevel: options?.headingLevel ?? 2,
         untaggedLabel: options?.untaggedLabel ?? "Other",
+        inlineExamples: options?.inlineExamples ?? true,
         href: options?.href ?? defaultHref,
       },
     }),
@@ -80,6 +86,7 @@ export function SpeculoosProvider({
       options?.layout,
       options?.headingLevel,
       options?.untaggedLabel,
+      options?.inlineExamples,
       options?.href,
     ],
   );

@@ -44,8 +44,10 @@ export { SchemaTable, FieldRows, DocsBody, type SchemaTableProps, type FieldRows
 export {
   Endpoint,
   Entry,
+  EntryExamples,
   Operation,
   type EndpointProps,
+  type EntryExamplesProps,
   type EntryProps,
   type OperationProps,
 } from "./operation.js";
@@ -80,4 +82,4 @@ export type {
   Tab,
   TabsProps,
 } from "./components.js";
-export type { ApiEntry } from "@speculoos/core";
+export type { ApiEntry, EntryExample } from "@speculoos/core";

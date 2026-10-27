@@ -7,7 +7,16 @@
  * operation would mean two places to keep in sync, so the pair is the unit.
  */
 
-import type { ApiIR, Endpoint, MessageOperation, Operation, TagDef } from "./document.js";
+import type {
+  ApiIR,
+  Endpoint,
+  Example,
+  MessageOperation,
+  Operation,
+  RequestResponseOperation,
+  TagDef,
+  WsMessage,
+} from "./document.js";
 import type { Node, TypeDef, TypeId, TypeRegistry } from "./schema.js";
 
 /** An operation together with the endpoint it hangs off. */
@@ -107,6 +116,65 @@ export function endpointUrl(
   if (servers.length !== 1) return undefined;
   const base = servers[0]!.url.replace(/\/+$/, "");
   return endpoint.address.startsWith("/") ? base + endpoint.address : `${base}/${endpoint.address}`;
+}
+
+/**
+ * One example on an entry, with what it is an example of.
+ *
+ * `value` and `externalValue` are as on an OAS `Example`; a message example's
+ * payload is its `value`.
+ */
+export interface EntryExample extends Example {
+  /** Unique within the IR: an anchor, and a key. */
+  id: string;
+  of:
+    | { kind: "message"; operation: MessageOperation; message: WsMessage; reply: boolean }
+    | { kind: "request"; operation: RequestResponseOperation; mediaType: string }
+    | { kind: "response"; operation: RequestResponseOperation; status: string; mediaType: string };
+}
+
+/**
+ * Every example on an entry, in page order: a REST operation's request then
+ * response examples; a channel's messages', operation by operation, replies
+ * after the messages they answer.
+ *
+ * For a page that shows examples together in one place — a panel beside the
+ * reference, as Stripe and Deepgram do — rather than under each payload.
+ */
+export function entryExamples(entry: ApiEntry): EntryExample[] {
+  const operations = entry.kind === "operation" ? [entry.operation] : entry.endpoint.operations;
+  return operations.flatMap((operation): EntryExample[] => {
+    if (operation.kind === "message") {
+      const of = (messages: WsMessage[], reply: boolean) =>
+        messages.flatMap((message) =>
+          message.examples.map((ex, i): EntryExample => ({
+            id: `${message.slug ?? message.id}-example-${i}`,
+            of: { kind: "message", operation, message, reply },
+            ...(ex.name !== undefined && { name: ex.name }),
+            ...(ex.summary !== undefined && { summary: ex.summary }),
+            value: ex.payload,
+          })),
+        );
+      return [...of(operation.messages, false), ...of(operation.reply?.messages ?? [], true)];
+    }
+    const request = (operation.requestBody?.content ?? []).flatMap((variant) =>
+      variant.examples.map((ex, i): EntryExample => ({
+        ...ex,
+        id: `${operation.slug}-request-${variant.mediaType}-example-${i}`,
+        of: { kind: "request", operation, mediaType: variant.mediaType },
+      })),
+    );
+    const responses = operation.responses.flatMap((response) =>
+      response.content.flatMap((variant) =>
+        variant.examples.map((ex, i): EntryExample => ({
+          ...ex,
+          id: `${operation.slug}-${response.status}-${variant.mediaType}-example-${i}`,
+          of: { kind: "response", operation, status: response.status, mediaType: variant.mediaType },
+        })),
+      ),
+    );
+    return [...request, ...responses];
+  });
 }
 
 /** Every operation in the document, in endpoint then source order. */

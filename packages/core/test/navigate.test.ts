@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { allOperations, apiEntries, createSlugger, endpointUrl, entrySlug, groupByTag, slugify, toRows, walk } from "../src/index.js";
+import { allOperations, apiEntries, createSlugger, endpointUrl, entryExamples, entrySlug, groupByTag, slugify, toRows, walk } from "../src/index.js";
 import { ir, jobRef, schemas } from "./fixture.js";
 
 describe("apiEntries", () => {
@@ -101,5 +101,44 @@ describe("endpointUrl", () => {
     expect(endpointUrl({ address: "/", servers: ["us"] }, two)).toBe("wss://us.example.com/");
     expect(endpointUrl({ address: "/", servers: [] }, two)).toBeUndefined();
     expect(endpointUrl({ address: "/", servers: [] }, { servers: [] })).toBeUndefined();
+  });
+});
+
+describe("entryExamples", () => {
+  it("gathers a channel's message examples in page order, replies after what they answer", () => {
+    const channel = apiEntries(ir).find((e) => e.kind === "channel")!;
+    const op = channel.endpoint.operations[0]!;
+    if (op.kind !== "message") throw new Error("expected a message operation");
+    const message = { ...op.messages[0]!, slug: "message", examples: [{ name: "hello", payload: { type: "hi" } }] };
+    const withExamples = {
+      ...channel,
+      endpoint: {
+        ...channel.endpoint,
+        operations: [{ ...op, messages: [message], reply: { messages: [{ ...message, slug: "reply" }] } }],
+      },
+    };
+    expect(entryExamples(withExamples).map((e) => [e.id, e.name, e.value, e.of.kind === "message" && e.of.reply])).toEqual([
+      ["message-example-0", "hello", { type: "hi" }, false],
+      ["reply-example-0", "hello", { type: "hi" }, true],
+    ]);
+  });
+
+  it("gathers a REST operation's request examples, then its responses'", () => {
+    const entry = apiEntries(ir).find((e) => e.kind === "operation" && e.operation.kind === "request-response" && e.operation.requestBody)!;
+    if (entry.kind !== "operation" || entry.operation.kind !== "request-response") throw new Error("expected REST");
+    const op = entry.operation;
+    const ex = { name: "one", value: 1 };
+    const withExamples = {
+      ...entry,
+      operation: {
+        ...op,
+        requestBody: { ...op.requestBody!, content: op.requestBody!.content.map((v) => ({ ...v, examples: [ex] })) },
+        responses: op.responses.map((r) => ({ ...r, content: r.content.map((v) => ({ ...v, examples: [ex] })) })),
+      },
+    };
+    const kinds = entryExamples(withExamples).map((e) => e.of.kind);
+    expect(kinds[0]).toBe("request");
+    expect(kinds.slice(1).every((k) => k === "response")).toBe(true);
+    expect(new Set(entryExamples(withExamples).map((e) => e.id)).size).toBe(kinds.length);
   });
 });

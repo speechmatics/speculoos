@@ -66,6 +66,7 @@ stylesheet link. Paste it into whatever is already building your pages.
 | `maxDepth` | `2` | Only when `expandRefs` is `"depth"`. |
 | `layout` | `"tree"` | `"tree"` nests children; `"rows"` flattens with `data-depth`. |
 | `idPrefix` | `""` | Namespaces generated ids, for more than one IR on a page. |
+| `inlineExamples` | `true` | Render examples under their payload. Turn off when the page uses `renderEntryExamples(entry, ir)`, which gathers an entry's examples into one section. |
 
 ## Anchors
 

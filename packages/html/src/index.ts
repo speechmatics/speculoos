@@ -23,6 +23,7 @@ export {
   renderEndpoint,
   renderEndpointById,
   renderEntry,
+  renderEntryExamples,
   renderOperation,
   renderOperationById,
   type RenderEndpointOptions,

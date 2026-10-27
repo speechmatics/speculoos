@@ -44,6 +44,7 @@ export {
   allOperations,
   apiEntries,
   endpointUrl,
+  entryExamples,
   entrySlug,
   groupByTag,
   listedEndpoints,
@@ -51,6 +52,7 @@ export {
   resolveRef,
   walk,
   type ApiEntry,
+  type EntryExample,
   type OperationEntry,
   type TagGroup,
 } from "./navigate.js";

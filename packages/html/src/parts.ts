@@ -48,6 +48,7 @@ export type SectionKind =
   | "links"
   | "security"
   | "servers"
+  | "examples"
   | "types"
   | "type";
 
@@ -189,7 +190,7 @@ export interface GroupItem {
  */
 export function group(
   c: Ctx,
-  kind: "mediaType" | "status" | "example",
+  kind: "mediaType" | "status" | "example" | "examples",
   items: GroupItem[],
   level: number,
 ): Html {

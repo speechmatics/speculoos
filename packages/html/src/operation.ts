@@ -16,6 +16,7 @@ import { DIRECTION_LABEL, DIRECTION_VERB, parametersNode, propertiesNode } from 
 import type {
   ApiEntry,
   ApiIR,
+  EntryExample,
   Endpoint,
   Example,
   MediaVariant,
@@ -27,7 +28,7 @@ import type {
   SecurityRequirements,
   WsMessage,
 } from "@speculoos/core";
-import { allOperations, endpointUrl, replyAddress } from "@speculoos/core";
+import { allOperations, endpointUrl, entryExamples, replyAddress } from "@speculoos/core";
 import { h, join, text, type Html } from "./escape.js";
 import { schemaTable } from "./fields.js";
 import { resolve, type HtmlOptions } from "./options.js";
@@ -61,6 +62,7 @@ const PARAM_GROUPS: { in: Parameter["in"]; title: string; channelTitle?: string 
 ];
 
 function examples(c: Ctx, list: Example[], idPrefix: string, level: number): Html {
+  if (!c.o.inlineExamples) return "";
   const items: GroupItem[] = list.map((ex, i) => ({
     id: `${idPrefix}-example-${i}`,
     label: text(ex.name ?? ex.summary ?? `Example ${i + 1}`),
@@ -229,7 +231,7 @@ function wsMessage(c: Ctx, message: WsMessage, level: number): Html {
     group(
       c,
       "example",
-      message.examples.map((ex, i) => ({
+      (c.o.inlineExamples ? message.examples : []).map((ex, i) => ({
         id: `${message.id}-example-${i}`,
         label: text(ex.name ?? ex.summary ?? `Example ${i + 1}`),
         body: codeBlock(c, format(ex.payload), "json"),
@@ -500,4 +502,65 @@ export function renderEntry(entry: ApiEntry, ir: ApiIR, options: RenderEndpointO
 
 export function entrySection(c: Ctx, entry: ApiEntry, level: number): Html {
   return entry.kind === "operation" ? operationSection(c, entry, level) : endpointSection(c, entry.endpoint, level);
+}
+
+/**
+ * Every example on an entry, in one place — for a panel beside the reference,
+ * as Stripe and Deepgram lay theirs out. Pair it with `inlineExamples: false`
+ * so they are not also shown under each payload. Empty when the entry has no
+ * examples.
+ */
+export function renderEntryExamples(
+  entry: ApiEntry,
+  ir: ApiIR,
+  options: RenderEndpointOptions & {
+    title?: string;
+    /** The examples to show, when not `entryExamples(entry)` as it stands — reordered, say. */
+    examples?: EntryExample[];
+  } = {},
+): Html {
+  const c: Ctx = { ir, o: resolve(options) };
+  const level = options.level ?? c.o.headingLevel;
+  const list = options.examples ?? entryExamples(entry);
+  if (list.length === 0) return "";
+  return section(
+    c,
+    { kind: "examples", title: text(options.title ?? "Examples"), level },
+    group(
+      c,
+      "examples",
+      list.map((ex) => ({
+        id: ex.id,
+        label: exampleLabel(c, ex),
+        body: join([
+          ex.summary !== undefined ? markdown(c, ex.summary) : undefined,
+          ex.description !== undefined ? markdown(c, ex.description) : undefined,
+          ex.externalValue !== undefined
+            ? link(c, { kind: "external", url: ex.externalValue }, text(ex.externalValue))
+            : codeBlock(c, format(ex.value), "json"),
+        ]),
+      })),
+      level + 1,
+    ),
+  );
+}
+
+/**
+ * "Send StartRecognition · minimal", "Request application/json", "200 Response".
+ * The summary is a sentence, so it goes with the example, not in the label.
+ */
+function exampleLabel(c: Ctx, ex: EntryExample): Html {
+  const own = ex.name;
+  const of = ex.of;
+  return inline(
+    of.kind === "message"
+      ? join([
+          badge(c, "direction", text(DIRECTION_VERB[of.operation.direction]), of.operation.direction),
+          text(` ${of.message.title ?? of.message.name}`),
+        ])
+      : of.kind === "request"
+        ? join([text("Request "), badge(c, "mediaType", text(of.mediaType), of.mediaType)])
+        : join([badge(c, "status", text(of.status), of.status), text(" Response")]),
+    own !== undefined ? text(` · ${own}`) : undefined,
+  );
 }
