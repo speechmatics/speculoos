@@ -162,6 +162,14 @@ describe("messages", () => {
     }
   });
 
+  it("anchors each message by name, without moving any operation's anchor", () => {
+    for (const ir of [v2, v3]) {
+      expect(messages(ir).map((m) => m.slug)).toEqual(["start-recognition", "add-audio", "recognition-started"]);
+      const others = ir.endpoints.flatMap((e) => [e.slug, ...e.operations.map((o) => o.slug)]);
+      for (const m of messages(ir)) expect(others).not.toContain(m.slug);
+    }
+  });
+
   it("infers the discriminating const so a renderer can label it", () => {
     for (const ir of [v2, v3]) {
       expect(messages(ir).map((m) => m.discriminatorValue)).toEqual([

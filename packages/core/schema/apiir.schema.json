@@ -2207,6 +2207,10 @@
         "payload": {
           "$ref": "#/definitions/Node"
         },
+        "slug": {
+          "description": "URL-safe anchor, assigned after every endpoint and operation slug so it never displaces one. Optional only because it arrived after `irVersion: 1` froze; adapters always set it. A message on two operations has two.",
+          "type": "string"
+        },
         "source": {
           "$ref": "#/definitions/SourceLocation"
         },

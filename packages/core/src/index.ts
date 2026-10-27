@@ -43,6 +43,7 @@ export {
 export {
   allOperations,
   apiEntries,
+  endpointUrl,
   entrySlug,
   groupByTag,
   listedEndpoints,

@@ -87,7 +87,7 @@ export function buildAsyncApi({ project, document }: BuildOptions): ApiIR {
     }
   }
 
-  const endpoints = ctx.v3 ? buildV3Endpoints(ctx) : buildV2Endpoints(ctx);
+  const endpoints = slugMessages(ctx, ctx.v3 ? buildV3Endpoints(ctx) : buildV2Endpoints(ctx));
   const finished = schemas.finish();
 
   return {
@@ -648,6 +648,32 @@ function buildMessage(ctx: Ctx, raw: unknown, pointer: string): WsMessage | unde
     ...bindingsOf(message),
     source,
   };
+}
+
+/**
+ * Gives every message an anchor, once every endpoint and operation has one.
+ *
+ * Done last, over the finished endpoints, so a message can only ever take the
+ * suffix in a collision: adding message anchors must not move an operation's,
+ * which sites already link to. A message on two operations is two objects, and
+ * gets two anchors — each place it is rendered needs its own.
+ */
+function slugMessages(ctx: Ctx, endpoints: Endpoint[]): Endpoint[] {
+  const slug = (m: WsMessage): WsMessage => ({ ...m, slug: ctx.slug(m.name) });
+  return endpoints.map((endpoint) => ({
+    ...endpoint,
+    operations: endpoint.operations.map((operation) =>
+      operation.kind !== "message"
+        ? operation
+        : {
+            ...operation,
+            messages: operation.messages.map(slug),
+            ...(operation.reply !== undefined && {
+              reply: { ...operation.reply, messages: operation.reply.messages.map(slug) },
+            }),
+          },
+    ),
+  }));
 }
 
 /**

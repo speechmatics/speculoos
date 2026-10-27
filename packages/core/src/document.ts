@@ -258,6 +258,12 @@ export type Direction = "client-sends" | "server-sends";
 
 export interface WsMessage {
   id: TypeId;
+  /**
+   * URL-safe anchor, assigned after every endpoint and operation slug so it
+   * never displaces one. Optional only because it arrived after `irVersion: 1`
+   * froze; adapters always set it. A message on two operations has two.
+   */
+  slug?: string;
   name: string;
   title?: string;
   summary?: string;

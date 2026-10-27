@@ -90,6 +90,25 @@ export function replyAddress(
   return ir.endpoints.find((e) => e.id === reply.channel)?.address;
 }
 
+/**
+ * The full URL a reader connects to — `wss://eu.rt.example.com/v2/` — when
+ * exactly one server applies to the endpoint. Undefined when there are several
+ * (which one to show is the site's call) or none.
+ *
+ * Server variables are left as templates, `https://{region}.example.com`, as
+ * they are on `Server.url`.
+ */
+export function endpointUrl(
+  endpoint: Pick<Endpoint, "address" | "servers">,
+  ir: Pick<ApiIR, "servers">,
+): string | undefined {
+  const servers =
+    endpoint.servers.length === 0 ? ir.servers : ir.servers.filter((s) => endpoint.servers.includes(s.id));
+  if (servers.length !== 1) return undefined;
+  const base = servers[0]!.url.replace(/\/+$/, "");
+  return endpoint.address.startsWith("/") ? base + endpoint.address : `${base}/${endpoint.address}`;
+}
+
 /** Every operation in the document, in endpoint then source order. */
 export function allOperations(ir: Pick<ApiIR, "endpoints">): OperationEntry[] {
   return ir.endpoints.flatMap((endpoint) =>

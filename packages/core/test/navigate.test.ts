@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { allOperations, apiEntries, createSlugger, entrySlug, groupByTag, slugify, toRows, walk } from "../src/index.js";
+import { allOperations, apiEntries, createSlugger, endpointUrl, entrySlug, groupByTag, slugify, toRows, walk } from "../src/index.js";
 import { ir, jobRef, schemas } from "./fixture.js";
 
 describe("apiEntries", () => {
@@ -81,5 +81,25 @@ describe("the IR round-trips as JSON", () => {
     expect(toRows(jobRef, ir, { expandRefs: "always" })).toEqual(
       toRows(jobRef, ir, { expandRefs: "always" }),
     );
+  });
+});
+
+describe("endpointUrl", () => {
+  const server = (id: string, url: string) => ({
+    id, url, protocol: "wss", docs: {}, variables: [], security: [], source: { document: "d", pointer: "#" },
+  });
+
+  it("joins the one applicable server's URL and the address", () => {
+    const one = { servers: [server("eu", "wss://eu.example.com/v2")] };
+    expect(endpointUrl({ address: "/", servers: [] }, one)).toBe("wss://eu.example.com/v2/");
+    expect(endpointUrl({ address: "/jobs", servers: [] }, { servers: [server("a", "https://x.com/")] })).toBe("https://x.com/jobs");
+    expect(endpointUrl({ address: "ws", servers: [] }, one)).toBe("wss://eu.example.com/v2/ws");
+  });
+
+  it("narrows to the endpoint's own servers, and gives up on more than one", () => {
+    const two = { servers: [server("eu", "wss://eu.example.com"), server("us", "wss://us.example.com")] };
+    expect(endpointUrl({ address: "/", servers: ["us"] }, two)).toBe("wss://us.example.com/");
+    expect(endpointUrl({ address: "/", servers: [] }, two)).toBeUndefined();
+    expect(endpointUrl({ address: "/", servers: [] }, { servers: [] })).toBeUndefined();
   });
 });
