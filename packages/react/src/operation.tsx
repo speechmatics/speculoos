@@ -214,6 +214,9 @@ function Message({ message, level }: { message: WsMessage; level: number }): Rea
   const C = useComponents();
   return (
     <>
+      {/* AsyncAPI's `summary` is often where a message's real prose lives —
+          paragraphs, admonitions — so it is markdown, not a title. */}
+      {message.summary !== undefined && <C.Markdown>{message.summary}</C.Markdown>}
       <DocsBody docs={message.docs} />
       {message.contentType !== undefined && (
         <C.Badge tone="mediaType" value={message.contentType}>{message.contentType}</C.Badge>
@@ -257,6 +260,7 @@ function Messages({ messages, level, title, kind }: {
           id: message.id,
           label: message.title ?? message.name,
           content: <Message message={message} level={level} />,
+          message,
         }))}
       />
     </C.Section>

@@ -7,7 +7,7 @@
  * fastest debugging loop when working on an adapter.
  */
 
-import { writeFile } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import { basename, dirname, extname, resolve } from "node:path";
 import { DIAGNOSTIC_CODE_NAMES } from "@speculoos/core";
 import { run } from "./run.js";
@@ -98,6 +98,9 @@ export async function main(argv: string[]): Promise<number> {
       if (out === undefined) {
         process.stdout.write(json + "\n");
       } else {
+        // Build scripts point -o at generated directories that a clean
+        // checkout does not have yet.
+        await mkdir(dirname(resolve(out)), { recursive: true });
         await writeFile(resolve(out), json + "\n");
         process.stderr.write(`${summarise(built.ir)} → ${out}\n`);
       }

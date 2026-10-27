@@ -224,6 +224,18 @@ describe("replacement", () => {
   });
 });
 
+describe("messageExtras", () => {
+  it("renders inside each message's card, given the IR message", () => {
+    const Extras = ({ message }: { message: { name: string } }) => <aside data-extra={message.name} />;
+    const html = render(
+      <Endpoint id="/v2/{language}" />,
+      ir("realtime-v3.yaml"),
+      radixThemes({ markdown: Markdown, messageExtras: Extras }),
+    );
+    expect(html).toMatch(/rt-Card[^]*?<aside data-extra="StartRecognition"><\/aside>/);
+  });
+});
+
 describe("direction badges", () => {
   it("carry an arrow — up for what the reader sends, down for what they receive", () => {
     const html = render(<Endpoint id="/v2/{language}" />, ir("realtime-v3.yaml"), radixThemes({ markdown: Markdown }));

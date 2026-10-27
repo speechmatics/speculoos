@@ -75,7 +75,19 @@ export interface RadixThemesOptions {
    * router's component if it wants `to` instead.
    */
   linkAs?: ComponentType<{ href: string; children: ReactNode }>;
+  /**
+   * Extra content for a message's card, under its title — for what your spec
+   * says that Speculoos does not render. It receives the IR message, so a
+   * site's own `x-` extensions are in `message.docs.extensions`:
+   *
+   *   messageExtras: ({ message }) =>
+   *     message.docs.extensions?.["x-preview-mode"] ? <PreviewCallout /> : null
+   */
+  messageExtras?: ComponentType<{ message: MessageOf<TabsProps> }>;
 }
+
+/** The IR message a message tab carries, without this package importing core. */
+type MessageOf<P extends TabsProps> = NonNullable<P["tabs"][number]["message"]>;
 
 /** Heading size by level. A level-2 operation reads as a page section, not a title. */
 const HEADING_SIZE = { 1: "8", 2: "6", 3: "5", 4: "4", 5: "3", 6: "2" } as const;
@@ -108,7 +120,7 @@ function clampLevel(level: number): 1 | 2 | 3 | 4 | 5 | 6 {
 }
 
 export function radixThemes(options: RadixThemesOptions): Components {
-  const { markdown, size = "2", linkAs } = options;
+  const { markdown, size = "2", linkAs, messageExtras: MessageExtras } = options;
   const colors = mergeColors(options.colors);
 
   function Section({ kind, id, title, subtitle, level, deprecated, children }: SectionProps): ReactNode {
@@ -239,6 +251,7 @@ export function radixThemes(options: RadixThemesOptions): Components {
               <Text as="div" size="3" weight="bold" mb="2">
                 {tab.label}
               </Text>
+              {MessageExtras !== undefined && tab.message !== undefined && <MessageExtras message={tab.message} />}
               {tab.content}
             </Card>
           </Fragment>

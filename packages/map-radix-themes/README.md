@@ -62,6 +62,7 @@ worth doing while you are there:
 | `size` | `"2"` | `"1"` \| `"2"` \| `"3"`. Scale of field lists, badges and tabs. |
 | `colors` | see below | Badge colours, merged entry by entry over the defaults. |
 | `linkAs` | — | Your router's link component, for internal links (types, operations, tags). Receives `href` and `children`. External links stay plain `<a>`s. |
+| `messageExtras` | — | Extra content in each message card, under its title. Receives the IR `message`, so it can render what a spec's own `x-` extensions say. |
 
 Field rows are a Radix `DataList`: the name on the left; type, constraints and
 description on the right. It works in either provider `layout` — a field's

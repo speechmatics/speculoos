@@ -270,6 +270,26 @@ describe("message operations", () => {
     expect(html).not.toContain("Path parameters");
   });
 
+  it("renders a message's summary as markdown, because that is often where its prose is", () => {
+    const html = render(<Endpoint id="/v2/{language}" />, ws);
+    expect(html).toContain("<x-md>Begin a session.</x-md>");
+  });
+
+  it("hands a message tab its message, for maps that read the spec's own extensions", () => {
+    const seen: string[] = [];
+    const spy: Components = {
+      ...boxy,
+      Tabs: (props) => {
+        if (props.kind === "message") for (const t of props.tabs) seen.push(t.message?.name ?? "none");
+        const Tabs = boxy.Tabs;
+        return <Tabs {...props} />;
+      },
+    };
+    render(<Endpoint id="/v2/{language}" />, ws, spy);
+    expect(seen).toContain("StartRecognition");
+    expect(seen).not.toContain("none");
+  });
+
   it("tabs over the messages on a channel", () => {
     const first = ws.endpoints.flatMap((e) => e.operations)[0]!;
     const html = render(<Operation id={first.id} />, ws);

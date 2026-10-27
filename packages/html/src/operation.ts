@@ -198,6 +198,9 @@ function responses(c: Ctx, list: RestResponse[], level: number, idPrefix: string
 
 function wsMessage(c: Ctx, message: WsMessage, level: number): Html {
   return join([
+    // AsyncAPI's `summary` is often where a message's real prose lives —
+    // paragraphs, admonitions — so it is markdown, not a title.
+    message.summary !== undefined ? markdown(c, message.summary) : undefined,
     docsBody(c, message.docs),
     inline(
       message.contentType !== undefined

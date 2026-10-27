@@ -13,7 +13,7 @@
  */
 
 import type { ComponentType, ReactNode } from "react";
-import type { Chip, Docs, FieldNode, HrefTarget, Parameter } from "@speculoos/core";
+import type { Chip, Docs, FieldNode, HrefTarget, Parameter, WsMessage } from "@speculoos/core";
 
 /**
  * Where a link points. Defined in `@speculoos/core` rather than here: the HTML
@@ -171,6 +171,12 @@ export interface Tab {
   id: string;
   label: ReactNode;
   content: ReactNode;
+  /**
+   * Set on a message tab (`kind: "message"`): the message itself, so a map can
+   * read what the pre-built `content` does not show — a spec's own `x-`
+   * extensions in `message.docs.extensions`, say.
+   */
+  message?: WsMessage | undefined;
 }
 
 /** Media types, response statuses, message variants. */

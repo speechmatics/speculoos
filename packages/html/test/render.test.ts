@@ -235,6 +235,10 @@ describe("endpoints", () => {
     expect(count(html, 'data-value="wss"')).toBe(1);
   });
 
+  it("renders a message's summary as markdown", () => {
+    expect(renderEndpointById("/v2/{language}", ws)).toContain('<div class="spec-markdown">Begin a session.</div>');
+  });
+
   it("heads a channel's operations by what the reader does", () => {
     const text = asText(renderEndpointById("/v2/{language}", ws));
     expect(text).toContain("Send client → server Messages the client sends.");
