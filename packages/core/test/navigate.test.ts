@@ -151,14 +151,24 @@ describe("endpointHandshake", () => {
     source: { document: "d", pointer: "#" },
   };
 
-  it("describes a WebSocket channel's upgrade: GET, the URL, 101, the servers' security", () => {
+  it("describes a WebSocket channel's upgrade: GET, the URL, the servers' security", () => {
     const h = endpointHandshake({ ...channel(), protocols: ["wss"], servers: [], address: "/" }, { servers: [server] });
     expect(h).toEqual({
       method: "GET",
       url: "wss://eu.example.com/v2/",
-      status: "101 Switching Protocols",
       security: server.security,
     });
+  });
+
+  it("carries the server's description when exactly one server applies", () => {
+    const described = { ...server, docs: { description: "Routes to the nearest region." } };
+    const one = endpointHandshake({ ...channel(), protocols: ["wss"], servers: [] }, { servers: [described] });
+    expect(one?.docs?.description).toBe("Routes to the nearest region.");
+    const two = endpointHandshake(
+      { ...channel(), protocols: ["wss"], servers: [] },
+      { servers: [described, { ...described, id: "us" }] },
+    );
+    expect(two?.docs).toBeUndefined();
   });
 
   it("takes the method from the channel's ws binding", () => {

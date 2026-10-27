@@ -438,6 +438,13 @@ export function operationSection(c: Ctx, entry: OperationEntry, level: number, n
 export interface RenderEndpointOptions extends HtmlOptions {
   /** Heading level for the endpoint's own section. Defaults to `headingLevel`. */
   level?: number;
+  /**
+   * The page's own HTML for the end of a channel's Handshake section — what a
+   * spec has no place for: the responses a failed upgrade gets, retry advice.
+   * Written verbatim, so it must be yours, not the spec's. Ignored where there
+   * is no handshake.
+   */
+  handshakeExtras?: Html;
 }
 
 /**
@@ -451,7 +458,7 @@ export interface RenderEndpointOptions extends HtmlOptions {
  */
 export function renderEndpoint(endpoint: Endpoint, ir: ApiIR, options: RenderEndpointOptions = {}): Html {
   const c: Ctx = { ir, o: resolve(options) };
-  return endpointSection(c, endpoint, options.level ?? c.o.headingLevel);
+  return endpointSection(c, endpoint, options.level ?? c.o.headingLevel, options.handshakeExtras);
 }
 
 /** Looks an endpoint up by id: the path, the channel id, or "webhook:name". */
@@ -459,15 +466,16 @@ export function renderEndpointById(id: string, ir: ApiIR, options: RenderEndpoin
   const c: Ctx = { ir, o: resolve(options) };
   const endpoint = ir.endpoints.find((e) => e.id === id);
   if (endpoint === undefined) return empty(c, `No endpoint ${id}`);
-  return endpointSection(c, endpoint, options.level ?? c.o.headingLevel);
+  return endpointSection(c, endpoint, options.level ?? c.o.headingLevel, options.handshakeExtras);
 }
 
 /**
  * How a client opens a WebSocket channel, before any message: the upgrade
- * request, what success answers, and the credentials it takes. Empty for a
- * REST path or a non-WebSocket channel.
+ * request and the credentials it takes. What the upgrade answers is the
+ * page's to add, through `handshakeExtras`. Empty for a REST path or a
+ * non-WebSocket channel.
  */
-function handshake(c: Ctx, endpoint: Endpoint, level: number): Html {
+function handshake(c: Ctx, endpoint: Endpoint, level: number, extras?: Html): Html {
   const hs = endpointHandshake(endpoint, c.ir);
   if (hs === undefined) return "";
   const item = (...parts: (Html | undefined)[]) => h("li", { class: c.o.cls("list-item") }, inline(...parts));
@@ -478,9 +486,10 @@ function handshake(c: Ctx, endpoint: Endpoint, level: number): Html {
       "ul",
       { class: c.o.cls("list", "handshake") },
       item(badge(c, "method", text(hs.method), hs.method.toLowerCase()), code(c, hs.url)),
-      item(badge(c, "status", text("101"), "101"), text("Switching Protocols")),
     ),
+    hs.docs !== undefined ? docsBody(c, hs.docs) : undefined,
     authentication(c, hs.security, level + 1),
+    extras,
   );
 }
 
@@ -523,7 +532,7 @@ function authentication(c: Ctx, requirements: SecurityRequirements, level: numbe
   );
 }
 
-export function endpointSection(c: Ctx, endpoint: Endpoint, level: number): Html {
+export function endpointSection(c: Ctx, endpoint: Endpoint, level: number, handshakeExtras?: Html): Html {
   // Headed like a REST operation: the title when there is one, with the
   // protocol where a method would sit, then where to connect — the full URL
   // when one server applies, "WSS wss://eu.example.com/v2/", else the address.
@@ -544,7 +553,7 @@ export function endpointSection(c: Ctx, endpoint: Endpoint, level: number): Html
       level,
     },
     docsBody(c, endpoint.docs),
-    handshake(c, endpoint, level + 1),
+    handshake(c, endpoint, level + 1, handshakeExtras),
     parameters(c, endpoint, endpoint.parameters, endpoint.source, level + 1),
     endpoint.operations.length === 0
       ? empty(c, "No operations")
@@ -559,11 +568,13 @@ export function endpointSection(c: Ctx, endpoint: Endpoint, level: number): Html
  */
 export function renderEntry(entry: ApiEntry, ir: ApiIR, options: RenderEndpointOptions = {}): Html {
   const c: Ctx = { ir, o: resolve(options) };
-  return entrySection(c, entry, options.level ?? c.o.headingLevel);
+  return entrySection(c, entry, options.level ?? c.o.headingLevel, options.handshakeExtras);
 }
 
-export function entrySection(c: Ctx, entry: ApiEntry, level: number): Html {
-  return entry.kind === "operation" ? operationSection(c, entry, level) : endpointSection(c, entry.endpoint, level);
+export function entrySection(c: Ctx, entry: ApiEntry, level: number, handshakeExtras?: Html): Html {
+  return entry.kind === "operation"
+    ? operationSection(c, entry, level)
+    : endpointSection(c, entry.endpoint, level, handshakeExtras);
 }
 
 /**

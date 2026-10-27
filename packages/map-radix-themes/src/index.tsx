@@ -120,6 +120,12 @@ const DIRECTION_ARROW: Record<string, string> = { "client-sends": "↑", "server
 /** Whether a `List` sits inside another, so a nested one can indent. */
 const InList = createContext(false);
 
+/**
+ * Whether a section sits inside a card (a message, the handshake). Its heading
+ * then steps down, so the card's own title stays the largest thing in it.
+ */
+const InCard = createContext(false);
+
 function clampLevel(level: number): 1 | 2 | 3 | 4 | 5 | 6 {
   return Math.min(Math.max(Math.round(level), 1), 6) as 1 | 2 | 3 | 4 | 5 | 6;
 }
@@ -129,16 +135,17 @@ export function radixThemes(options: RadixThemesOptions): Components {
   const colors = mergeColors(options.colors);
 
   function Section(props: SectionProps): ReactNode {
-    if (props.kind === "message") return <MessageCard {...props} />;
+    if (props.kind === "message" || props.kind === "handshake") return <CardSection {...props} />;
     const { kind, id, title, subtitle, level, deprecated, children } = props;
+    const inCard = useContext(InCard);
     const h = clampLevel(level);
     const major = MAJOR.has(kind);
     return (
-      <Box asChild mt={major ? "7" : "5"} mb={major ? "5" : "3"} {...(id !== undefined ? { id } : {})}>
+      <Box asChild mt={major ? "7" : inCard ? "4" : "5"} mb={major ? "5" : "3"} {...(id !== undefined ? { id } : {})}>
         <section data-kind={kind}>
-          <Flex direction="column" gap="2" mb="3">
+          <Flex direction="column" gap="2" mb={inCard ? "2" : "3"}>
             <Flex gap="3" align="center" wrap="wrap">
-              <Heading as={`h${h}`} size={HEADING_SIZE[h]}>
+              <Heading as={`h${h}`} size={inCard ? "3" : HEADING_SIZE[h]}>
                 {title}
               </Heading>
               {deprecated === true && <Badge color={colors.tone.deprecated}>deprecated</Badge>}
@@ -159,20 +166,26 @@ export function radixThemes(options: RadixThemesOptions): Components {
    * A message is a card headed by its name. The heading keeps its level — a
    * message is a real section, with an anchor a page's prose links to — but is
    * sized down, so twenty of them read as a list rather than as twenty titles.
+   * Sections inside a card step down again (see `InCard`).
+   *
+   * The handshake is a card too: everything about opening the connection in
+   * one unit, before the first message.
    */
-  function MessageCard({ id, title, level, deprecated, message, children }: SectionProps): ReactNode {
+  function CardSection({ kind, id, title, level, deprecated, message, children }: SectionProps): ReactNode {
     const h = clampLevel(level);
     return (
       <Card asChild size="2" my="4" {...(id !== undefined ? { id } : {})}>
-        <section data-kind="message">
+        <section data-kind={kind}>
           <Flex gap="3" align="center" wrap="wrap" mb="2">
-            <Heading as={`h${h}`} size="4">
+            {/* The handshake is one per page and heads everything about
+                connecting, so it reads as a section title; messages are many. */}
+            <Heading as={`h${h}`} size={kind === "handshake" ? "5" : "4"}>
               {title}
             </Heading>
             {deprecated === true && <Badge color={colors.tone.deprecated}>deprecated</Badge>}
           </Flex>
           {MessageExtras !== undefined && message !== undefined && <MessageExtras message={message} />}
-          {children}
+          <InCard.Provider value={true}>{children}</InCard.Provider>
         </section>
       </Card>
     );

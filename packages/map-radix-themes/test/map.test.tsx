@@ -337,3 +337,23 @@ describe("gathered examples", () => {
     expect(html).toMatch(/<div id="start-recognition-example-0-body" hidden=""/);
   });
 });
+
+describe("handshake", () => {
+  it("is a card, like a message: the connection as one unit before the first message", () => {
+    const html = render(<Endpoint id="/v2/{language}" />, ir("realtime-v3.yaml"), radixThemes({ markdown: Markdown }));
+    expect(html).toMatch(/<section data-kind="handshake" class="[^"]*rt-Card[^"]*">/);
+  });
+});
+
+describe("headings inside cards", () => {
+  it("keep the card's title the largest: the handshake's sections step down", () => {
+    const html = render(<Endpoint id="/v2/{language}" />, ir("realtime-v3.yaml"), radixThemes({ markdown: Markdown }));
+    // The card ends where the channel's own Address parameters begin.
+    const start = html.indexOf('data-kind="handshake"');
+    const card = html.slice(start, html.indexOf('data-kind="parameters"', start));
+    const sizes = [...card.matchAll(/rt-Heading rt-r-size-(\d)/g)].map((m) => Number(m[1]));
+    expect(sizes.length).toBeGreaterThan(1);
+    expect(sizes[0]).toBe(5); // Handshake
+    expect(sizes.slice(1).every((s) => s < 5)).toBe(true); // Authentication, …
+  });
+});

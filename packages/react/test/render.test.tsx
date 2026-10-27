@@ -542,13 +542,15 @@ describe("EntryExamples", () => {
 });
 
 describe("Handshake", () => {
-  it("opens a WebSocket channel with its upgrade request, 101, and how to authenticate", () => {
+  it("opens a WebSocket channel with its upgrade request and how to authenticate", () => {
     const html = render(<Endpoint id="/v2/{language}" />, ws);
     expect(html).toContain('<x-section data-kind="handshake" data-level="3"><x-title>Handshake</x-title>');
     expect(html).toContain('<x-badge data-tone="method">GET</x-badge> <x-code>wss://eu2.rt.example.com/v2/v2/{language}</x-code>');
-    expect(html).toContain('<x-badge data-tone="status">101</x-badge> Switching Protocols');
     expect(html).toContain('<x-section data-kind="security" data-level="4"><x-title>Authentication</x-title>');
     expect(html).toContain("<x-code>Authorization: Bearer &lt;token&gt;</x-code>");
+    // The one server's description: where a spec says how to pick another.
+    const handshake = html.slice(html.indexOf('data-kind="handshake"'), html.indexOf("Authentication"));
+    expect(handshake).toContain("Production endpoint.");
   });
 
   it("comes before the channel's operations", () => {
@@ -558,5 +560,20 @@ describe("Handshake", () => {
 
   it("is not shown for a REST path", () => {
     expect(render(<Endpoint id="/jobs" />, rest)).not.toContain('data-kind="handshake"');
+  });
+});
+
+describe("handshakeExtras", () => {
+  it("ends the Handshake section with the page's own content", () => {
+    const channel = apiEntries(ws).find((e) => e.kind === "channel")!;
+    const html = render(<Entry entry={channel} handshakeExtras={<aside>retry advice</aside>} />, ws);
+    const handshake = html.slice(html.indexOf('data-kind="handshake"'), html.indexOf('data-kind="operation"'));
+    expect(handshake).toContain("<aside>retry advice</aside>");
+    expect(handshake.indexOf("Authentication")).toBeLessThan(handshake.indexOf("<aside>"));
+  });
+
+  it("is ignored where there is no handshake", () => {
+    const op = apiEntries(rest).find((e) => e.kind === "operation")!;
+    expect(render(<Entry entry={op} handshakeExtras={<aside>x</aside>} />, rest)).not.toContain("<aside>");
   });
 });

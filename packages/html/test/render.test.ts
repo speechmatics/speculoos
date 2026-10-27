@@ -401,16 +401,30 @@ describe("renderEntryExamples", () => {
 });
 
 describe("handshake", () => {
-  it("opens a WebSocket channel with its upgrade request, 101, and how to authenticate", () => {
+  it("opens a WebSocket channel with its upgrade request and how to authenticate", () => {
     const html = renderEndpointById("/v2/{language}", ws);
     expect(html).toContain('spec-section spec-section--handshake');
     expect(html).toContain(">wss://eu2.rt.example.com/v2/v2/{language}</code>");
-    expect(html).toContain("Switching Protocols");
     expect(html).toContain(">Authorization: Bearer &lt;token&gt;</code>");
+    expect(html.slice(html.indexOf("spec-section--handshake"), html.indexOf("Authentication"))).toContain("Production endpoint.");
     expect(html.indexOf("spec-section--handshake")).toBeLessThan(html.indexOf("spec-section--operation"));
   });
 
   it("is not shown for a REST path", () => {
     expect(renderEndpointById("/jobs", rest)).not.toContain("spec-section--handshake");
+  });
+});
+
+describe("handshakeExtras", () => {
+  it("ends a channel's Handshake section with the page's own HTML", () => {
+    const channel = apiEntries(ws).find((e) => e.kind === "channel")!;
+    const html = renderEntry(channel, ws, { handshakeExtras: "<aside>retry advice</aside>" });
+    const handshake = html.slice(html.indexOf("spec-section--handshake"), html.indexOf("spec-section--operation"));
+    expect(handshake).toContain("<aside>retry advice</aside>");
+  });
+
+  it("is ignored where there is no handshake", () => {
+    const op = apiEntries(rest).find((e) => e.kind === "operation")!;
+    expect(renderEntry(op, rest, { handshakeExtras: "<aside>x</aside>" })).not.toContain("<aside>");
   });
 });

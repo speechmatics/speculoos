@@ -502,10 +502,11 @@ function Protocols({ endpoint }: { endpoint: IREndpoint }): ReactNode {
 
 /**
  * How a client opens a WebSocket channel, before any message: the upgrade
- * request, what success answers, and the credentials it takes. Nothing for a
- * REST path or a non-WebSocket channel.
+ * request and the credentials it takes. What the upgrade answers is the
+ * page's to add, through `handshakeExtras`. Nothing for a REST path or a
+ * non-WebSocket channel.
  */
-function Handshake({ endpoint, level }: { endpoint: IREndpoint; level: number }): ReactNode {
+function Handshake({ endpoint, level, extras }: { endpoint: IREndpoint; level: number; extras?: ReactNode }): ReactNode {
   const C = useComponents();
   const { ir } = useSpeculoos();
   const handshake = endpointHandshake(endpoint, ir);
@@ -517,11 +518,10 @@ function Handshake({ endpoint, level }: { endpoint: IREndpoint; level: number })
           <C.Badge tone="method" value={handshake.method.toLowerCase()}>{handshake.method}</C.Badge>{" "}
           <C.Code>{handshake.url}</C.Code>
         </C.ListItem>
-        <C.ListItem>
-          <C.Badge tone="status" value="101">101</C.Badge> Switching Protocols
-        </C.ListItem>
       </C.List>
+      {handshake.docs !== undefined && <DocsBody docs={handshake.docs} />}
       <Authentication security={handshake.security} level={level + 1} />
+      {extras}
     </C.Section>
   );
 }
@@ -569,6 +569,12 @@ export interface EndpointProps {
   endpoint?: IREndpoint;
   /** Heading level for the endpoint's own section. Defaults to the provider's. */
   level?: number;
+  /**
+   * The page's own content for the end of the Handshake section — what a spec
+   * has no place for: the responses a failed upgrade gets, retry advice.
+   * Ignored where there is no handshake.
+   */
+  handshakeExtras?: ReactNode;
 }
 
 /**
@@ -614,7 +620,7 @@ export function Endpoint(props: EndpointProps): ReactNode {
       level={level}
     >
       <DocsBody docs={endpoint.docs} />
-      <Handshake endpoint={endpoint} level={level + 1} />
+      <Handshake endpoint={endpoint} level={level + 1} extras={props.handshakeExtras} />
       <Parameters
         endpoint={endpoint}
         parameters={endpoint.parameters}
@@ -643,18 +649,20 @@ export interface EntryProps {
   entry: ApiEntry;
   /** Heading level for the entry's own section. Defaults to the provider's. */
   level?: number;
+  /** For a channel: the page's own content for the end of its Handshake section. */
+  handshakeExtras?: ReactNode;
 }
 
 /**
  * One API reference entry, as its page body: a REST operation standing alone,
  * or a channel with its send and receive. What a site renders per page.
  */
-export function Entry({ entry, level }: EntryProps): ReactNode {
+export function Entry({ entry, level, handshakeExtras }: EntryProps): ReactNode {
   const lvl = level !== undefined ? { level } : {};
   return entry.kind === "operation" ? (
     <Operation endpoint={entry.endpoint} operation={entry.operation} {...lvl} />
   ) : (
-    <Endpoint endpoint={entry.endpoint} {...lvl} />
+    <Endpoint endpoint={entry.endpoint} {...lvl} handshakeExtras={handshakeExtras} />
   );
 }
 

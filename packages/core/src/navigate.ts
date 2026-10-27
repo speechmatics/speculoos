@@ -19,7 +19,7 @@ import type {
   TagDef,
   WsMessage,
 } from "./document.js";
-import type { Node, TypeDef, TypeId, TypeRegistry } from "./schema.js";
+import type { Docs, Node, TypeDef, TypeId, TypeRegistry } from "./schema.js";
 
 /** An operation together with the endpoint it hangs off. */
 export interface OperationEntry {
@@ -179,16 +179,23 @@ export function entryExamples(entry: ApiEntry): EntryExample[] {
   });
 }
 
-/** How a client opens a WebSocket channel: the upgrade request and what it needs. */
+/**
+ * How a client opens a WebSocket channel: the upgrade request and what it
+ * needs. What the upgrade answers — 101, or a 4xx — is the page's to say:
+ * AsyncAPI has no place for it.
+ */
 export interface Handshake {
   /** "GET" unless the channel's `ws` binding says otherwise. */
   method: string;
   /** The full URL when one server applies, else the channel's address. */
   url: string;
-  /** What a successful upgrade answers with. */
-  status: "101 Switching Protocols";
   /** The applicable servers' security: any one alternative opens the connection. */
   security: SecurityRequirements;
+  /**
+   * The server's own description, when exactly one applies — where a spec says
+   * what this endpoint is, or how to pick a region instead.
+   */
+  docs?: Docs;
 }
 
 /**
@@ -211,11 +218,14 @@ export function endpointHandshake(endpoint: Endpoint, ir: Pick<ApiIR, "servers">
   const method = typeof ws === "object" && ws !== null && typeof (ws as { method?: unknown }).method === "string"
     ? ((ws as { method: string }).method).toUpperCase()
     : "GET";
+  const only = servers.length === 1 ? servers[0] : undefined;
   return {
     method,
     url: endpointUrl(endpoint, ir) ?? endpoint.address,
-    status: "101 Switching Protocols",
     security,
+    ...(only !== undefined && (only.docs.description !== undefined || only.docs.externalDocs !== undefined)
+      ? { docs: only.docs }
+      : {}),
   };
 }
 
