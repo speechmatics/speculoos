@@ -253,7 +253,9 @@ function buildField(c: Ctx, input: FieldInput): FieldNode {
       ...(input.extraChips ?? []),
       ...extendsChips,
       ...chipsFor(node, chipOpts),
-      ...(target ? chipsFor(target.node, chipOpts) : []),
+      // A `$ref` is labelled by the type's name, so a small enum behind one is
+      // spelled out nowhere unless its values are chips.
+      ...(target ? chipsFor(target.node, { ...chipOpts, maxInlineEnum: 0 }) : []),
     ]),
     docs: mergeDocs(input.usageDocs, node.docs, target?.docs, target?.node.docs),
     children: expansion.children,
@@ -472,6 +474,23 @@ function expand(
       };
     }
 
+    // An enum whose values carry their own descriptions — lowered from the
+    // oneOf-of-documented-consts idiom — reads as what it was written as: one
+    // row per value, each with its description. Undocumented values stay chips.
+    case "enum": {
+      if (!eff.members.some((m) => m.docs !== undefined)) return NONE;
+      const nodes = eff.members.map((m, i) =>
+        buildField(c, {
+          node: { kind: "const", value: m.value, source: eff.source, docs: m.docs ?? {}, nullable: false },
+          path: at(`value-${i + 1}`),
+          depth: depth + 1,
+          required: false,
+          ancestors,
+        }),
+      );
+      return { children: { kind: "variants", label: "one of", nodes } };
+    }
+
     case "intersection": {
       const nodes = eff.members.map((n, i) =>
         buildField(c, {
@@ -565,6 +584,7 @@ export function chipsFor(node: Node, opts: ChipOptions = {}): Chip[] {
     }
 
     case "enum": {
+      if (node.members.some((m) => m.docs !== undefined)) break; // rows of their own; see expand()
       if (node.members.length <= maxInlineEnum) break; // already in the type label
       if (node.members.length > MAX_ENUM_CHIP_VALUES) {
         push("enum", `${node.members.length} values`, node.members.length);

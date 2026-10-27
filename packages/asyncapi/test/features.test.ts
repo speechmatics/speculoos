@@ -113,10 +113,14 @@ describe("the presentation layer works on AsyncAPI IR unchanged", () => {
       "transcription_config",
       "language",
       "operating_point",
+      // operating_point is a oneOf of documented consts: a row per value.
+      undefined,
+      undefined,
     ]);
     expect(rows.find((r) => r.name === "message")?.typeLabel).toBe('"StartRecognition"');
     expect(rows.find((r) => r.name === "operating_point")?.typeLabel).toBe(
       '"standard" | "enhanced"',
     );
+    expect(rows.slice(-2).map((r) => r.typeLabel)).toEqual(['"standard"', '"enhanced"']);
   });
 });

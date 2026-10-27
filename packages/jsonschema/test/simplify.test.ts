@@ -41,6 +41,26 @@ describe("constUnionToEnum", () => {
     expect(node).toMatchObject({ kind: "enum", baseType: "integer" });
   });
 
+  it("collapses one with a `type` beside it that every const already satisfies", () => {
+    const { node, diagnostics } = lowerOne({
+      type: "string",
+      description: "Which kind.",
+      oneOf: [
+        { const: "a", description: "First." },
+        { const: "b", description: "Second." },
+      ],
+    });
+    if (node.kind !== "enum") throw new Error("expected enum");
+    expect(node.docs.description).toBe("Which kind.");
+    expect(node.members.map((m) => m.docs?.description)).toEqual(["First.", "Second."]);
+    expect(diagnostics.map((d) => d.code)).not.toContain("UNION_WITH_SIBLINGS");
+  });
+
+  it("still intersects a `type` the consts do not satisfy", () => {
+    const { node } = lowerOne({ type: "number", oneOf: [{ const: "a" }, { const: "b" }] });
+    expect(node.kind).toBe("intersection");
+  });
+
   it("leaves a mixed union alone", () => {
     const { node } = lowerOne({ oneOf: [{ const: "a" }, { type: "number" }] });
     expect(node.kind).toBe("union");

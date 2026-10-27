@@ -207,8 +207,10 @@ function lowerUnion(
 
   const local = lower(rest, loc, ctx);
   // A bare `type: object` next to a union agrees with its branches rather than
-  // adding to them; intersecting with an empty object would be pure noise.
-  if (addsNothing(local)) return union;
+  // adding to them; intersecting with an empty object would be pure noise. So
+  // does a bare `type: string` next to a oneOf of string consts — the
+  // documented-enum idiom, which then folds into an enum like any other.
+  if (addsNothing(local) || restatesConsts(local, variants)) return union;
 
   ctx.report(
     diag(
@@ -245,6 +247,20 @@ function requiredOnlyNote(branches: unknown[], keyword: "oneOf" | "anyOf"): stri
 
 function withNote(node: Node, note: string): Node {
   return { ...node, docs: { ...node.docs, notes: [...(node.docs.notes ?? []), note] } };
+}
+
+/**
+ * Is this a bare primitive type that every branch, being a const of that type,
+ * already satisfies? `{ type: string, oneOf: [{ const: a }, { const: b }] }`.
+ */
+function restatesConsts(node: Node, variants: { node: Node }[]): boolean {
+  const kind =
+    node.kind === "string" || node.kind === "boolean" ? node.kind
+    : node.kind === "number" ? "number"
+    : undefined;
+  if (kind === undefined || variants.length === 0) return false;
+  if ("constraints" in node && Object.keys(node.constraints).length > 0) return false;
+  return variants.every((v) => v.node.kind === "const" && typeof v.node.value === kind);
 }
 
 /** Does this node constrain anything its siblings do not already say? */

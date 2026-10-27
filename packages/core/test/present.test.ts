@@ -8,7 +8,7 @@ import {
   typeLabel,
   type FieldNode,
 } from "../src/index.js";
-import { ids, ir, jobRef, messageRef, ref, treeRef } from "./fixture.js";
+import { enumNode, ids, ir, jobRef, messageRef, obj, prop, ref, treeRef } from "./fixture.js";
 
 const find = (rows: FieldNode[], path: string) =>
   rows.find((r) => r.path.join("/") === path);
@@ -193,6 +193,35 @@ describe("chips", () => {
     expect(language?.chips).toEqual([
       { kind: "default", label: 'default: "en"', value: "en" },
       { kind: "pattern", label: "matches /^[a-z]{2}$/", value: "^[a-z]{2}$" },
+    ]);
+  });
+
+  it("spells out a small enum behind a $ref, which its name-only label does not", () => {
+    const direction = ids("Direction");
+    const withEnum = {
+      ...ir,
+      schemas: {
+        ...ir.schemas,
+        [direction]: { ...ir.schemas[ids("Language")]!, id: direction, name: "Direction", node: enumNode(["ltr", "rtl"]) },
+      },
+    };
+    const rows = toRows(obj([prop("dir", ref(direction))]), withEnum, { expandRefs: "always" });
+    expect(find(rows, "dir")?.typeLabel).toBe("Direction");
+    expect(find(rows, "dir")?.chips.map((c) => c.label)).toEqual(['"ltr"', '"rtl"']);
+  });
+
+  it("gives an enum with documented values a row per value, instead of chips", () => {
+    const documented = { ...enumNode(["ok", "busy"]), members: [
+      { value: "ok", docs: { description: "All is well." } },
+      { value: "busy", docs: { description: "Try later." } },
+    ] };
+    const field = find(toRows(obj([prop("status", documented)]), ir), "status");
+    expect(field?.chips).toEqual([]);
+    expect(field?.children.kind).toBe("variants");
+    const rows = field?.children.kind === "variants" ? field.children.nodes : [];
+    expect(rows.map((r) => [r.typeLabel, r.docs.description])).toEqual([
+      ['"ok"', "All is well."],
+      ['"busy"', "Try later."],
     ]);
   });
 
