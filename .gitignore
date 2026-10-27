@@ -5,3 +5,6 @@ dist/
 
 # Built by `pnpm preview`. Dev tooling output, not source.
 preview/out/
+
+# Built by `pnpm pack:local`, for installing into another project.
+.packs/

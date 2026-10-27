@@ -14,6 +14,7 @@
     "preview": "node preview/build.mjs",
     "preview:serve": "node preview/build.mjs --serve",
     "preview:radix": "pnpm --filter @speculoos/map-radix-themes dev",
+    "pack:local": "node scripts/pack-local.mjs",
     "docs:diagnostics": "node scripts/diagnostics-doc.mjs",
     "docs:check": "node scripts/diagnostics-doc.mjs --check"
   },
