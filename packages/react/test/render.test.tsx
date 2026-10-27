@@ -129,6 +129,21 @@ describe("SchemaTable", () => {
     expect(html).not.toContain("<x-badge data-tone=\"constraint\">extends");
   });
 
+  it("says a field is nullable once, in its type", () => {
+    const source = { document: "d", pointer: "#" };
+    const node = {
+      kind: "object" as const, source, docs: {}, nullable: false, additional: { kind: "any" as const },
+      patternProperties: [], constraints: {}, composedFrom: [],
+      properties: [{
+        name: "name", required: false, readOnly: false, writeOnly: false, deprecated: false, docs: {},
+        node: { kind: "string" as const, source, docs: {}, nullable: true, constraints: {} },
+      }],
+    };
+    const html = render(<SchemaTable node={node} />, rest);
+    expect(html).toContain("string | null");
+    expect(html).not.toContain("nullable");
+  });
+
   it("terminates on a self-referential type when told to expand everything", () => {
     const html = render(<SchemaTable typeId={jobId} expandRefs="always" />, rest);
     expect(html).toContain("recursive");

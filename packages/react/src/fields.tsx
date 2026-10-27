@@ -94,10 +94,13 @@ function Composition({ ids }: { ids: TypeId[] }): ReactNode {
  * nullability, recursion and an unresolved reference. The IR keeps these off
  * `chips` on purpose — `nullable` is a first-class field, and `children` is a
  * resolution outcome — so it falls to the renderer to make them visible.
+ *
+ * Nullability usually is visible already: the type label ends `| null` unless
+ * `nullableSuffix` is off. The chip is for when it is.
  */
 function shapeChips(field: FieldNode): Chip[] {
   const out: Chip[] = [];
-  if (field.nullable) out.push({ kind: "note", label: "nullable" });
+  if (field.nullable && !field.typeLabel.endsWith(" | null")) out.push({ kind: "note", label: "nullable" });
   if (field.children.kind === "cycle") out.push({ kind: "note", label: "recursive" });
   if (field.children.kind === "link" && field.children.reason === "unresolved") {
     out.push({ kind: "note", label: "unresolved reference", value: field.children.target });
