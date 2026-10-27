@@ -124,3 +124,38 @@ describe("the presentation layer works on AsyncAPI IR unchanged", () => {
     expect(rows.slice(-2).map((r) => r.typeLabel)).toEqual(['"standard"', '"enhanced"']);
   });
 });
+
+describe("security", () => {
+  it("reads a 3.x server's schemes as alternatives: any one authenticates", async () => {
+    const project = await load({
+      root: specDir,
+      documents: [{
+        name: "doc",
+        content: {
+          asyncapi: "3.0.0",
+          info: { title: "t", version: "1" },
+          servers: {
+            prod: {
+              host: "x.example.com", protocol: "wss",
+              security: [
+                { $ref: "#/components/securitySchemes/key" },
+                { $ref: "#/components/securitySchemes/jwt" },
+              ],
+            },
+          },
+          components: {
+            securitySchemes: {
+              key: { type: "http", scheme: "bearer" },
+              jwt: { type: "httpApiKey", name: "jwt", in: "query" },
+            },
+          },
+        },
+      }],
+    });
+    const ir = buildAsyncApi({ project });
+    expect(ir.servers[0]?.security).toEqual([
+      [{ scheme: "key", scopes: [] }],
+      [{ scheme: "jwt", scopes: [] }],
+    ]);
+  });
+});

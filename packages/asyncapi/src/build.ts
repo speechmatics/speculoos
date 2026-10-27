@@ -326,18 +326,22 @@ function buildSecuritySchemes(ctx: Ctx): Record<string, SecurityScheme> {
   return out;
 }
 
-/** 3.x security is a list of scheme objects or refs, not a map of name → scopes. */
+/**
+ * 3.x security is a list of scheme objects or refs, not a map of name → scopes,
+ * and the list is alternatives: "only one of the security scheme objects need
+ * to be satisfied". So each scheme is an alternative of its own.
+ */
 function securityFromSchemeList(value: unknown): SecurityRequirements {
   if (!Array.isArray(value) || value.length === 0) return [];
-  const required = value.flatMap((entry) => {
+  const alternatives = value.flatMap((entry) => {
     if (!isObject(entry)) return [];
     const ref = str(entry, "$ref");
     const scopes = Array.isArray(entry["scopes"])
       ? entry["scopes"].filter((s): s is string => typeof s === "string")
       : [];
-    return [{ scheme: ref === undefined ? (str(entry, "type") ?? "unknown") : refName(ref), scopes }];
+    return [[{ scheme: ref === undefined ? (str(entry, "type") ?? "unknown") : refName(ref), scopes }]];
   });
-  return required.length === 0 ? [] : [required];
+  return alternatives;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
