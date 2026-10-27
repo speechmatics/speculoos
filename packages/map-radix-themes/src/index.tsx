@@ -16,7 +16,7 @@
  *   ./fields.tsx  `Fields` and `FieldRow`, as a DataList
  */
 
-import { createContext, Fragment, useContext, type ComponentType, type ReactNode } from "react";
+import { createContext, useContext, type ComponentType, type ReactNode } from "react";
 import {
   Badge,
   Box,
@@ -26,7 +26,6 @@ import {
   Heading,
   Link,
   ScrollArea,
-  Separator,
   Tabs,
   Text,
 } from "@radix-ui/themes";
@@ -83,11 +82,11 @@ export interface RadixThemesOptions {
    *   messageExtras: ({ message }) =>
    *     message.docs.extensions?.["x-preview-mode"] ? <PreviewCallout /> : null
    */
-  messageExtras?: ComponentType<{ message: MessageOf<TabsProps> }>;
+  messageExtras?: ComponentType<{ message: IRMessage }>;
 }
 
-/** The IR message a message tab carries, without this package importing core. */
-type MessageOf<P extends TabsProps> = NonNullable<P["tabs"][number]["message"]>;
+/** The IR message a message section carries, without this package importing core. */
+type IRMessage = NonNullable<SectionProps["message"]>;
 
 /** Heading size by level. A level-2 operation reads as a page section, not a title. */
 const HEADING_SIZE = { 1: "8", 2: "6", 3: "5", 4: "4", 5: "3", 6: "2" } as const;
@@ -123,7 +122,9 @@ export function radixThemes(options: RadixThemesOptions): Components {
   const { markdown, size = "2", linkAs, messageExtras: MessageExtras } = options;
   const colors = mergeColors(options.colors);
 
-  function Section({ kind, id, title, subtitle, level, deprecated, children }: SectionProps): ReactNode {
+  function Section(props: SectionProps): ReactNode {
+    if (props.kind === "message") return <MessageCard {...props} />;
+    const { kind, id, title, subtitle, level, deprecated, children } = props;
     const h = clampLevel(level);
     const major = MAJOR.has(kind);
     return (
@@ -145,6 +146,29 @@ export function radixThemes(options: RadixThemesOptions): Components {
           {children}
         </section>
       </Box>
+    );
+  }
+
+  /**
+   * A message is a card headed by its name. The heading keeps its level — a
+   * message is a real section, with an anchor a page's prose links to — but is
+   * sized down, so twenty of them read as a list rather than as twenty titles.
+   */
+  function MessageCard({ id, title, level, deprecated, message, children }: SectionProps): ReactNode {
+    const h = clampLevel(level);
+    return (
+      <Card asChild size="2" my="4" {...(id !== undefined ? { id } : {})}>
+        <section data-kind="message">
+          <Flex gap="3" align="center" wrap="wrap" mb="2">
+            <Heading as={`h${h}`} size="4">
+              {title}
+            </Heading>
+            {deprecated === true && <Badge color={colors.tone.deprecated}>deprecated</Badge>}
+          </Flex>
+          {MessageExtras !== undefined && message !== undefined && <MessageExtras message={message} />}
+          {children}
+        </section>
+      </Card>
     );
   }
 
@@ -212,15 +236,10 @@ export function radixThemes(options: RadixThemesOptions): Components {
   }
 
   /**
-   * Media types, statuses and examples are tabs: alternative views of one
-   * thing, where seeing one at a time is the point.
-   *
-   * Messages are not. The messages on a channel are distinct things a reader
-   * needs to compare — "I may send any of these" — so they are stacked, each
-   * on its own card, with "or" between them. One message is still a card.
+   * Media types, statuses and examples: alternative views of one thing, where
+   * seeing one at a time is the point.
    */
   function SpecTabs({ kind, tabs }: TabsProps): ReactNode {
-    if (kind === "message") return <Alternatives tabs={tabs} />;
     const first = tabs[0];
     if (first === undefined) return null;
     return (
@@ -238,25 +257,6 @@ export function radixThemes(options: RadixThemesOptions): Components {
           </Tabs.Content>
         ))}
       </Tabs.Root>
-    );
-  }
-
-  function Alternatives({ tabs }: Pick<TabsProps, "tabs">): ReactNode {
-    return (
-      <Flex direction="column" gap="3" my="3" data-kind="message">
-        {tabs.map((tab, i) => (
-          <Fragment key={tab.id}>
-            {i > 0 && <Or />}
-            <Card size="2">
-              <Text as="div" size="3" weight="bold" mb="2">
-                {tab.label}
-              </Text>
-              {MessageExtras !== undefined && tab.message !== undefined && <MessageExtras message={tab.message} />}
-              {tab.content}
-            </Card>
-          </Fragment>
-        ))}
-      </Flex>
     );
   }
 
@@ -305,17 +305,4 @@ export function radixThemes(options: RadixThemesOptions): Components {
     ListItem,
     Empty,
   };
-}
-
-/** The divider between alternatives: a rule, the word, a rule. */
-function Or(): ReactNode {
-  return (
-    <Flex align="center" gap="3">
-      <Separator size="4" style={{ flex: 1 }} />
-      <Text size="1" color="gray" weight="medium">
-        or
-      </Text>
-      <Separator size="4" style={{ flex: 1 }} />
-    </Flex>
-  );
 }

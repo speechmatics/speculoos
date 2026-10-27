@@ -62,12 +62,17 @@ worth doing while you are there:
 | `size` | `"2"` | `"1"` \| `"2"` \| `"3"`. Scale of field lists, badges and tabs. |
 | `colors` | see below | Badge colours, merged entry by entry over the defaults. |
 | `linkAs` | — | Your router's link component, for internal links (types, operations, tags). Receives `href` and `children`. External links stay plain `<a>`s. |
-| `messageExtras` | — | Extra content in each message card, under its title. Receives the IR `message`, so it can render what a spec's own `x-` extensions say. |
+| `messageExtras` | — | Extra content in each message's card, under its heading. Receives the IR `message`, so it can render what a spec's own `x-` extensions say. |
 
-Field rows are a Radix `DataList`: the name on the left; type, constraints and
-description on the right. It works in either provider `layout` — a field's
-nested rows are rendered after it as siblings, indented by depth, so nothing
-needs setting on the provider.
+Field rows are a Radix `DataList`: the name on the left, with "required" beside
+it; type, constraints and description on the right. It works in either provider
+`layout` — a field's nested rows are rendered after it as siblings, indented by
+depth, so nothing needs setting on the provider.
+
+Nested rows start collapsed behind a "Show 4 properties" toggle. That is what
+makes `expandRefs: "always"` practical: every named type expanded where it is
+used, without a page of every field of every type. In `layout: "rows"` there is
+nothing nested to hide, and no toggle.
 
 ### Colours
 
@@ -104,9 +109,13 @@ const components = { ...radixThemes({ markdown }), Badge: MyBadge };
   reads as text. A filled `Code` made every type look clickable.
 - **Direction badges carry an arrow** — ↑ for what the reader sends, ↓ for what
   they receive — so a channel's two operations tell apart at a glance.
-- **Messages are cards, not tabs.** The messages on a channel are alternatives
-  a reader compares, so `Tabs` with `kind: "message"` stacks them, one `Card`
-  each, with "or" between. Media types, statuses and examples stay tabs.
+- **A message is a card with a heading.** The renderer gives each message a
+  `Section` of `kind: "message"`, anchored at its slug, because a channel's
+  messages are its vocabulary and prose links to them. The map draws it as a
+  `Card` with a smaller heading at the real level. Media types, statuses and
+  examples are tabs.
+- **"required" is red text, not a badge.** It is on most rows; a badge on most
+  rows is noise, and it pushed each row onto a second line.
 - **`CodeBlock`** — Radix has none. It is a ghost `Code` in a `<pre>` on a
   `Card`, in a horizontal `ScrollArea`. `language-json` is on the `<code>` for
   highlighters.

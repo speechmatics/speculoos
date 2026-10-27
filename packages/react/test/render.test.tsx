@@ -275,14 +275,14 @@ describe("message operations", () => {
     expect(html).toContain("<x-md>Begin a session.</x-md>");
   });
 
-  it("hands a message tab its message, for maps that read the spec's own extensions", () => {
+  it("hands a message's section its message, for maps that read the spec's own extensions", () => {
     const seen: string[] = [];
     const spy: Components = {
       ...boxy,
-      Tabs: (props) => {
-        if (props.kind === "message") for (const t of props.tabs) seen.push(t.message?.name ?? "none");
-        const Tabs = boxy.Tabs;
-        return <Tabs {...props} />;
+      Section: (props) => {
+        if (props.kind === "message") seen.push(props.message?.name ?? "none");
+        const Section = boxy.Section;
+        return <Section {...props} />;
       },
     };
     render(<Endpoint id="/v2/{language}" />, ws, spy);
@@ -290,10 +290,18 @@ describe("message operations", () => {
     expect(seen).not.toContain("none");
   });
 
-  it("tabs over the messages on a channel", () => {
+  it("gives each message a section of its own, anchored, straight under its operation", () => {
     const first = ws.endpoints.flatMap((e) => e.operations)[0]!;
-    const html = render(<Operation id={first.id} />, ws);
-    expect(html).toContain('<x-tabs data-kind="message">');
+    const html = render(<Operation id={first.id} level={2} />, ws);
+    expect(html).toContain('<x-section data-kind="message" data-level="3" id="start-recognition"><x-title>Start recognition</x-title>');
+    expect(html).not.toContain('data-kind="messages"');
+    expect(html).not.toContain('<x-tabs data-kind="message">');
+  });
+
+  it("does not badge the discriminating const, which the payload already shows", () => {
+    const html = render(<Endpoint id="/v2/{language}" />, ws);
+    expect(html).not.toContain('<x-badge data-tone="constraint">&quot;StartRecognition&quot;</x-badge>');
+    expect(html).toContain("<x-code>&quot;StartRecognition&quot;</x-code>");
   });
 
   it("renders both AsyncAPI versions of one API identically", async () => {
@@ -385,14 +393,25 @@ describe("Endpoint", () => {
     expect(count(html, ">WSS</x-badge>")).toBe(1);
   });
 
-  it("heads a titled channel by its title, with protocol and address beside like a method and path", () => {
+  it("heads a titled channel by its title, with protocol and URL beside like a method and path", () => {
     const titled: ApiIR = {
       ...ws,
       endpoints: ws.endpoints.map((e) => ({ ...e, docs: { ...e.docs, title: "Realtime" } })),
     };
     const html = render(<Endpoint id="/v2/{language}" />, titled);
     expect(html).toContain(
-      '<x-title>Realtime</x-title><x-subtitle><x-badge data-tone="protocol">WSS</x-badge> <x-code>/v2/{language}</x-code></x-subtitle>',
+      '<x-title>Realtime</x-title><x-subtitle><x-badge data-tone="protocol">WSS</x-badge> <x-code>wss://eu2.rt.example.com/v2/v2/{language}</x-code></x-subtitle>',
+    );
+  });
+
+  it("falls back to the address when more than one server applies", () => {
+    const two: ApiIR = {
+      ...ws,
+      servers: [...ws.servers, { ...ws.servers[0]!, id: "other", url: "wss://us.example.com" }],
+      endpoints: ws.endpoints.map((e) => ({ ...e, docs: { ...e.docs, title: "Realtime" } })),
+    };
+    expect(render(<Endpoint id="/v2/{language}" />, two)).toContain(
+      '<x-badge data-tone="protocol">WSS</x-badge> <x-code>/v2/{language}</x-code></x-subtitle>',
     );
   });
 

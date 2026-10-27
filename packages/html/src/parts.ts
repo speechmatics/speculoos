@@ -42,6 +42,7 @@ export type SectionKind =
   | "response"
   | "messages"
   | "message"
+  | "headers"
   | "reply"
   | "callbacks"
   | "links"
@@ -188,7 +189,7 @@ export interface GroupItem {
  */
 export function group(
   c: Ctx,
-  kind: "mediaType" | "status" | "message" | "example",
+  kind: "mediaType" | "status" | "example",
   items: GroupItem[],
   level: number,
 ): Html {

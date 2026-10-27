@@ -239,6 +239,18 @@ describe("endpoints", () => {
     expect(renderEndpointById("/v2/{language}", ws)).toContain('<div class="spec-markdown">Begin a session.</div>');
   });
 
+  it("gives each message an anchored section straight under its operation, without a discriminator badge", () => {
+    const html = renderEndpointById("/v2/{language}", ws);
+    expect(html).toContain('<section class="spec-section spec-section--message" id="start-recognition" data-level="4">');
+    expect(html).not.toContain("spec-section--messages");
+    expect(html).not.toContain("spec-group--message");
+    expect(html).not.toContain('spec-badge--constraint">&quot;StartRecognition&quot;');
+  });
+
+  it("heads a channel with the full URL when one server applies", () => {
+    expect(renderEndpointById("/v2/{language}", ws)).toContain(">wss://eu2.rt.example.com/v2/v2/{language}</code>");
+  });
+
   it("heads a channel's operations by what the reader does", () => {
     const text = asText(renderEndpointById("/v2/{language}", ws));
     expect(text).toContain("Send client → server Messages the client sends.");

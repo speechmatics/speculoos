@@ -147,16 +147,15 @@ describe("messages", () => {
     return render(<Operation id={withTwo.operation.id} />, api, radixThemes({ markdown: Markdown }));
   };
 
-  it("stacks a channel's messages as alternatives rather than tabbing them", () => {
+  it("gives each message a card of its own, headed one level down and anchored", () => {
     const html = messageOp();
-    const block = html.slice(html.indexOf('data-kind="message"'));
-    expect(block).toContain("rt-Card");
-    expect(block.slice(0, block.indexOf("rt-Card"))).not.toContain('role="tablist"');
+    expect(html).toMatch(/<section data-kind="message" id="start-recognition" class="[^"]*rt-Card[^"]*"><div[^>]*><h3 [^>]*>Start recognition<\/h3>/);
+    expect(html).not.toContain('role="tablist" aria-orientation="horizontal" data-kind="message"');
   });
 
-  it("says 'or' between them, in words", () => {
+  it("no longer says 'or' between them: they are a vocabulary, not alternatives", () => {
     const text = messageOp().replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
-    expect(text).toMatch(/ or /);
+    expect(text).not.toMatch(/ or /);
   });
 
   it("still tabs media types, statuses and examples", () => {
@@ -221,6 +220,28 @@ describe("replacement", () => {
     const Badge = ({ children }: { children: ReactNode }) => <mark>{children}</mark>;
     const html = render(<Operation id="listJobs" />, ir("batch.yaml"), { ...radixThemes({ markdown: Markdown }), Badge });
     expect(html).toContain("<mark>GET</mark>");
+  });
+});
+
+describe("field rows", () => {
+  const createJob = (options = {}) =>
+    render(<Operation id="createJob" />, ir("batch.yaml"), radixThemes({ markdown: Markdown }), options);
+
+  it("marks required in text on the name's line, not as a badge", () => {
+    // Each row's label only: the request body's own "required" stays a badge, in its heading.
+    const labels = createJob().split("rt-DataListLabel").slice(1).map((c) => c.slice(0, c.indexOf("</dt>")));
+    expect(labels.some((l) => /<span[^>]*rt-Text[^>]*>required<\/span>/.test(l))).toBe(true);
+    expect(labels.some((l) => /rt-Badge[^>]*>required</.test(l))).toBe(false);
+  });
+
+  it("collapses nested rows behind a toggle that says how many there are", () => {
+    const html = createJob({ expandRefs: "always" });
+    expect(html).toMatch(/aria-expanded="false"[^>]*><span aria-hidden="true">▸<\/span>Show \d+ (properties|property|options?)<\/button>/);
+    expect(html).toMatch(/<div id="[^"]+" style="display:none">/);
+  });
+
+  it("offers no toggle when nothing is nested", () => {
+    expect(render(<Operation id="listJobs" />, ir("batch.yaml"), radixThemes({ markdown: Markdown }), { layout: "rows" })).not.toContain("aria-expanded");
   });
 });
 

@@ -37,6 +37,7 @@ export const CLASSES: Record<string, readonly string[]> = {
     "response",
     "messages",
     "message",
+    "headers",
     "reply",
     "callbacks",
     "links",
@@ -127,7 +128,7 @@ export const CLASSES: Record<string, readonly string[]> = {
    * The static stand-in for tabs: a labelled list of regions. Carries
    * `data-count`. Turn it into tabs or an accordion with these names.
    */
-  group: ["mediaType", "status", "message", "example"],
+  group: ["mediaType", "status", "example"],
   "group-item": [],
   "group-label": [],
   "group-body": [],

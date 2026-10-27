@@ -36,6 +36,7 @@ export type SectionKind =
   | "response"
   | "messages"
   | "message"
+  | "headers"
   | "reply"
   | "callbacks"
   | "links"
@@ -66,6 +67,12 @@ export interface SectionProps {
   /** Heading level, 1–6. Counts down from `options.headingLevel`. */
   level: number;
   deprecated?: boolean | undefined;
+  /**
+   * Set on a message's own section (`kind: "message"`): the message itself, so
+   * a map can render what the IR carries and Speculoos does not show — a spec's
+   * own `x-` extensions in `message.docs.extensions`, say.
+   */
+  message?: WsMessage | undefined;
   children?: ReactNode | undefined;
 }
 
@@ -171,18 +178,17 @@ export interface Tab {
   id: string;
   label: ReactNode;
   content: ReactNode;
-  /**
-   * Set on a message tab (`kind: "message"`): the message itself, so a map can
-   * read what the pre-built `content` does not show — a spec's own `x-`
-   * extensions in `message.docs.extensions`, say.
-   */
-  message?: WsMessage | undefined;
 }
 
-/** Media types, response statuses, message variants. */
+/**
+ * Media types, response statuses, examples: alternative views of one thing.
+ *
+ * Not messages. A channel's messages are its vocabulary, each one something a
+ * reader links to, so each is a `Section` of `kind: "message"` with an anchor.
+ */
 export interface TabsProps {
   /** What the tabs are over, for components that style the sets differently. */
-  kind: "mediaType" | "status" | "message" | "example";
+  kind: "mediaType" | "status" | "example";
   tabs: Tab[];
   children?: ReactNode | undefined;
 }

@@ -11,10 +11,15 @@
  * `children` is absent on a leaf in "tree" and on every row in "rows" — so
  * nesting in one and indenting in the other would indent twice. Siblings
  * everywhere is the one shape that reads the same in both.
+ *
+ * Nested rows start collapsed behind a "Show 4 properties" toggle, so a site
+ * can expand named types inline (`expandRefs: "always"`) without a page of
+ * every field of every type. In "rows" layout there are no `children` to hide,
+ * and nothing toggles.
  */
 
-import type { ReactNode } from "react";
-import { Badge, Box, DataList, Flex, Text } from "@radix-ui/themes";
+import { useId, useState, type ReactNode } from "react";
+import { Badge, Box, Button, DataList, Flex, Text } from "@radix-ui/themes";
 import type { FieldRowProps, FieldsProps } from "@speculoos/react";
 import type { BadgeColors } from "./colors.js";
 
@@ -44,15 +49,27 @@ function Name({ name }: Pick<FieldRowProps, "name">): ReactNode {
   return name === null || name === undefined ? <Text color="gray">—</Text> : <Text weight="bold">{name}</Text>;
 }
 
-/** The marks that sit with a field's name: required, deprecated. */
+/**
+ * The marks that sit on the name's line: required, deprecated. "required" is
+ * coloured text, not a badge — it is on most rows, and a badge on most rows is
+ * noise that also pushes each one onto a second line.
+ */
 function Marks({ required, deprecated, colors }: { required: boolean; deprecated: boolean; colors: BadgeColors }): ReactNode {
   if (!required && !deprecated) return null;
   return (
     <>
-      {required && <Badge color={colors.tone.required} size="1">required</Badge>}
+      {required && <Text size="1" color={colors.tone.required}>required</Text>}
       {deprecated && <Badge color={colors.tone.deprecated} size="1">deprecated</Badge>}
     </>
   );
+}
+
+/** "Show 4 properties", or "Show 2 options" for a union's branches. */
+function toggleLabel(field: FieldRowProps["field"], open: boolean): string {
+  const nodes = field.children.kind === "inline" || field.children.kind === "variants" ? field.children.nodes : [];
+  const noun = field.children.kind === "variants" ? "option" : "property";
+  const plural = nodes.length === 1 ? noun : noun === "property" ? "properties" : "options";
+  return `${open ? "Hide" : "Show"} ${nodes.length} ${plural}`;
 }
 
 /** Type, then "one of", then constraint chips — what the value may be. */
@@ -69,7 +86,7 @@ function TypeLine({ type, variantsLabel, chips }: Pick<FieldRowProps, "type" | "
 export function fields(size: Size) {
   function Fields({ kind, children }: FieldsProps): ReactNode {
     return (
-      <DataList.Root size={size} my="3" data-kind={kind}>
+      <DataList.Root size={size} my="2" data-kind={kind}>
         {children}
       </DataList.Root>
     );
@@ -80,25 +97,46 @@ export function fields(size: Size) {
 export function fieldRow(colors: BadgeColors) {
   function FieldRow(props: FieldRowProps): ReactNode {
     const { field, depth, name, docs, required, deprecated, children } = props;
+    const [open, setOpen] = useState(false);
+    const nested = useId();
+    const hasChildren = children !== undefined && children !== null;
     return (
       <>
         <DataList.Item data-key={field.key} align="start">
           <DataList.Label minWidth="180px">
             <Box pl={indent(depth)}>
-              <Flex direction="column" gap="1" align="start">
+              <Flex gap="2" align="baseline" wrap="wrap">
                 <Name name={name} />
                 <Marks required={required} deprecated={deprecated} colors={colors} />
               </Flex>
             </Box>
           </DataList.Label>
           <DataList.Value>
-            <Flex direction="column" gap="1">
+            <Flex direction="column" gap="1" align="start">
               <TypeLine {...props} />
               {docs}
+              {hasChildren && (
+                <Button
+                  variant="ghost"
+                  size="1"
+                  color="gray"
+                  aria-expanded={open}
+                  aria-controls={nested}
+                  onClick={() => setOpen((o) => !o)}
+                >
+                  <span aria-hidden="true">{open ? "▾" : "▸"}</span>
+                  {toggleLabel(field, open)}
+                </Button>
+              )}
             </Flex>
           </DataList.Value>
         </DataList.Item>
-        {children}
+        {/* `display: contents` keeps the nested rows on the list's own grid. */}
+        {hasChildren && (
+          <div id={nested} style={{ display: open ? "contents" : "none" }}>
+            {children}
+          </div>
+        )}
       </>
     );
   }

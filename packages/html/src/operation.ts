@@ -27,7 +27,7 @@ import type {
   SecurityRequirements,
   WsMessage,
 } from "@speculoos/core";
-import { allOperations, replyAddress } from "@speculoos/core";
+import { allOperations, endpointUrl, replyAddress } from "@speculoos/core";
 import { h, join, text, type Html } from "./escape.js";
 import { schemaTable } from "./fields.js";
 import { resolve, type HtmlOptions } from "./options.js";
@@ -196,25 +196,33 @@ function responses(c: Ctx, list: RestResponse[], level: number, idPrefix: string
   );
 }
 
+/**
+ * One message, as a section of its own: a channel's messages are its
+ * vocabulary, and a reader — or the page's own prose — links to each.
+ */
 function wsMessage(c: Ctx, message: WsMessage, level: number): Html {
-  return join([
+  return section(
+    c,
+    {
+      kind: "message",
+      ...(message.slug !== undefined ? { id: message.slug } : {}),
+      title: text(message.title ?? message.name),
+      level,
+    },
     // AsyncAPI's `summary` is often where a message's real prose lives —
     // paragraphs, admonitions — so it is markdown, not a title.
     message.summary !== undefined ? markdown(c, message.summary) : undefined,
     docsBody(c, message.docs),
-    inline(
-      message.contentType !== undefined
-        ? badge(c, "mediaType", text(message.contentType), message.contentType)
-        : undefined,
-      message.discriminatorValue !== undefined
-        ? badge(c, "constraint", text(format(message.discriminatorValue)))
-        : undefined,
-    ),
+    // No badge for `discriminatorValue`: it is the const field the payload
+    // table already shows, and it usually repeats the title too.
+    message.contentType !== undefined
+      ? badge(c, "mediaType", text(message.contentType), message.contentType)
+      : undefined,
     schemaTable(c, message.payload),
     message.headers !== undefined
       ? section(
           c,
-          { kind: "message", title: text("Headers"), level: level + 1 },
+          { kind: "headers", title: text("Headers"), level: level + 1 },
           schemaTable(c, message.headers, { kind: "headers" }),
         )
       : undefined,
@@ -228,31 +236,21 @@ function wsMessage(c: Ctx, message: WsMessage, level: number): Html {
       })),
       level + 1,
     ),
-  ]);
+  );
 }
 
-function messages(
-  c: Ctx,
-  list: WsMessage[],
-  level: number,
-  title: string,
-  kind: "messages" | "reply",
-): Html {
-  if (list.length === 0) return "";
-  return section(
-    c,
-    { kind, title: text(title), level },
-    group(
-      c,
-      "message",
-      list.map((message) => ({
-        id: message.id,
-        label: text(message.title ?? message.name),
-        body: wsMessage(c, message, level + 1),
-      })),
-      level + 1,
-    ),
-  );
+/**
+ * An operation's messages sit straight under it: its heading — "Send",
+ * "Receive" — already says what they are. A reply's are headed, because the
+ * reply is a second set, and may arrive somewhere else.
+ */
+function messages(c: Ctx, list: WsMessage[], level: number): Html {
+  return join(list.map((message) => wsMessage(c, message, level)));
+}
+
+function reply(c: Ctx, r: NonNullable<MessageOperation["reply"]>, level: number): Html {
+  if (r.messages.length === 0) return "";
+  return section(c, { kind: "reply", title: text(replyTitle(r, c.ir)), level }, messages(c, r.messages, level + 1));
 }
 
 function links(c: Ctx, operation: Operation, level: number): Html {
@@ -429,16 +427,8 @@ export function operationSection(c: Ctx, entry: OperationEntry, level: number, n
           links(c, operation, level + 1),
         ])
       : join([
-          messages(c, operation.messages, level + 1, "Messages", "messages"),
-          operation.reply !== undefined
-            ? messages(
-                c,
-                operation.reply.messages,
-                level + 1,
-                replyTitle(operation.reply, c.ir),
-                "reply",
-              )
-            : undefined,
+          messages(c, operation.messages, level + 1),
+          operation.reply !== undefined ? reply(c, operation.reply, level + 1) : undefined,
         ]),
   );
 }
@@ -472,9 +462,11 @@ export function renderEndpointById(id: string, ir: ApiIR, options: RenderEndpoin
 
 export function endpointSection(c: Ctx, endpoint: Endpoint, level: number): Html {
   // Headed like a REST operation: the title when there is one, with the
-  // protocol beside the address where a method would sit — "WSS /v2/{language}".
+  // protocol where a method would sit, then where to connect — the full URL
+  // when one server applies, "WSS wss://eu.example.com/v2/", else the address.
   const webhook = endpoint.operations.some((o) => o.kind === "request-response" && o.isWebhook);
   const title = endpoint.docs.title;
+  const url = endpointUrl(endpoint, c.ir);
   return section(
     c,
     {
@@ -484,7 +476,7 @@ export function endpointSection(c: Ctx, endpoint: Endpoint, level: number): Html
       subtitle: inline(
         webhook ? badge(c, "note", text("webhook")) : undefined,
         ...endpoint.protocols.map((protocol) => badge(c, "protocol", text(protocol.toUpperCase()), protocol)),
-        title !== undefined ? code(c, endpoint.address) : undefined,
+        url !== undefined ? code(c, url) : title !== undefined ? code(c, endpoint.address) : undefined,
       ),
       level,
     },

@@ -9,7 +9,7 @@
  */
 
 import { Fragment, useMemo, type ReactNode } from "react";
-import { replyAddress } from "@speculoos/core";
+import { endpointUrl, replyAddress } from "@speculoos/core";
 import type {
   ApiEntry,
   ApiIR,
@@ -210,23 +210,32 @@ function Responses({ responses, level, idPrefix }: {
   );
 }
 
+/**
+ * One message, as a section of its own: a channel's messages are its
+ * vocabulary, and a reader — or the page's own prose — links to each.
+ */
 function Message({ message, level }: { message: WsMessage; level: number }): ReactNode {
   const C = useComponents();
   return (
-    <>
+    <C.Section
+      kind="message"
+      {...(message.slug !== undefined ? { id: message.slug } : {})}
+      title={message.title ?? message.name}
+      level={level}
+      message={message}
+    >
       {/* AsyncAPI's `summary` is often where a message's real prose lives —
           paragraphs, admonitions — so it is markdown, not a title. */}
       {message.summary !== undefined && <C.Markdown>{message.summary}</C.Markdown>}
       <DocsBody docs={message.docs} />
+      {/* No badge for `discriminatorValue`: it is the const field the payload
+          table already shows, and it usually repeats the title too. */}
       {message.contentType !== undefined && (
         <C.Badge tone="mediaType" value={message.contentType}>{message.contentType}</C.Badge>
       )}
-      {message.discriminatorValue !== undefined && (
-        <C.Badge tone="constraint">{format(message.discriminatorValue)}</C.Badge>
-      )}
       <SchemaTable node={message.payload} />
       {message.headers !== undefined && (
-        <C.Section kind="message" title="Headers" level={level + 1}>
+        <C.Section kind="headers" title="Headers" level={level + 1}>
           <SchemaTable node={message.headers} kind="headers" />
         </C.Section>
       )}
@@ -240,29 +249,32 @@ function Message({ message, level }: { message: WsMessage; level: number }): Rea
           }))}
         />
       )}
+    </C.Section>
+  );
+}
+
+/**
+ * An operation's messages sit straight under it: its heading — "Send",
+ * "Receive" — already says what they are. A reply's are headed, because the
+ * reply is a second set, and may arrive somewhere else.
+ */
+function Messages({ messages, level }: { messages: WsMessage[]; level: number }): ReactNode {
+  return (
+    <>
+      {messages.map((message) => (
+        <Message key={message.slug ?? message.id} message={message} level={level} />
+      ))}
     </>
   );
 }
 
-function Messages({ messages, level, title, kind }: {
-  messages: WsMessage[];
-  level: number;
-  title: string;
-  kind: "messages" | "reply";
-}): ReactNode {
+function Reply({ reply, level }: { reply: NonNullable<MessageOperation["reply"]>; level: number }): ReactNode {
   const C = useComponents();
-  if (messages.length === 0) return null;
+  const { ir } = useSpeculoos();
+  if (reply.messages.length === 0) return null;
   return (
-    <C.Section kind={kind} title={title} level={level}>
-      <C.Tabs
-        kind="message"
-        tabs={messages.map((message) => ({
-          id: message.id,
-          label: message.title ?? message.name,
-          content: <Message message={message} level={level} />,
-          message,
-        }))}
-      />
+    <C.Section kind="reply" title={replyTitle(reply, ir)} level={level}>
+      <Messages messages={reply.messages} level={level + 1} />
     </C.Section>
   );
 }
@@ -458,15 +470,8 @@ function OperationSection({ endpoint, operation, level, nested }: {
         </>
       ) : (
         <>
-          <Messages messages={operation.messages} level={level + 1} title="Messages" kind="messages" />
-          {operation.reply !== undefined && (
-            <Messages
-              messages={operation.reply.messages}
-              level={level + 1}
-              title={replyTitle(operation.reply, ir)}
-              kind="reply"
-            />
-          )}
+          <Messages messages={operation.messages} level={level + 1} />
+          {operation.reply !== undefined && <Reply reply={operation.reply} level={level + 1} />}
         </>
       )}
     </C.Section>
@@ -511,7 +516,7 @@ export interface EndpointProps {
  */
 export function Endpoint(props: EndpointProps): ReactNode {
   const C = useComponents();
-  const { options } = useSpeculoos();
+  const { ir, options } = useSpeculoos();
   const found = useEndpoint(props.id ?? "");
   const endpoint = props.endpoint ?? found;
   const level = props.level ?? options.headingLevel;
@@ -519,9 +524,11 @@ export function Endpoint(props: EndpointProps): ReactNode {
   if (endpoint === undefined) return <C.Empty>{`No endpoint ${props.id ?? ""}`}</C.Empty>;
 
   // Headed like a REST operation: the title when there is one, with the
-  // protocol beside the address where a method would sit — "WSS /v2/{language}".
+  // protocol where a method would sit, then where to connect — the full URL
+  // when one server applies, "WSS wss://eu.example.com/v2/", else the address.
   const webhook = endpoint.operations.some((o) => o.kind === "request-response" && o.isWebhook);
   const titled = endpoint.docs.title !== undefined;
+  const url = endpointUrl(endpoint, ir);
   return (
     <C.Section
       kind="endpoint"
@@ -535,7 +542,7 @@ export function Endpoint(props: EndpointProps): ReactNode {
               <C.Badge tone="protocol" value={protocol}>{protocol.toUpperCase()}</C.Badge>{" "}
             </Fragment>
           ))}
-          {titled && <C.Code>{endpoint.address}</C.Code>}
+          {url !== undefined ? <C.Code>{url}</C.Code> : titled && <C.Code>{endpoint.address}</C.Code>}
         </>
       }
       level={level}
