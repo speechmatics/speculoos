@@ -11,6 +11,7 @@ import type {
   ApiIR,
   Endpoint,
   Example,
+  MediaVariant,
   MessageOperation,
   Operation,
   RequestResponseOperation,
@@ -104,15 +105,17 @@ export function replyAddress(
 /**
  * The full URL a reader connects to — `wss://eu.rt.example.com/v2/` — when
  * exactly one server applies to the endpoint. Undefined when there are several
- * (which one to show is the site's call) or none.
+ * (which one to show is the site's call) or none, and for a webhook, which the
+ * reader serves rather than calls.
  *
  * Server variables are left as templates, `https://{region}.example.com`, as
  * they are on `Server.url`.
  */
 export function endpointUrl(
-  endpoint: Pick<Endpoint, "address" | "servers">,
+  endpoint: Pick<Endpoint, "address" | "servers" | "operations">,
   ir: Pick<ApiIR, "servers">,
 ): string | undefined {
+  if (endpoint.operations.some((o) => o.kind === "request-response" && o.isWebhook)) return undefined;
   const servers =
     endpoint.servers.length === 0 ? ir.servers : ir.servers.filter((s) => endpoint.servers.includes(s.id));
   if (servers.length !== 1) return undefined;
@@ -247,6 +250,49 @@ export function securityUsage(scheme: SecurityScheme): string | undefined {
     default:
       return undefined;
   }
+}
+
+/**
+ * A security requirement's label: the scheme's name, then its kind when no
+ * usage line says it and the name does not ("oauth (oauth2)"), then any
+ * scopes. Shared by both renderers.
+ */
+export function securityLabel(
+  req: { scheme: string; scopes: string[] },
+  scheme: SecurityScheme | undefined,
+): string {
+  const kind = scheme === undefined ? undefined : scheme.kind === "http" ? scheme.scheme : scheme.kind;
+  const named =
+    scheme === undefined || securityUsage(scheme) !== undefined || kind === undefined || kind.toLowerCase() === req.scheme.toLowerCase()
+      ? req.scheme
+      : `${req.scheme} (${kind})`;
+  return req.scopes.length === 0 ? named : `${named}: ${req.scopes.join(", ")}`;
+}
+
+/**
+ * Media types with the same schema and view grouped into one, in first-seen
+ * order: `application/json` and a vendor alias of it are one tab with two
+ * labels, not two tabs a reader has to compare to find nothing different.
+ * The group's examples are all of theirs, once each — a spec often gives an
+ * example for one of the aliases only.
+ */
+export function groupMediaVariants(variants: MediaVariant[]): { mediaTypes: string[]; variant: MediaVariant }[] {
+  const groups = new Map<string, { mediaTypes: string[]; variant: MediaVariant }>();
+  for (const variant of variants) {
+    // Where a schema came from is not what it says: two media types pointing
+    // at the same shape from different places in a spec are still the same.
+    const key = JSON.stringify([variant.node, variant.view], (k, v: unknown) => (k === "source" ? undefined : v));
+    const group = groups.get(key);
+    if (group === undefined) {
+      groups.set(key, { mediaTypes: [variant.mediaType], variant });
+      continue;
+    }
+    group.mediaTypes.push(variant.mediaType);
+    const seen = new Set(group.variant.examples.map((e) => JSON.stringify(e)));
+    const added = variant.examples.filter((e) => !seen.has(JSON.stringify(e)));
+    if (added.length > 0) group.variant = { ...group.variant, examples: [...group.variant.examples, ...added] };
+  }
+  return [...groups.values()];
 }
 
 /** Every operation in the document, in endpoint then source order. */

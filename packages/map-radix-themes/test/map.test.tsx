@@ -377,3 +377,24 @@ describe("security alternatives", () => {
     expect(list).toMatch(/<li style="border-top:1px solid var\(--gray-a4\)"[^>]*><span[^>]*rt-Badge[^>]*>bearer<\/span> <code[^>]*>Authorization: Bearer &lt;token&gt;<\/code><div data-md="">A JWT.<\/div><\/li>/);
   });
 });
+
+describe("a single tab", () => {
+  it("shows its label and content without a tab bar", () => {
+    const api = ir("batch.yaml");
+    const one: ApiIR = {
+      ...api,
+      endpoints: api.endpoints.map((e) => ({
+        ...e,
+        operations: e.operations.map((o) =>
+          o.kind === "request-response" && o.requestBody !== undefined
+            ? { ...o, requestBody: { ...o.requestBody, content: o.requestBody.content.slice(0, 1) } }
+            : o,
+        ),
+      })),
+    };
+    const html = render(<Operation id="createJob" />, one, radixThemes({ markdown: Markdown }));
+    const body = html.slice(html.indexOf('data-kind="request"'), html.indexOf('data-kind="response"'));
+    expect(body).not.toContain('role="tablist"');
+    expect(body).toContain("application/json");
+  });
+});

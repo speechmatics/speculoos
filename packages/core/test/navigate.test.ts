@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { allOperations, apiEntries, createSlugger, endpointHandshake, endpointUrl, entryExamples, entrySlug, securityUsage, groupByTag, slugify, toRows, walk } from "../src/index.js";
+import { allOperations, apiEntries, createSlugger, endpointHandshake, endpointUrl, entryExamples, entrySlug, groupMediaVariants, securityUsage, groupByTag, slugify, toRows, walk } from "../src/index.js";
 import { ir, jobRef, schemas } from "./fixture.js";
 
 describe("apiEntries", () => {
@@ -91,16 +91,27 @@ describe("endpointUrl", () => {
 
   it("joins the one applicable server's URL and the address", () => {
     const one = { servers: [server("eu", "wss://eu.example.com/v2")] };
-    expect(endpointUrl({ address: "/", servers: [] }, one)).toBe("wss://eu.example.com/v2/");
-    expect(endpointUrl({ address: "/jobs", servers: [] }, { servers: [server("a", "https://x.com/")] })).toBe("https://x.com/jobs");
-    expect(endpointUrl({ address: "ws", servers: [] }, one)).toBe("wss://eu.example.com/v2/ws");
+    expect(endpointUrl({ address: "/", servers: [], operations: [] }, one)).toBe("wss://eu.example.com/v2/");
+    expect(endpointUrl({ address: "/jobs", servers: [], operations: [] }, { servers: [server("a", "https://x.com/")] })).toBe("https://x.com/jobs");
+    expect(endpointUrl({ address: "ws", servers: [], operations: [] }, one)).toBe("wss://eu.example.com/v2/ws");
+  });
+
+  it("has no URL for a webhook, which the reader serves rather than calls", () => {
+    const path = ir.endpoints.find((e) => e.operations.some((o) => o.kind === "request-response"))!;
+    const hook = {
+      ...path,
+      address: "jobFinished",
+      operations: path.operations.map((o) => (o.kind === "request-response" ? { ...o, isWebhook: true } : o)),
+    };
+    expect(endpointUrl(path, { servers: [server("a", "https://x.com")] })).toBe(`https://x.com${path.address}`);
+    expect(endpointUrl(hook, { servers: [server("a", "https://x.com")] })).toBeUndefined();
   });
 
   it("narrows to the endpoint's own servers, and gives up on more than one", () => {
     const two = { servers: [server("eu", "wss://eu.example.com"), server("us", "wss://us.example.com")] };
-    expect(endpointUrl({ address: "/", servers: ["us"] }, two)).toBe("wss://us.example.com/");
-    expect(endpointUrl({ address: "/", servers: [] }, two)).toBeUndefined();
-    expect(endpointUrl({ address: "/", servers: [] }, { servers: [] })).toBeUndefined();
+    expect(endpointUrl({ address: "/", servers: ["us"], operations: [] }, two)).toBe("wss://us.example.com/");
+    expect(endpointUrl({ address: "/", servers: [], operations: [] }, two)).toBeUndefined();
+    expect(endpointUrl({ address: "/", servers: [], operations: [] }, { servers: [] })).toBeUndefined();
   });
 });
 
@@ -193,5 +204,28 @@ describe("securityUsage", () => {
     expect(securityUsage({ ...base, kind: "apiKey", name: "jwt", in: "query" })).toBe("?jwt=<key>");
     expect(securityUsage({ ...base, kind: "apiKey", name: "X-Key", in: "header" })).toBe("X-Key: <key>");
     expect(securityUsage({ ...base, kind: "openIdConnect", openIdConnectUrl: "https://x" })).toBeUndefined();
+  });
+});
+
+describe("groupMediaVariants", () => {
+  const node = { kind: "any", source: { document: "d", pointer: "#" }, docs: {}, nullable: false } as const;
+  const v = (mediaType: string, examples: { value: unknown }[] = []) => ({ mediaType, node, view: "response" as const, examples });
+
+  it("groups media types with the same schema, keeping first-seen order", () => {
+    const text = { ...node, kind: "string", constraints: {} } as const;
+    const groups = groupMediaVariants([v("application/json"), { ...v("text/plain"), node: text }, v("application/vnd.x+json")]);
+    expect(groups.map((g) => g.mediaTypes)).toEqual([["application/json", "application/vnd.x+json"], ["text/plain"]]);
+  });
+
+  it("ignores where in the spec each schema came from", () => {
+    const elsewhere = { ...v("application/vnd.x+json"), node: { ...node, source: { document: "d", pointer: "#/elsewhere" } } };
+    expect(groupMediaVariants([v("application/json"), elsewhere]).map((g) => g.mediaTypes)).toEqual([
+      ["application/json", "application/vnd.x+json"],
+    ]);
+  });
+
+  it("gives a group the examples of all its media types, once each", () => {
+    const [group] = groupMediaVariants([v("application/json", [{ value: 1 }]), v("application/vnd.x+json", [{ value: 1 }, { value: 2 }])]);
+    expect(group?.variant.examples).toEqual([{ value: 1 }, { value: 2 }]);
   });
 });

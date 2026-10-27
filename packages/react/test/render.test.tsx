@@ -174,10 +174,37 @@ describe("request and response views", () => {
 });
 
 describe("Operation", () => {
-  it("renders the method, the path and the operation's own slug as an anchor", () => {
+  it("gives media types carrying the same thing one tab, labelled with both", () => {
+    const aliased: ApiIR = {
+      ...rest,
+      endpoints: rest.endpoints.map((e) => ({
+        ...e,
+        operations: e.operations.map((o) =>
+          o.kind !== "request-response" ? o : {
+            ...o,
+            responses: o.responses.map((r) => ({
+              ...r,
+              content: r.content.flatMap((v) => (v.mediaType === "application/json" ? [v, { ...v, mediaType: "application/vnd.x+json" }] : [v])),
+            })),
+          },
+        ),
+      })),
+    };
+    const html = render(<Operation id="listJobs" />, aliased);
+    expect(html).toContain('<x-label><x-badge data-tone="mediaType">application/json</x-badge> <x-badge data-tone="mediaType">application/vnd.x+json</x-badge></x-label>');
+  });
+
+  it("presents authentication as the handshake does: each way in, how to send it, what it is", () => {
+    const html = render(<Operation id="listJobs" />, rest);
+    expect(html).toContain('<x-section data-kind="security" data-level="3"><x-title>Authentication</x-title>');
+    expect(html).not.toContain("<x-title>Security</x-title>");
+  });
+
+
+  it("renders the method, the full URL and the operation's own slug as an anchor", () => {
     const html = render(<Operation id="listJobs" />, rest);
     expect(html).toContain('<x-badge data-tone="method">GET</x-badge>');
-    expect(html).toContain("<x-code>/jobs</x-code>");
+    expect(html).toContain("<x-code>https://asr.api.example.com/v2/jobs</x-code>");
     expect(html).toContain('id="list-jobs"');
   });
 
@@ -446,7 +473,7 @@ describe("Endpoint", () => {
 
   it("leaves a standalone Operation as it was, address and shared parameters included", () => {
     const html = render(<Operation id="listJobs" />, rest);
-    expect(html).toContain("<x-code>/jobs</x-code>");
+    expect(html).toContain("<x-code>https://asr.api.example.com/v2/jobs</x-code>");
     expect(html).toContain(">X-Request-Id<");
   });
 

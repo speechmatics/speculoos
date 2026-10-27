@@ -290,6 +290,18 @@ export function radixThemes(options: RadixThemesOptions): Components {
     if (kind === "examples") return <ExampleList tabs={tabs} />;
     const first = tabs[0];
     if (first === undefined) return null;
+    // One tab is not a choice: its label says what the content is, and a tab
+    // bar around it would be noise.
+    if (tabs.length === 1) {
+      return (
+        <Box my="3" data-kind={kind}>
+          <Flex gap="2" align="center" wrap="wrap" mb="2">
+            {first.label}
+          </Flex>
+          {first.content}
+        </Box>
+      );
+    }
     return (
       <Tabs.Root defaultValue={first.id} my="3" data-kind={kind}>
         <Tabs.List size={size === "1" ? "1" : "2"}>

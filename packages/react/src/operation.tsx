@@ -9,7 +9,15 @@
  */
 
 import { Fragment, useMemo, type ReactNode } from "react";
-import { endpointHandshake, endpointUrl, entryExamples, replyAddress, securityUsage } from "@speculoos/core";
+import {
+  endpointHandshake,
+  endpointUrl,
+  entryExamples,
+  groupMediaVariants,
+  replyAddress,
+  securityLabel,
+  securityUsage,
+} from "@speculoos/core";
 import type {
   ApiEntry,
   ApiIR,
@@ -79,12 +87,22 @@ function Examples({ examples, idPrefix }: { examples: Example[]; idPrefix: strin
   return <C.Tabs kind="example" tabs={tabs} />;
 }
 
+/** One tab per distinct content: media types carrying the same thing share one. */
 function Content({ content, idPrefix }: { content: MediaVariant[]; idPrefix: string }): ReactNode {
   const C = useComponents();
   if (content.length === 0) return null;
-  const tabs: Tab[] = content.map((variant) => ({
+  const tabs: Tab[] = groupMediaVariants(content).map(({ mediaTypes, variant }) => ({
     id: `${idPrefix}-${variant.mediaType}`,
-    label: <C.Badge tone="mediaType" value={variant.mediaType}>{variant.mediaType}</C.Badge>,
+    label: (
+      <>
+        {mediaTypes.map((mediaType, i) => (
+          <Fragment key={mediaType}>
+            {i > 0 && " "}
+            <C.Badge tone="mediaType" value={mediaType}>{mediaType}</C.Badge>
+          </Fragment>
+        ))}
+      </>
+    ),
     content: (
       <>
         <SchemaTable node={variant.node} view={variant.view} />
@@ -93,45 +111,6 @@ function Content({ content, idPrefix }: { content: MediaVariant[]; idPrefix: str
     ),
   }));
   return <C.Tabs kind="mediaType" tabs={tabs} />;
-}
-
-function Security({ security, level }: { security: SecurityRequirements; level: number }): ReactNode {
-  const C = useComponents();
-  const { ir } = useSpeculoos();
-  if (security.length === 0) return null;
-  return (
-    <C.Section kind="security" title="Security" level={level}>
-      <C.List kind="security">
-        {security.map((alternative, i) => (
-          <C.ListItem key={i}>
-            {alternative.length === 0 ? (
-              <C.Badge tone="securityScheme">optional</C.Badge>
-            ) : (
-              alternative.map((req) => {
-                // The parenthetical says what kind of credential this is. When
-                // the scheme is named after its own kind — `bearer: {scheme:
-                // bearer}`, which is the common case — repeating it reads like a
-                // bug, so it is left off.
-                const scheme = ir.securitySchemes[req.scheme];
-                const kind = scheme === undefined ? undefined
-                  : scheme.kind === "http" ? scheme.scheme
-                  : scheme.kind;
-                const label =
-                  kind === undefined || kind.toLowerCase() === req.scheme.toLowerCase()
-                    ? req.scheme
-                    : `${req.scheme} (${kind})`;
-                return (
-                  <C.Badge key={req.scheme} tone="securityScheme" value={req.scheme}>
-                    {req.scopes.length === 0 ? label : `${label}: ${req.scopes.join(", ")}`}
-                  </C.Badge>
-                );
-              })
-            )}
-          </C.ListItem>
-        ))}
-      </C.List>
-    </C.Section>
-  );
 }
 
 /**
@@ -323,6 +302,7 @@ export function Operation(props: OperationProps): ReactNode {
  */
 function useHeading(endpoint: IREndpoint, operation: IROperation, nested: boolean): { title: ReactNode; subtitle: ReactNode } {
   const C = useComponents();
+  const { ir } = useSpeculoos();
   const mark =
     operation.kind === "request-response" ? (
       <>
@@ -336,11 +316,13 @@ function useHeading(endpoint: IREndpoint, operation: IROperation, nested: boolea
       <C.Badge tone="direction" value={operation.direction}>{DIRECTION_LABEL[operation.direction]}</C.Badge>
     );
   if (!nested) {
+    // The full URL when one server applies — what a reader would call — else
+    // the address.
     return {
       title: operation.docs.title ?? operation.id,
       subtitle: (
         <>
-          {mark} <C.Code>{endpoint.address}</C.Code>
+          {mark} <C.Code>{endpointUrl(endpoint, ir) ?? endpoint.address}</C.Code>
         </>
       ),
     };
@@ -390,7 +372,7 @@ function OperationSection({ endpoint, operation, level, nested }: {
     >
       <DocsBody docs={operation.docs} />
       {!nested && <Protocols endpoint={endpoint} />}
-      <Security security={security} level={level + 1} />
+      <Authentication security={security} level={level + 1} />
       <Parameters endpoint={endpoint} parameters={parameters} source={operation.source} level={level + 1} />
 
       {operation.kind === "request-response" ? (
@@ -550,7 +532,7 @@ function Authentication({ security, level }: { security: SecurityRequirements; l
                 const usage = scheme === undefined ? undefined : securityUsage(scheme);
                 return (
                   <Fragment key={req.scheme}>
-                    <C.Badge tone="securityScheme" value={req.scheme}>{req.scheme}</C.Badge>
+                    <C.Badge tone="securityScheme" value={req.scheme}>{securityLabel(req, scheme)}</C.Badge>
                     {usage !== undefined && <> <C.Code>{usage}</C.Code></>}
                     {scheme !== undefined && <DocsBody docs={scheme.docs} />}
                   </Fragment>

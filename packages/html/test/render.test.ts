@@ -341,7 +341,7 @@ describe("legible without CSS", () => {
 
   it("separates an operation's method from its address", () => {
     const text = asText(renderOperationById("listJobs", rest));
-    expect(text).toMatch(/GET \/jobs/);
+    expect(text).toMatch(/GET https:\/\/asr\.api\.example\.com\/v2\/jobs/);
   });
 
   it("separates a nav entry's method from its title", () => {

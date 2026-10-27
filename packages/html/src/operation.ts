@@ -28,7 +28,16 @@ import type {
   SecurityRequirements,
   WsMessage,
 } from "@speculoos/core";
-import { allOperations, endpointHandshake, endpointUrl, entryExamples, replyAddress, securityUsage } from "@speculoos/core";
+import {
+  allOperations,
+  endpointHandshake,
+  endpointUrl,
+  entryExamples,
+  groupMediaVariants,
+  replyAddress,
+  securityLabel,
+  securityUsage,
+} from "@speculoos/core";
 import { h, join, text, type Html } from "./escape.js";
 import { schemaTable } from "./fields.js";
 import { resolve, type HtmlOptions } from "./options.js";
@@ -76,61 +85,17 @@ function examples(c: Ctx, list: Example[], idPrefix: string, level: number): Htm
   return group(c, "example", items, level);
 }
 
+/** One item per distinct content: media types carrying the same thing share one. */
 function content(c: Ctx, variants: MediaVariant[], idPrefix: string, level: number): Html {
-  const items: GroupItem[] = variants.map((variant) => ({
+  const items: GroupItem[] = groupMediaVariants(variants).map(({ mediaTypes, variant }) => ({
     id: `${idPrefix}-${variant.mediaType}`,
-    label: badge(c, "mediaType", text(variant.mediaType), variant.mediaType),
+    label: inline(...mediaTypes.map((mediaType) => badge(c, "mediaType", text(mediaType), mediaType))),
     body: join([
       schemaTable(c, variant.node, { view: variant.view }),
       examples(c, variant.examples, `${idPrefix}-${variant.mediaType}`, level + 1),
     ]),
   }));
   return group(c, "mediaType", items, level);
-}
-
-function security(c: Ctx, requirements: SecurityRequirements, level: number): Html {
-  if (requirements.length === 0) return "";
-  return section(
-    c,
-    { kind: "security", title: text("Security"), level },
-    h(
-      "ul",
-      { class: c.o.cls("list", "security") },
-      ...requirements.map((alternative) =>
-        h(
-          "li",
-          { class: c.o.cls("list-item") },
-          alternative.length === 0
-            ? badge(c, "securityScheme", text("optional"))
-            : inline(
-                ...alternative.map((req) => {
-                  // The parenthetical says what kind of credential this is.
-                  // When the scheme is named after its own kind — `bearer:
-                  // {scheme: bearer}`, the common case — repeating it reads
-                  // like a bug, so it is left off.
-                  const scheme = c.ir.securitySchemes[req.scheme];
-                  const kind =
-                    scheme === undefined
-                      ? undefined
-                      : scheme.kind === "http"
-                        ? scheme.scheme
-                        : scheme.kind;
-                  const label =
-                    kind === undefined || kind.toLowerCase() === req.scheme.toLowerCase()
-                      ? req.scheme
-                      : `${req.scheme} (${kind})`;
-                  return badge(
-                    c,
-                    "securityScheme",
-                    text(req.scopes.length === 0 ? label : `${label}: ${req.scopes.join(", ")}`),
-                    req.scheme,
-                  );
-                }),
-              ),
-        ),
-      ),
-    ),
-  );
 }
 
 /**
@@ -315,7 +280,11 @@ function heading(c: Ctx, endpoint: Endpoint, operation: Operation, nested: boole
         )
       : badge(c, "direction", text(DIRECTION_LABEL[operation.direction]), operation.direction);
   if (!nested) {
-    return { title: text(operation.docs.title ?? operation.id), subtitle: inline(mark, code(c, endpoint.address)) };
+    // The full URL when one server applies — what a reader would call — else the address.
+    return {
+      title: text(operation.docs.title ?? operation.id),
+      subtitle: inline(mark, code(c, endpointUrl(endpoint, c.ir) ?? endpoint.address)),
+    };
   }
   if (operation.kind === "request-response") {
     return { title: text(operation.docs.title ?? operation.method.toUpperCase()), subtitle: mark };
@@ -396,7 +365,7 @@ export function operationSection(c: Ctx, entry: OperationEntry, level: number, n
     },
     docsBody(c, operation.docs),
     nested ? undefined : protocols(c, endpoint),
-    security(c, requirements, level + 1),
+    authentication(c, requirements, level + 1),
     parameters(c, endpoint, operationParameters(endpoint, operation, nested), operation.source, level + 1),
     operation.kind === "request-response"
       ? join([
@@ -520,7 +489,7 @@ function authentication(c: Ctx, requirements: SecurityRequirements, level: numbe
                   const usage = scheme === undefined ? undefined : securityUsage(scheme);
                   return join([
                     inline(
-                      badge(c, "securityScheme", text(req.scheme), req.scheme),
+                      badge(c, "securityScheme", text(securityLabel(req, scheme)), req.scheme),
                       usage !== undefined ? code(c, usage) : undefined,
                     ),
                     scheme !== undefined ? docsBody(c, scheme.docs) : undefined,
