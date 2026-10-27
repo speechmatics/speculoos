@@ -320,9 +320,10 @@ function heading(c: Ctx, endpoint: Endpoint, operation: Operation, nested: boole
   if (operation.kind === "request-response") {
     return { title: text(operation.docs.title ?? operation.method.toUpperCase()), subtitle: mark };
   }
+  // The direction is part of what the heading says — "Send ↑" — so it sits in the title.
   return {
-    title: text(DIRECTION_VERB[operation.direction]),
-    subtitle: inline(mark, operation.docs.title !== undefined ? text(operation.docs.title) : undefined),
+    title: inline(text(DIRECTION_VERB[operation.direction]), mark),
+    subtitle: operation.docs.title !== undefined ? text(operation.docs.title) : "",
   };
 }
 

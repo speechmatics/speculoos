@@ -498,8 +498,9 @@ describe("Entry", () => {
     const entry = { kind: "channel" as const, endpoint: ws.endpoints[0]! };
     const html = render(<Entry entry={entry} level={1} />, ws);
     expect(html).toBe(render(<Endpoint endpoint={entry.endpoint} level={1} />, ws));
-    expect(html).toContain("<x-title>Send</x-title>");
-    expect(html).toContain("<x-title>Receive</x-title>");
+    // The direction sits in the heading, beside the verb.
+    expect(html).toContain('<x-title>Send <x-badge data-tone="direction">client → server</x-badge></x-title>');
+    expect(html).toContain('<x-title>Receive <x-badge data-tone="direction">server → client</x-badge></x-title>');
   });
 });
 

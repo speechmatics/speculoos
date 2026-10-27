@@ -348,14 +348,15 @@ function useHeading(endpoint: IREndpoint, operation: IROperation, nested: boolea
   if (operation.kind === "request-response") {
     return { title: operation.docs.title ?? operation.method.toUpperCase(), subtitle: mark };
   }
+  // The direction is part of what the heading says — "Send ↑" — so it sits in
+  // the title, and a map can draw the two on one line.
   return {
-    title: DIRECTION_VERB[operation.direction],
-    subtitle: (
+    title: (
       <>
-        {mark}
-        {operation.docs.title !== undefined && <> {operation.docs.title}</>}
+        {DIRECTION_VERB[operation.direction]} {mark}
       </>
     ),
+    subtitle: operation.docs.title,
   };
 }
 

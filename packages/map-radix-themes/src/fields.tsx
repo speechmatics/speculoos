@@ -39,6 +39,13 @@ export type Size = "1" | "2" | "3";
  */
 export type FieldLayout = "columns" | "vertical" | "stacked";
 
+/**
+ * Which of a field's two states is marked. "optional" (the default) marks the
+ * exception in an API where most fields are required, and leaves the rest of
+ * the rows quiet; "required" is the other way round.
+ */
+export type Presence = "optional" | "required";
+
 type Space = "0" | "4" | "6" | "7" | "8";
 
 /**
@@ -63,7 +70,11 @@ function indent(depth: number): Space {
  * `"invalid_model"` heads its own description, and a dash would say nothing.
  */
 function Name({ name, type }: Pick<FieldRowProps, "name" | "type">): ReactNode {
-  return <Text weight="bold">{named(name) ? name : type}</Text>;
+  return (
+    <Text weight="bold" style={{ color: "var(--gray-12)" }}>
+      {named(name) ? name : type}
+    </Text>
+  );
 }
 
 function named(name: FieldRowProps["name"]): boolean {
@@ -71,15 +82,25 @@ function named(name: FieldRowProps["name"]): boolean {
 }
 
 /**
- * The marks that sit on the name's line: required, deprecated. "required" is
- * coloured text, not a badge — it is on most rows, and a badge on most rows is
- * noise that also pushes each one onto a second line.
+ * The marks that sit on the name's line: optional or required (see
+ * `Presence`), deprecated. Text rather than badges — one of them is on most
+ * rows, and a badge on most rows is noise. A row with no name — an enum's
+ * value, a union's branch — is neither.
  */
-function Marks({ required, deprecated, colors }: { required: boolean; deprecated: boolean; colors: BadgeColors }): ReactNode {
-  if (!required && !deprecated) return null;
+function Marks({ named: hasName, required, deprecated, colors, presence }: {
+  named: boolean;
+  required: boolean;
+  deprecated: boolean;
+  colors: BadgeColors;
+  presence: Presence;
+}): ReactNode {
+  const mark =
+    !hasName ? null
+    : presence === "optional" ? (!required && <Text size="1" color="gray">optional</Text>)
+    : required && <Text size="1" color={colors.tone.required}>required</Text>;
   return (
     <>
-      {required && <Text size="1" color={colors.tone.required}>required</Text>}
+      {mark}
       {deprecated && <Badge color={colors.tone.deprecated} size="1">deprecated</Badge>}
     </>
   );
@@ -100,7 +121,11 @@ function toggleLabel(field: FieldRowProps["field"], open: boolean): string {
 function TypeLine({ name, type, variantsLabel, chips }: Pick<FieldRowProps, "name" | "type" | "variantsLabel" | "chips">): ReactNode {
   return (
     <Flex gap="2" wrap="wrap" align="center">
-      {named(name) && type}
+      {named(name) && (
+        <Text style={{ color: "var(--gray-12)" }}>
+          {type}
+        </Text>
+      )}
       {variantsLabel !== undefined && <Text size="1" color="gray">{variantsLabel}</Text>}
       {chips}
     </Flex>
@@ -125,12 +150,13 @@ export function fields(size: Size, layout: FieldLayout) {
   return Fields;
 }
 
-export function fieldRow(colors: BadgeColors, layout: FieldLayout) {
+export function fieldRow(colors: BadgeColors, layout: FieldLayout, presence: Presence) {
   function FieldRow(props: FieldRowProps): ReactNode {
     const { field, depth, name, docs, required, deprecated, children } = props;
     const [open, setOpen] = useState(false);
     const nested = useId();
     const hasChildren = children !== undefined && children !== null;
+    const described = field.docs.description !== undefined || field.docs.externalDocs !== undefined;
     const columns = layout === "columns";
     const oneLine = layout === "stacked";
     // Stacked, the value sits under the name, so the whole row indents.
@@ -147,7 +173,7 @@ export function fieldRow(colors: BadgeColors, layout: FieldLayout) {
               <Flex gap="2" align="baseline" wrap="wrap">
                 <Name name={name} type={props.type} />
                 {oneLine && <TypeLine {...props} />}
-                <Marks required={required} deprecated={deprecated} colors={colors} />
+                <Marks named={named(name)} required={required} deprecated={deprecated} colors={colors} presence={presence} />
               </Flex>
             </Box>
           </DataList.Label>
@@ -156,25 +182,36 @@ export function fieldRow(colors: BadgeColors, layout: FieldLayout) {
               literal — would widen the whole list past its card. Every level
               opts out, and the description takes the full width, so a wide
               table scrolls inside its own scroll area instead. */}
-          <DataList.Value style={{ minWidth: 0 }}>
-            <Flex direction="column" gap="1" align="start" minWidth="0" width="100%">
-              {!oneLine && <TypeLine {...props} />}
-              <Box width="100%">{docs}</Box>
-              {hasChildren && (
-                <Button
-                  variant="ghost"
-                  size="1"
-                  color="gray"
-                  aria-expanded={open}
-                  aria-controls={nested}
-                  onClick={() => setOpen((o) => !o)}
-                >
-                  <span aria-hidden="true">{open ? "▾" : "▸"}</span>
-                  {toggleLabel(field, open)}
-                </Button>
-              )}
-            </Flex>
-          </DataList.Value>
+          {/* Stacked, an empty value would still take a line under the name. */}
+          {(!oneLine || described || hasChildren) && (
+            <DataList.Value style={{ minWidth: 0 }}>
+              <Flex direction="column" gap="1" align="start" minWidth="0" width="100%">
+                {!oneLine && <TypeLine {...props} />}
+                {/* Lighter than the name and type above it: the row is read by
+                    those, and the description is there for whoever stops. A
+                    plain colour, not Text's `color`, which would grey its links
+                    too. */}
+                {described && (
+                  <Text as="div" size="2" style={{ width: "100%", color: "var(--gray-11)" }}>
+                    {docs}
+                  </Text>
+                )}
+                {hasChildren && (
+                  <Button
+                    variant="ghost"
+                    size="1"
+                    color="gray"
+                    aria-expanded={open}
+                    aria-controls={nested}
+                    onClick={() => setOpen((o) => !o)}
+                  >
+                    <span aria-hidden="true">{open ? "▾" : "▸"}</span>
+                    {toggleLabel(field, open)}
+                  </Button>
+                )}
+              </Flex>
+            </DataList.Value>
+          )}
         </DataList.Item>
         {/* `display: contents` keeps the nested rows on the list's own grid. */}
         {hasChildren && (

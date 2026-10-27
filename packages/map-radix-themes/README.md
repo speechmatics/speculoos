@@ -60,13 +60,14 @@ worth doing while you are there:
 |---|---|---|
 | `markdown` | — | **Required.** Renders and sanitises a description. |
 | `size` | `"2"` | `"1"` \| `"2"` \| `"3"`. Scale of field lists, badges and tabs. |
-| `fieldLayout` | `"stacked"` | `"stacked"`: name, type, constraints and required on one line, description below, a rule between fields — Deepgram's. `"columns"`: name left, type and description right, stacked on phones. `"vertical"`: always stacked, the type on a line of its own. |
+| `presence` | `"optional"` | Which of a field's states is marked: `"optional"` (the exception, in most APIs) or `"required"`. |
+| `fieldLayout` | `"stacked"` | `"stacked"`: name, type, constraints and optional on one line, description below, a rule between fields — Deepgram's. `"columns"`: name left, type and description right, stacked on phones. `"vertical"`: always stacked, the type on a line of its own. |
 | `colors` | see below | Badge colours, merged entry by entry over the defaults. |
 | `linkAs` | — | Your router's link component, for internal links (types, operations, tags). Receives `href` and `children`. External links stay plain `<a>`s. |
 | `messageExtras` | — | Extra content in each message's card, under its heading. Receives the IR `message`, so it can render what a spec's own `x-` extensions say. |
 
 Field rows are a Radix `DataList`, stacked: the name, type, constraints and
-"required" on one line, the description under it (`fieldLayout` has the
+"optional" on one line, the description under it (`fieldLayout` has the
 two-column alternative). It works in either provider
 `layout` — a field's nested rows are rendered after it as siblings, indented by
 depth, so nothing needs setting on the provider.
@@ -83,10 +84,10 @@ DELETE differ without anything reading the badge's text.
 
 | Group | Defaults |
 |---|---|
-| `method` | get `green`, post `blue`, put `orange`, patch `amber`, delete `red`, head `cyan`, options `gray`, trace `gray` |
+| `method` | get `green`, post `blue`, put `orange`, patch `amber`, delete `red`, head `gray`, options `gray`, trace `gray` |
 | `status` | 1xx `gray`, 2xx `green`, 3xx `blue`, 4xx `orange`, 5xx `red`, default `gray` |
-| `direction` | client-sends `blue`, server-sends `violet` |
-| `tone` | required `red`, deprecated `amber`, protocol `cyan`, securityScheme `iris`; everything else `gray` |
+| `direction` | client-sends `cyan`, server-sends `cyan` — the protocol's colour; the arrow tells them apart |
+| `tone` | required `red`, deprecated `amber`, protocol `cyan`; everything else `gray` |
 
 `tone` is also the fallback for a value with no entry. Override any single entry:
 
@@ -109,8 +110,13 @@ const components = { ...radixThemes({ markdown }), Badge: MyBadge };
 - **`Code` is a ghost.** Monospace with no fill and no colour of its own, so a
   linked type (`JobStatus`) takes the link colour and a plain one (`integer`)
   reads as text. A filled `Code` made every type look clickable.
-- **Direction badges carry an arrow** — ↑ for what the reader sends, ↓ for what
-  they receive — so a channel's two operations tell apart at a glance.
+- **A direction badge is an arrow** — ↑ for what the reader sends, ↓ for what
+  they receive — round, beside "Send" or "Receive" in the heading. Its label
+  ("client → server") is a tooltip, and visually hidden text for screen
+  readers.
+- **Few colours.** WebSocket has its own colour among the HTTP methods, and a
+  channel's directions share it; security schemes, media types and
+  constraints are grey.
 - **A message is a card with a heading.** The renderer gives each message a
   `Section` of `kind: "message"`, anchored at its slug, because a channel's
   messages are its vocabulary and prose links to them. The map draws it as a
@@ -122,8 +128,12 @@ const components = { ...radixThemes({ markdown }), Badge: MyBadge };
 - **A row with no name is headed by its type.** An enum's documented values,
   a union's branches and a scalar payload have no name; `"invalid_model"` or
   `string<binary>` stands in the name column rather than a dash.
-- **"required" is red text, not a badge.** It is on most rows; a badge on most
-  rows is noise, and it pushed each row onto a second line.
+- **"optional" is marked, not "required".** Most fields in most APIs are
+  required, so marking those put a red word on nearly every row; marking the
+  exception is quieter. `presence: "required"` marks the other way. Either is
+  text, not a badge.
+- **Names and types are dark, descriptions lighter.** A row is scanned by its
+  name and type; the description is for whoever stops there.
 - **`CodeBlock`** — Radix has none. It is a ghost `Code` in a `<pre>` on a
   `Card`, in a horizontal `ScrollArea`. `language-json` is on the `<code>` for
   highlighters.

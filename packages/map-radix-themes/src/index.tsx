@@ -29,6 +29,8 @@ import {
   Separator,
   Tabs,
   Text,
+  Tooltip,
+  VisuallyHidden,
 } from "@radix-ui/themes";
 import type {
   BadgeProps,
@@ -45,9 +47,9 @@ import type {
   TabsProps,
 } from "@speculoos/react";
 import { badgeColor, mergeColors, type BadgeColorOverrides } from "./colors.js";
-import { fieldRow, fields, type FieldLayout, type Size } from "./fields.js";
+import { fieldRow, fields, type FieldLayout, type Presence, type Size } from "./fields.js";
 
-export type { FieldLayout } from "./fields.js";
+export type { FieldLayout, Presence } from "./fields.js";
 
 export {
   DEFAULT_COLORS,
@@ -70,6 +72,8 @@ export interface RadixThemesOptions {
   size?: Size;
   /** How a field row is laid out; see `FieldLayout`. Default "stacked". */
   fieldLayout?: FieldLayout;
+  /** Which of a field's states is marked; see `Presence`. Default "optional". */
+  presence?: Presence;
   /** Badge colours, merged entry by entry over `DEFAULT_COLORS`. */
   colors?: BadgeColorOverrides;
   /**
@@ -120,6 +124,9 @@ const DIRECTION_ARROW: Record<string, string> = { "client-sends": "↑", "server
 /** Whether a `List` sits inside another, so a nested one can indent. */
 const InList = createContext(false);
 
+/** What the enclosing `List` is of, so an item can lay itself out to suit. */
+const ListKind = createContext<ListProps["kind"] | undefined>(undefined);
+
 /**
  * Whether a section sits inside a card (a message, the handshake). Its heading
  * then steps down, so the card's own title stays the largest thing in it.
@@ -131,7 +138,7 @@ function clampLevel(level: number): 1 | 2 | 3 | 4 | 5 | 6 {
 }
 
 export function radixThemes(options: RadixThemesOptions): Components {
-  const { markdown, size = "2", fieldLayout = "stacked", linkAs, messageExtras: MessageExtras } = options;
+  const { markdown, size = "2", fieldLayout = "stacked", presence = "optional", linkAs, messageExtras: MessageExtras } = options;
   const colors = mergeColors(options.colors);
 
   function Section(props: SectionProps): ReactNode {
@@ -150,8 +157,10 @@ export function radixThemes(options: RadixThemesOptions): Components {
               </Heading>
               {deprecated === true && <Badge color={colors.tone.deprecated}>deprecated</Badge>}
             </Flex>
+            {/* Grey: the heading's marks — a path, a URL — support the title
+                rather than compete with it. Badges keep their own colours. */}
             {subtitle !== undefined && (
-              <Flex gap="2" align="center" wrap="wrap">
+              <Flex gap="2" align="center" wrap="wrap" style={{ color: "var(--gray-11)" }}>
                 {subtitle}
               </Flex>
             )}
@@ -174,7 +183,7 @@ export function radixThemes(options: RadixThemesOptions): Components {
   function CardSection({ kind, id, title, level, deprecated, message, children }: SectionProps): ReactNode {
     const h = clampLevel(level);
     return (
-      <Card asChild size="2" my="4" {...(id !== undefined ? { id } : {})}>
+      <Card asChild size="1" my="4" {...(id !== undefined ? { id } : {})}>
         <section data-kind={kind}>
           <Flex gap="3" align="center" wrap="wrap" mb="2">
             {/* The handshake is one per page and heads everything about
@@ -227,9 +236,28 @@ export function radixThemes(options: RadixThemesOptions): Components {
 
   function SpecBadge({ tone, value, children }: BadgeProps): ReactNode {
     const arrow = tone === "direction" && value !== undefined ? DIRECTION_ARROW[value] : undefined;
+    const color = badgeColor(colors, { tone, value });
+    const badgeSize = size === "3" ? "2" : "1";
+    // A direction is an arrow: the label ("client → server") is the tooltip,
+    // and still there for a screen reader.
+    if (arrow !== undefined) {
+      // One size up from the other badges, square, unpadded: a circle.
+      return (
+        <Tooltip content={children}>
+          <Badge
+            color={color}
+            size={size === "3" ? "3" : "2"}
+            radius="full"
+            style={{ width: "1.5em", height: "1.5em", padding: 0, justifyContent: "center" }}
+          >
+            <span aria-hidden="true">{arrow}</span>
+            <VisuallyHidden>{children}</VisuallyHidden>
+          </Badge>
+        </Tooltip>
+      );
+    }
     return (
-      <Badge color={badgeColor(colors, { tone, value })} size={size === "3" ? "2" : "1"}>
-        {arrow !== undefined && <span aria-hidden="true">{arrow}</span>}
+      <Badge color={color} size={badgeSize}>
         {children}
       </Badge>
     );
@@ -323,16 +351,33 @@ export function radixThemes(options: RadixThemesOptions): Components {
    */
   function List({ kind, children }: ListProps): ReactNode {
     const nested = useContext(InList);
+    // Lists nest, and an item answers to its own list's kind.
     return (
       <Flex asChild direction="column" gap={LIST_GAP[kind]} my={nested ? "1" : "3"} p="0" pl={nested ? "3" : "0"} width="100%">
         <ul style={{ listStyle: "none" }} data-kind={kind}>
-          <InList.Provider value={true}>{children}</InList.Provider>
+          <InList.Provider value={true}>
+            <ListKind.Provider value={kind}>{children}</ListKind.Provider>
+          </InList.Provider>
         </ul>
       </Flex>
     );
   }
 
+  /**
+   * An item lays out its parts in a row. A security alternative is stacked like
+   * a field row instead — a rule above, the scheme and how to send it on one
+   * line, its description under them — because it is read like one: as a
+   * block layout, the inline badge and code share a line and the description,
+   * a block, takes the next.
+   */
   function ListItem({ children }: ListItemProps): ReactNode {
+    if (useContext(ListKind) === "security") {
+      return (
+        <Box asChild pt="3" style={{ borderTop: "1px solid var(--gray-a4)" }}>
+          <li>{children}</li>
+        </Box>
+      );
+    }
     return (
       <Flex asChild gap="2" align="center" wrap="wrap">
         <li>{children}</li>
@@ -356,7 +401,7 @@ export function radixThemes(options: RadixThemesOptions): Components {
     Badge: SpecBadge,
     Link: SpecLink,
     Fields: fields(size, fieldLayout),
-    FieldRow: fieldRow(colors, fieldLayout),
+    FieldRow: fieldRow(colors, fieldLayout, presence),
     Tabs: SpecTabs,
     List,
     ListItem,

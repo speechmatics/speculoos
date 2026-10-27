@@ -48,7 +48,7 @@ export const DEFAULT_COLORS: BadgeColors = {
     put: "orange",
     patch: "amber",
     delete: "red",
-    head: "cyan",
+    head: "gray",
     options: "gray",
     trace: "gray",
   },
@@ -60,9 +60,11 @@ export const DEFAULT_COLORS: BadgeColors = {
     "5xx": "red",
     default: "gray",
   },
+  // Both directions take the WebSocket protocol's colour: they are the two
+  // halves of one connection, and the arrow already says which is which.
   direction: {
-    "client-sends": "blue",
-    "server-sends": "violet",
+    "client-sends": "cyan",
+    "server-sends": "cyan",
   },
   tone: {
     method: "gray",
@@ -73,7 +75,7 @@ export const DEFAULT_COLORS: BadgeColors = {
     deprecated: "amber",
     mediaType: "gray",
     protocol: "cyan",
-    securityScheme: "iris",
+    securityScheme: "gray",
     note: "gray",
   },
 };

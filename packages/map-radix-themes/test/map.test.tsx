@@ -229,11 +229,21 @@ describe("field rows", () => {
   const createJob = (options = {}) =>
     render(<Operation id="createJob" />, ir("batch.yaml"), radixThemes({ markdown: Markdown }), options);
 
-  it("marks required in text on the name's line, not as a badge", () => {
-    // Each row's label only: the request body's own "required" stays a badge, in its heading.
-    const labels = createJob().split("rt-DataListLabel").slice(1).map((c) => c.slice(0, c.indexOf("</dt>")));
+  // Each row's label only: the request body's own "required" stays a badge, in its heading.
+  const labelsOf = (html: string) => html.split("rt-DataListLabel").slice(1).map((c) => c.slice(0, c.indexOf("</dt>")));
+
+  it("marks optional fields by default, in text on the name's line, and leaves required ones quiet", () => {
+    const labels = labelsOf(createJob());
+    expect(labels.some((l) => /<span[^>]*rt-Text[^>]*>optional<\/span>/.test(l))).toBe(true);
+    expect(labels.some((l) => />required</.test(l))).toBe(false);
+  });
+
+  it("marks required fields instead with presence: required, never as a badge", () => {
+    const html = render(<Operation id="createJob" />, ir("batch.yaml"), radixThemes({ markdown: Markdown, presence: "required" }));
+    const labels = labelsOf(html);
     expect(labels.some((l) => /<span[^>]*rt-Text[^>]*>required<\/span>/.test(l))).toBe(true);
     expect(labels.some((l) => /rt-Badge[^>]*>required</.test(l))).toBe(false);
+    expect(labels.some((l) => />optional</.test(l))).toBe(false);
   });
 
   it("collapses nested rows behind a toggle that says how many there are", () => {
@@ -262,8 +272,9 @@ describe("messageExtras", () => {
 describe("direction badges", () => {
   it("carry an arrow — up for what the reader sends, down for what they receive", () => {
     const html = render(<Endpoint id="/v2/{language}" />, ir("realtime-v3.yaml"), radixThemes({ markdown: Markdown }));
-    expect(html).toContain('<span aria-hidden="true">↑</span>client → server');
-    expect(html).toContain('<span aria-hidden="true">↓</span>server → client');
+    // The arrow is all that shows: the label is for screen readers, and the tooltip.
+    expect(html).toMatch(/data-radius="full"[^>]*><span aria-hidden="true">↑<\/span><span[^>]*>client → server<\/span>/);
+    expect(html).toMatch(/data-radius="full"[^>]*><span aria-hidden="true">↓<\/span><span[^>]*>server → client<\/span>/);
   });
 });
 
@@ -355,5 +366,14 @@ describe("headings inside cards", () => {
     expect(sizes.length).toBeGreaterThan(1);
     expect(sizes[0]).toBe(5); // Handshake
     expect(sizes.slice(1).every((s) => s < 5)).toBe(true); // Authentication, …
+  });
+});
+
+describe("security alternatives", () => {
+  it("stack like field rows: a rule above each, the scheme and its usage inline, the description below", () => {
+    const html = render(<Endpoint id="/v2/{language}" />, ir("realtime-v3.yaml"), radixThemes({ markdown: Markdown }));
+    const from = html.indexOf('data-kind="security"', html.indexOf("Authentication"));
+    const list = html.slice(from, html.indexOf("</ul>", from));
+    expect(list).toMatch(/<li style="border-top:1px solid var\(--gray-a4\)"[^>]*><span[^>]*rt-Badge[^>]*>bearer<\/span> <code[^>]*>Authorization: Bearer &lt;token&gt;<\/code><div data-md="">A JWT.<\/div><\/li>/);
   });
 });
