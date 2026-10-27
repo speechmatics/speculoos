@@ -60,12 +60,14 @@ worth doing while you are there:
 |---|---|---|
 | `markdown` | — | **Required.** Renders and sanitises a description. |
 | `size` | `"2"` | `"1"` \| `"2"` \| `"3"`. Scale of field lists, badges and tabs. |
+| `fieldLayout` | `"stacked"` | `"stacked"`: name, type, constraints and required on one line, description below, a rule between fields — Deepgram's. `"columns"`: name left, type and description right, stacked on phones. `"vertical"`: always stacked, the type on a line of its own. |
 | `colors` | see below | Badge colours, merged entry by entry over the defaults. |
 | `linkAs` | — | Your router's link component, for internal links (types, operations, tags). Receives `href` and `children`. External links stay plain `<a>`s. |
 | `messageExtras` | — | Extra content in each message's card, under its heading. Receives the IR `message`, so it can render what a spec's own `x-` extensions say. |
 
-Field rows are a Radix `DataList`: the name on the left, with "required" beside
-it; type, constraints and description on the right. It works in either provider
+Field rows are a Radix `DataList`, stacked: the name, type, constraints and
+"required" on one line, the description under it (`fieldLayout` has the
+two-column alternative). It works in either provider
 `layout` — a field's nested rows are rendered after it as siblings, indented by
 depth, so nothing needs setting on the provider.
 

@@ -125,7 +125,7 @@ describe("field rows in tree layout", () => {
       expect(open).toBeLessThanOrEqual(1);
     }
     expect(open).toBe(0);
-    expect(html).toMatch(/rt-r-pl-[1-9]/); // and something was indented
+    expect(html).toMatch(/padding-left:var\(--space-[1-9]\)/); // and something was indented
   });
 
   it("shows the same rows in both layouts", () => {
@@ -276,6 +276,34 @@ describe("snapshots", () => {
     expect(
       render(<Endpoint id="/v2/{language}" />, ir("realtime-v3.yaml"), radixThemes({ markdown: Markdown })),
     ).toMatchSnapshot();
+  });
+});
+
+describe("fieldLayout", () => {
+  const labels = (html: string) => html.split("rt-DataListLabel").slice(1).map((c) => c.slice(0, c.indexOf("</dt>")));
+  const job = (fieldLayout?: "columns" | "vertical" | "stacked") =>
+    render(<Operation id="createJob" />, ir("batch.yaml"), radixThemes({ markdown: Markdown, ...(fieldLayout ? { fieldLayout } : {}) }));
+
+  it("is stacked by default", () => {
+    expect(job()).toBe(job("stacked"));
+  });
+
+  it("columns sits side by side from sm", () => {
+    expect(job("columns")).toContain("rt-r-orientation-vertical sm:rt-r-orientation-horizontal");
+  });
+
+  it("vertical always stacks, the type still under the name", () => {
+    const html = job("vertical");
+    expect(html).not.toContain("sm:rt-r-orientation-horizontal");
+    // The name's line holds the name only; the type is in the value below.
+    expect(labels(html).every((l) => (l.match(/rt-Code/g) ?? []).length <= 1)).toBe(true);
+  });
+
+  it("stacked puts the type on the name's line, with a rule between fields", () => {
+    const html = job("stacked");
+    expect(html).not.toContain("sm:rt-r-orientation-horizontal");
+    expect(labels(html).some((l) => (l.match(/rt-Code/g) ?? []).length >= 2)).toBe(true);
+    expect(html).toContain("border-top:1px solid var(--gray-a4)");
   });
 });
 

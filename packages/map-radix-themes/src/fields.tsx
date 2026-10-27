@@ -1,6 +1,7 @@
 /**
- * Field rows, as a Radix `DataList`: name on the left, type, constraints and
- * description on the right.
+ * Field rows, as a Radix `DataList`: by default stacked, the name, type,
+ * constraints and "required" on one line and the description under it; see
+ * `FieldLayout` for the two-column alternative.
  *
  * A `DataList` was chosen over a `Table` by looking at both: it reads better for
  * schemas, parameters and headers alike, and a `Table`'s column headers bought
@@ -24,6 +25,19 @@ import type { FieldRowProps, FieldsProps } from "@speculoos/react";
 import type { BadgeColors } from "./colors.js";
 
 export type Size = "1" | "2" | "3";
+
+/**
+ * How a field row is laid out.
+ *
+ *   "columns"   name on the left, type and description on the right; stacked
+ *               below the `sm` breakpoint, where two columns do not fit.
+ *   "vertical"  always stacked: the name's line, then type, then description.
+ *   "stacked"   Deepgram's: name, type, constraints and "required" on one
+ *               line, the description under it, a rule between fields. The
+ *               default: each field reads as one unit, and the description
+ *               gets the full width rather than losing a column to the name.
+ */
+export type FieldLayout = "columns" | "vertical" | "stacked";
 
 type Space = "0" | "4" | "6" | "7" | "8";
 
@@ -93,12 +107,17 @@ function TypeLine({ name, type, variantsLabel, chips }: Pick<FieldRowProps, "nam
   );
 }
 
-export function fields(size: Size) {
+export function fields(size: Size, layout: FieldLayout) {
   function Fields({ kind, children }: FieldsProps): ReactNode {
     return (
-      // Side by side from the `sm` breakpoint; stacked, name over value, below
-      // it, where two columns leave a value a few characters wide.
-      <DataList.Root size={size} my="2" orientation={{ initial: "vertical", sm: "horizontal" }} data-kind={kind}>
+      // In "columns", side by side from the `sm` breakpoint; stacked, name over
+      // value, below it, where two columns leave a value a few characters wide.
+      <DataList.Root
+        size={size}
+        my="2"
+        orientation={layout === "columns" ? { initial: "vertical", sm: "horizontal" } : "vertical"}
+        data-kind={kind}
+      >
         {children}
       </DataList.Root>
     );
@@ -106,19 +125,28 @@ export function fields(size: Size) {
   return Fields;
 }
 
-export function fieldRow(colors: BadgeColors) {
+export function fieldRow(colors: BadgeColors, layout: FieldLayout) {
   function FieldRow(props: FieldRowProps): ReactNode {
     const { field, depth, name, docs, required, deprecated, children } = props;
     const [open, setOpen] = useState(false);
     const nested = useId();
     const hasChildren = children !== undefined && children !== null;
+    const columns = layout === "columns";
+    const oneLine = layout === "stacked";
+    // Stacked, the value sits under the name, so the whole row indents.
+    const pad = indent(depth);
+    const rowStyle = {
+      ...(!columns && pad !== "0" ? { paddingLeft: `var(--space-${pad})` } : {}),
+      ...(oneLine ? { borderTop: "1px solid var(--gray-a4)", paddingTop: "var(--space-3)" } : {}),
+    };
     return (
       <>
-        <DataList.Item data-key={field.key} align="start">
-          <DataList.Label minWidth={{ initial: "0", sm: "180px" }}>
-            <Box pl={indent(depth)}>
+        <DataList.Item data-key={field.key} align="start" style={rowStyle}>
+          <DataList.Label minWidth={columns ? { initial: "0", sm: "180px" } : "0"}>
+            <Box pl={columns ? pad : "0"}>
               <Flex gap="2" align="baseline" wrap="wrap">
                 <Name name={name} type={props.type} />
+                {oneLine && <TypeLine {...props} />}
                 <Marks required={required} deprecated={deprecated} colors={colors} />
               </Flex>
             </Box>
@@ -130,7 +158,7 @@ export function fieldRow(colors: BadgeColors) {
               table scrolls inside its own scroll area instead. */}
           <DataList.Value style={{ minWidth: 0 }}>
             <Flex direction="column" gap="1" align="start" minWidth="0" width="100%">
-              <TypeLine {...props} />
+              {!oneLine && <TypeLine {...props} />}
               <Box width="100%">{docs}</Box>
               {hasChildren && (
                 <Button

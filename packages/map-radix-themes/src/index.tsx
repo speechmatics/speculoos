@@ -45,7 +45,9 @@ import type {
   TabsProps,
 } from "@speculoos/react";
 import { badgeColor, mergeColors, type BadgeColorOverrides } from "./colors.js";
-import { fieldRow, fields, type Size } from "./fields.js";
+import { fieldRow, fields, type FieldLayout, type Size } from "./fields.js";
+
+export type { FieldLayout } from "./fields.js";
 
 export {
   DEFAULT_COLORS,
@@ -66,6 +68,8 @@ export interface RadixThemesOptions {
   markdown: ComponentType<MarkdownProps>;
   /** Scale of field lists, badges and tabs. Default "2". */
   size?: Size;
+  /** How a field row is laid out; see `FieldLayout`. Default "stacked". */
+  fieldLayout?: FieldLayout;
   /** Badge colours, merged entry by entry over `DEFAULT_COLORS`. */
   colors?: BadgeColorOverrides;
   /**
@@ -121,7 +125,7 @@ function clampLevel(level: number): 1 | 2 | 3 | 4 | 5 | 6 {
 }
 
 export function radixThemes(options: RadixThemesOptions): Components {
-  const { markdown, size = "2", linkAs, messageExtras: MessageExtras } = options;
+  const { markdown, size = "2", fieldLayout = "stacked", linkAs, messageExtras: MessageExtras } = options;
   const colors = mergeColors(options.colors);
 
   function Section(props: SectionProps): ReactNode {
@@ -338,8 +342,8 @@ export function radixThemes(options: RadixThemesOptions): Components {
     CodeBlock,
     Badge: SpecBadge,
     Link: SpecLink,
-    Fields: fields(size),
-    FieldRow: fieldRow(colors),
+    Fields: fields(size, fieldLayout),
+    FieldRow: fieldRow(colors, fieldLayout),
     Tabs: SpecTabs,
     List,
     ListItem,
