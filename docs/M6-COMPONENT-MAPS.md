@@ -425,3 +425,133 @@ case is now concrete: category headings over the entry list. REST entries would 
 their operation's tags; a channel its own or its operations'. Still parked until the
 flat list has been used.
 
+
+## 15. Piloting on the Speechmatics docs
+
+*The map and both renderers, used for real: the Realtime WebSocket reference and one
+Batch REST operation (`POST /jobs`), on the Docusaurus site that already documents both,
+side by side with the live pages. The `speculoos-pilot` branch of `speechmatics/docs`.*
+
+### Setup, and its traps
+
+Speculoos is installed from tarballs: `pnpm pack:local` packs every public package into
+`.packs/` under version-free names, and the site depends on
+`file:../speculoos/.packs/speculoos-*.tgz`. Tarballs rather than `npm link`, because a
+symlinked package resolves `react` from this repository and breaks hooks. Two caches
+then hide a new pack, because the version never changes: npm reuses its cached tarball
+(the lockfile pins the integrity hash), and webpack's persistent cache treats a
+same-version package as unchanged. The site's `speculoos:refresh` reinstalls the
+tarballs and clears webpack's cache; then restart the dev server.
+
+The site builds IR at `start`/`build`: `speculoos build` for the Realtime spec, and for
+Batch a conversion first (below). That step runs *after* the site's own spec generation,
+not beside it — it reads a file that step writes.
+
+### The specs were the biggest lever
+
+Most of what made the pages read well was a better spec, not a better renderer — the
+working rule was to rewrite specs rather than teach the library their quirks.
+
+- **Realtime, rewritten as canonical AsyncAPI 3.** One channel holding all 24 messages,
+  with `receive`/`send` operations from the server's point of view; the channel's `title`
+  and `description` head the page. Message examples moved from payload schemas to
+  `message.examples`. Enums whose values were described in a Markdown table became
+  `oneOf`s of documented `const`s — with a `title` each, which the old plugin uses to
+  label its tabs. A binary `AddAudio` payload, two security schemes on the server
+  (`Authorization: Bearer`, or `?jwt=` for browsers), and `bindings.ws.method: GET`.
+- **Batch stays Swagger 2.0**, generated upstream. It is converted to OpenAPI 3 at
+  build time (`swagger2openapi --anchors`) and patched with an **OpenAPI Overlay 1.0**
+  (`spec/batch.overlay.yaml`): `openapi: 3.1.0`; the multipart `config` part as a
+  `JobConfig` sent as JSON (Swagger 2.0's formData can only call it a string, so no page
+  could show `JobConfig`); HTTP Bearer; status enums as documented values. The overlay is
+  applied by a short script over `jsonpath-plus`, not a library, so that an action
+  matching nothing fails the build — a renamed upstream field cannot silently drop its
+  patch. Actions remove only what changes and merge the rest, keeping upstream order and
+  prose. The one cost: prose the overlay replaces no longer follows upstream edits.
+- Found along the way: the live Batch page omits two documented query parameters
+  (`wait`, `format`); and WebSocket close codes do not map one-to-one onto `Error`
+  types (two codes have no type, six types have no documented code) — so close codes
+  are their own table, not folded into the types.
+
+### What changed in Speculoos
+
+Core and both renderers, at parity:
+
+- **Message summaries** render as Markdown (AsyncAPI's `summary` is often where the
+  prose is). **Messages are anchored sections** — `WsMessage.slug`, additive under
+  `irVersion: 1`, assigned after every other slug so none moves — straight under their
+  operation; no "Messages" wrapper, no discriminator badge repeating the payload.
+- **Full URLs.** `endpointUrl` joins the one applicable server and the address (none for
+  a webhook, which the reader serves). Entry headings show it, REST and channel alike.
+- **The handshake.** `endpointHandshake` describes a WebSocket channel's upgrade:
+  method (from the `ws` binding, else GET), URL, the applicable servers' security and
+  description. Rendered as a "Handshake" section; `handshakeExtras` ends it with the
+  page's own content (responses, an example exchange). AsyncAPI has no place for the
+  upgrade's responses, so they stay the page's.
+- **Authentication** is one presentation for both dialects: each alternative, how to
+  send it (`securityUsage`: "Authorization: Bearer <token>", "?jwt=<key>"), and the
+  scheme's description — replacing operation-level "Security" badges.
+  `securityLabel` is shared. A 3.x server's security list is read as alternatives (it
+  was read as all-of, a bug).
+- **Examples gathered in one place.** `entryExamples(entry)` lists an entry's examples
+  with what each is of; `<EntryExamples>` / `renderEntryExamples` render them, in a
+  given order if the page supplies one; `inlineExamples: false` stops them repeating
+  under each payload.
+- **Enums.** A small enum behind a `$ref` showed its values nowhere (the label is the
+  type's name); now it has chips. An enum with documented values gets a row per value.
+  `type` beside a `oneOf` of consts of that type restates them, so it no longer makes an
+  intersection.
+- **Content.** `groupMediaVariants` gives media types with the same schema one tab —
+  `application/json` and a vendor alias of it — ignoring where in the spec each came
+  from, and taking all their examples.
+- A channel operation's direction badge sits in its heading ("Send ↑").
+
+### What the map learnt
+
+Defaults changed by looking at real pages next to Deepgram's reference:
+
+- **Stacked field rows** (`fieldLayout: "stacked"`, now default): name, type,
+  constraints and presence on one line, description below, a rule between fields.
+  Descriptions get the width a name column took. `"columns"` and `"vertical"` remain.
+- **`presence: "optional"`** (default) marks the exception rather than putting a red
+  "required" on most rows. Names and types near-black, descriptions lighter.
+- **Nested properties collapse** behind "Show N properties", which makes
+  `expandRefs: "always"` usable — types inline, no Types section to jump to. Messages
+  stay open: find-in-page must work.
+- **Cards** for messages and the handshake, `size="1"`; headings inside a card step
+  down so its title is the largest thing in it. Security alternatives stack like field
+  rows. A single tab shows no tab bar. A row with no name is headed by its type.
+- **Badges.** A direction is a round arrow with its label as a tooltip. Few colours:
+  WebSocket has its own (cyan by default; the site passes its sidebar's teal), both
+  directions share it, schemes and media types are grey.
+- Field values shrink to their column (`min-width: 0` at every level), so a wide table
+  in a description scrolls instead of widening the card; lists stack below `sm`.
+
+### What stayed the site's
+
+Deliberately not in the library, because they are this site's decisions or knowledge:
+the session panel (a compact sequence diagram beside a channel — client left, server
+right, the audio loop bracketed — whose order a spec cannot express); code samples from
+`x-codeSamples` beside a REST operation; the close-code table and handshake responses as
+MDX partials; a page per entry (`<SpeculoosReference entry="post-jobs">`) with the
+entry's heading as the page's h1 (`hide_title`); the sidebar's badge colours; and a
+`.rt-Code` reset for what Infima's global `code` style leaked into Radix.
+
+### Docusaurus traps
+
+Every Markdown file needs a front-matter `description` — partials too — or the site's
+config exits the dev server. `unlisted: true` crashed (the site's `Admonition` map has no
+`caution`). Headings rendered by components are not in Docusaurus's build-time TOC; the
+pilot pages hide it.
+
+### Open
+
+- **A page per entry, generated.** A standalone script turning every entry into a stub
+  page and a sidebar entry — deliberately not a Docusaurus plugin, since the site may not
+  stay on Docusaurus.
+- **Agent STT and Realtime as one spec**, two channels on one server. Same host, a shared
+  vocabulary that has drifted: 13 message names in common, 4 identical; 21 schema names,
+  none identical. Needs a drift-versus-real-difference pass and a single source of truth;
+  moving Agent STT's house overlay to the Overlay standard goes with it.
+- Smaller: a TOC helper; Infima typography leftovers; paragraph margins inside cards;
+  tags as category headings; versioning; the maintenance policy for a second map.

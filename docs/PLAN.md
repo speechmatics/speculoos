@@ -978,6 +978,15 @@ per REST operation (`POST /projects`), one per channel (`WSS /v2/{language}`, ho
 send and receive). `apiEntries` in core, `<Entry>` / `<EntryList>` / `useEntries` in React,
 `renderEntry` and `groupBy: "entry"` in HTML; `EndpointList` is gone. §14 of the M6 plan.
 
+*Then it met the Speechmatics docs.* The Realtime WebSocket reference and one Batch REST
+operation, rendered through the map on the real site beside the live pages. Most of the
+improvement came from the specs — Realtime rewritten as canonical AsyncAPI 3; Batch, still
+Swagger 2.0 upstream, converted to OpenAPI 3.1 and patched with an Overlay — and the rest
+from additions at parity across both renderers: anchored messages, full URLs, a handshake
+section, one Authentication presentation, gathered examples, documented enum values, and
+grouped media types. The map's defaults changed to stacked field rows, "optional" marks
+and collapsible nested properties. §15 of the M6 plan.
+
 **Post-1.0:** example synthesis and code samples (OD-2); further framework bindings; an
 MDX/Docusaurus/Astro integration package; a playground app.
 
