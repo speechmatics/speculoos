@@ -349,10 +349,9 @@ generated with a drift check.~~ **Done — see M1.**
 
 **Out of scope:** parsing, I/O, markdown rendering, HTML, example synthesis, anything React.
 
-**Housekeeping (do first, it is five minutes).** Add `tsconfig.json` and a `typescript`
-devDependency — `pnpm lint` cannot currently run. Drop `external: ["react"]` from
-`tsup.config.ts`. Rename `src/index.ts` to `src/ir.ts` and re-export. Move `IR-notes.md` to
-`docs/design/ir-rationale.md`; it is design rationale, not source.
+**Housekeeping.** ✅ Done: `tsconfig.json` and `typescript`; the stray `external: ["react"]`
+dropped from `tsup.config.ts`; `IR-notes.md` moved to `docs/design/ir-rationale.md`. The
+proposed `src/ir.ts` was overtaken: the IR's types live in `schema.ts` and `document.ts`.
 
 ---
 
@@ -634,7 +633,7 @@ README says so in the first paragraph. ✅ 39 tests.
 **Depends on:** `core`.
 
 **Scope.** `renderOperation(op, ir, opts): string`. Semantic HTML with stable, documented
-class names and `slugFor`-derived anchors. For Hugo/Jekyll/Eleventy/Astro sites that are
+class names, and anchors from the slugs the IR already carries. For Hugo/Jekyll/Eleventy/Astro sites that are
 not React. Sanitisation of markdown is the caller's responsibility and the API makes that
 explicit by taking a `renderMarkdown` function rather than embedding one.
 
@@ -694,9 +693,10 @@ have zero dependencies, including on this.
 
 ## 6. Milestones
 
-**M0 — Foundations (small).** Root `tsconfig.base.json`, per-package `tsconfig.json`,
-shared tsup/vitest config, `typescript` devDependency, lint/format, CI running
-build + typecheck + test across the workspace. Fix the core housekeeping items above.
+**M0 — Foundations (small). ✅ Done.** Root `tsconfig.base.json`, per-package `tsconfig.json`
+and tsup config, `typescript` devDependency, CI running build + typecheck + test across the
+workspace, and the core housekeeping above. Lint and format came last, with the alpha:
+Biome, in CI.
 
 **M1 — IR complete and provable. ✅ Done, except as noted.** `ApiIR` finished; presentation
 layer (`toTree`/`toRows`/`typeLabel`/chips) implemented; `projectForView`, `walk`,
@@ -931,7 +931,7 @@ and reshaping, not adding. So OD-2 stays descoped with the path genuinely open.
 *Still open:* the reference integration is still a fake component library rather than the
 Speechmatics design system. Unchanged from M4, and still a consumer task.
 
-**M6 — Shipped component maps. In progress: map built and looked at.** A Radix Themes map, as a package rather than an
+**M6 — Shipped component maps. ✅ Done, but for the maintenance policy for a second map.** A Radix Themes map, as a package rather than an
 example, with a factory taking options and spread for wholesale replacement. Twelve
 components, not a renderer: there is one React renderer and a map per library. Closes the
 reference-integration item carried since M4. Full plan in
@@ -961,9 +961,7 @@ channel's messages as stacked cards rather than tabs. A Vite dev server
 (`pnpm preview:radix`) renders every fixture through real Radix in either layout and
 appearance. Looking at it found a renderer
 defect — the operation list's label read "GET/jobs List jobs", unseparated inside an
-inline `Link` — now fixed in `@speculoos/react`. Details, and what remains, in §12 of the
-M6 plan. Open: versioning, the maintenance policy for a second map, and trying it on the
-Speechmatics docs site.
+inline `Link` — now fixed in `@speculoos/react`. Details in §12 of the M6 plan.
 
 *Endpoints became the unit.* Looking at the map also showed both renderers were
 operation-first: a channel's address and parameters repeated under each operation, and
@@ -985,7 +983,19 @@ Swagger 2.0 upstream, converted to OpenAPI 3.1 and patched with an Overlay — a
 from additions at parity across both renderers: anchored messages, full URLs, a handshake
 section, one Authentication presentation, gathered examples, documented enum values, and
 grouped media types. The map's defaults changed to stacked field rows, "optional" marks
-and collapsible nested properties. §15 of the M6 plan.
+and collapsible nested properties. It then became the site's whole API reference — four
+APIs, REST and WebSocket, a page per entry, and the schema tables in guide pages — and the
+OpenAPI plugin it replaced was removed. §15 of the M6 plan.
+
+**Alpha. ✅ Prepared, not yet published.** Every package except `fixtures` is published,
+in lockstep as `0.1.0-alpha.N` under npm's `alpha` tag, MIT-licensed, with a README each.
+`pnpm release:check`, in CI, checks what a consumer would install: versions and metadata,
+publint, and the packed tarballs installed into a fresh project where every entry point
+typechecks and loads from ESM and CommonJS. The public API was inventoried export by
+export and trimmed to what is meant to be used — 158 values and 169 types to 123 and 164 —
+with the building blocks for custom sections and passes documented rather than left as
+accidents. Releases are published by GitHub Actions with npm trusted publishing (OIDC,
+provenance), never from a laptop. `docs/RELEASING.md`.
 
 **Post-1.0:** example synthesis and code samples (OD-2); further framework bindings; an
 MDX/Docusaurus/Astro integration package; a playground app.
