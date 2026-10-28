@@ -1,22 +1,54 @@
 {
   "name": "@speculoos/cli",
-  "version": "0.0.1",
+  "version": "0.1.0-alpha.0",
   "description": "Build, lint and inspect API specs as Speculoos IR.",
-  "license": "ISC",
+  "keywords": [
+    "cli",
+    "openapi",
+    "asyncapi",
+    "api-reference",
+    "lint"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/speechmatics/speculoos.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://github.com/speechmatics/speculoos/tree/main/packages/cli#readme",
+  "bugs": {
+    "url": "https://github.com/speechmatics/speculoos/issues"
+  },
+  "type": "commonjs",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
+  "bin": {
+    "speculoos": "./dist/cli.js"
+  },
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
     }
   },
   "files": [
     "dist"
   ],
   "sideEffects": false,
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public",
+    "tag": "alpha"
+  },
   "scripts": {
     "build": "tsup",
     "test": "vitest run",
@@ -38,8 +70,5 @@
     "tsup": "^8.5.0",
     "typescript": "^5.9.3",
     "vitest": "^3.2.3"
-  },
-  "bin": {
-    "speculoos": "./dist/cli.js"
   }
 }

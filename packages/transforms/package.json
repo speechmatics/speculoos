@@ -1,22 +1,49 @@
 {
   "name": "@speculoos/transforms",
-  "version": "0.0.1",
+  "version": "0.1.0-alpha.0",
   "description": "IR-to-IR passes: hide, filter, sort, rename, redact.",
-  "license": "ISC",
+  "keywords": [
+    "openapi",
+    "asyncapi",
+    "api-reference"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/speechmatics/speculoos.git",
+    "directory": "packages/transforms"
+  },
+  "homepage": "https://github.com/speechmatics/speculoos/tree/main/packages/transforms#readme",
+  "bugs": {
+    "url": "https://github.com/speechmatics/speculoos/issues"
+  },
+  "type": "commonjs",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
     }
   },
   "files": [
     "dist"
   ],
   "sideEffects": false,
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public",
+    "tag": "alpha"
+  },
   "scripts": {
     "build": "tsup",
     "test": "vitest run",

@@ -1,22 +1,51 @@
 {
   "name": "@speculoos/map-radix-themes",
-  "version": "0.0.1",
+  "version": "0.1.0-alpha.0",
   "description": "A Speculoos component map for Radix Themes. Twelve components, not a renderer.",
-  "license": "ISC",
+  "keywords": [
+    "radix-ui",
+    "react",
+    "openapi",
+    "asyncapi",
+    "api-reference"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/speechmatics/speculoos.git",
+    "directory": "packages/map-radix-themes"
+  },
+  "homepage": "https://github.com/speechmatics/speculoos/tree/main/packages/map-radix-themes#readme",
+  "bugs": {
+    "url": "https://github.com/speechmatics/speculoos/issues"
+  },
+  "type": "commonjs",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
     }
   },
   "files": [
     "dist"
   ],
   "sideEffects": false,
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public",
+    "tag": "alpha"
+  },
   "scripts": {
     "build": "tsup",
     "dev": "vite --config dev/vite.config.mts",
@@ -26,7 +55,7 @@
   },
   "peerDependencies": {
     "@radix-ui/themes": "^3.0.0",
-    "@speculoos/react": "workspace:*",
+    "@speculoos/react": "workspace:^",
     "react": ">=18"
   },
   "devDependencies": {

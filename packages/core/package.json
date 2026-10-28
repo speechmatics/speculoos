@@ -1,23 +1,62 @@
 {
   "name": "@speculoos/core",
-  "version": "0.0.1",
+  "version": "0.1.0-alpha.0",
   "description": "The Speculoos intermediate representation: types and pure operations.",
+  "keywords": [
+    "openapi",
+    "asyncapi",
+    "api-reference",
+    "intermediate-representation"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/speechmatics/speculoos.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://github.com/speechmatics/speculoos/tree/main/packages/core#readme",
+  "bugs": {
+    "url": "https://github.com/speechmatics/speculoos/issues"
+  },
+  "type": "commonjs",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
     },
     "./validate": {
-      "types": "./dist/validate.d.ts",
-      "import": "./dist/validate.mjs",
-      "require": "./dist/validate.js"
+      "import": {
+        "types": "./dist/validate.d.mts",
+        "default": "./dist/validate.mjs"
+      },
+      "require": {
+        "types": "./dist/validate.d.ts",
+        "default": "./dist/validate.js"
+      }
     },
     "./schema.json": "./schema/apiir.schema.json",
     "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "schema"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public",
+    "tag": "alpha"
   },
   "scripts": {
     "build": "pnpm schema && tsup",
@@ -27,19 +66,6 @@
     "schema": "node scripts/gen-schema.mjs",
     "schema:check": "node scripts/gen-schema.mjs --check"
   },
-  "devDependencies": {
-    "@types/node": "^22.10.2",
-    "ajv": "^8.20.0",
-    "ts-json-schema-generator": "^2.9.0",
-    "tsup": "^8.5.0",
-    "typescript": "^5.9.3",
-    "vitest": "^3.2.3"
-  },
-  "sideEffects": false,
-  "files": [
-    "dist",
-    "schema"
-  ],
   "peerDependencies": {
     "ajv": "^8.17.1"
   },
@@ -47,5 +73,13 @@
     "ajv": {
       "optional": true
     }
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "ajv": "^8.20.0",
+    "ts-json-schema-generator": "^2.9.0",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.3"
   }
 }
