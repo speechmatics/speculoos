@@ -1,0 +1,5 @@
+# Mechanical changes that git blame should look through:
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+# Format with Biome
+fdae009f69771657174f14c2e494c4f446c48e34

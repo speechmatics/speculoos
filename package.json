@@ -9,7 +9,7 @@
     "build": "pnpm -r build",
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",
-    "lint": "biome lint .",
+    "lint": "biome check .",
     "speculoos": "node packages/cli/dist/cli.js",
     "preview": "node preview/build.mjs",
     "preview:serve": "node preview/build.mjs --serve",
