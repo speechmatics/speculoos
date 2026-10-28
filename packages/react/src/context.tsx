@@ -58,12 +58,7 @@ export interface SpeculoosProviderProps {
   children?: ReactNode;
 }
 
-export function SpeculoosProvider({
-  ir,
-  components,
-  options,
-  children,
-}: SpeculoosProviderProps): ReactNode {
+export function SpeculoosProvider({ ir, components, options, children }: SpeculoosProviderProps): ReactNode {
   const value = useMemo<SpeculoosContextValue>(
     () => ({
       ir,

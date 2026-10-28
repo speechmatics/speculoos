@@ -28,8 +28,7 @@ export type RenameMap = Readonly<Record<string, string>>;
  */
 export const renameTypes = (map: RenameMap): Transform =>
   named("renameTypes", (ir: ApiIR): ApiIR => {
-    const newName = (id: TypeId, def: TypeDef): string | undefined =>
-      map[id] ?? map[def.name];
+    const newName = (id: TypeId, def: TypeDef): string | undefined => map[id] ?? map[def.name];
 
     const ids = Object.keys(ir.schemas).sort();
     const renamed = new Set<TypeId>();

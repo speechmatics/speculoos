@@ -32,13 +32,7 @@ export interface RunResult {
   diagnostics: Diagnostic[];
 }
 
-export async function run({
-  specs,
-  root,
-  allowRemoteRefs,
-  transforms,
-  validate,
-}: RunOptions): Promise<RunResult> {
+export async function run({ specs, root, allowRemoteRefs, transforms, validate }: RunOptions): Promise<RunResult> {
   const project = await load({
     root,
     documents: specs,
@@ -54,11 +48,7 @@ export async function run({
   const family = entry.dialect?.family;
 
   const transform = (ir: ApiIR): RunResult => ({
-    ir: applyTransforms(
-      ir,
-      transforms ?? [],
-      validate === true ? { validate: parseApiIR } : {},
-    ),
+    ir: applyTransforms(ir, transforms ?? [], validate === true ? { validate: parseApiIR } : {}),
     diagnostics: [],
   });
 

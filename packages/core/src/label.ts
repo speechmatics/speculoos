@@ -49,12 +49,7 @@ export function typeLabel(node: Node, ctx: LabelContext, opts: LabelOptions = {}
   return node.nullable && o.nullableSuffix ? `${base} | null` : base;
 }
 
-function render(
-  node: Node,
-  ctx: LabelContext,
-  o: Required<LabelOptions>,
-  depth: number,
-): string {
+function render(node: Node, ctx: LabelContext, o: Required<LabelOptions>, depth: number): string {
   if (depth > o.maxDepth) return "…";
 
   switch (node.kind) {
@@ -74,9 +69,7 @@ function render(
       return formatValue(node.value);
 
     case "enum":
-      return node.members.length <= o.maxVariants
-        ? node.members.map((m) => formatValue(m.value)).join(" | ")
-        : "enum";
+      return node.members.length <= o.maxVariants ? node.members.map((m) => formatValue(m.value)).join(" | ") : "enum";
 
     case "object":
       return node.docs.title ?? "object";
@@ -103,9 +96,7 @@ function render(
       const labels = node.variants.map((v) =>
         v.labelSource === "index" ? render(v.node, ctx, o, depth + 1) : v.label,
       );
-      return labels.length <= o.maxVariants
-        ? labels.join(" | ")
-        : `${labels.slice(0, o.maxVariants).join(" | ")} | …`;
+      return labels.length <= o.maxVariants ? labels.join(" | ") : `${labels.slice(0, o.maxVariants).join(" | ")} | …`;
     }
 
     case "intersection":

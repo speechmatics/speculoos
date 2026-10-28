@@ -97,9 +97,10 @@ describe("docsOf", () => {
   });
 
   it("carries externalDocs and deprecated", () => {
-    expect(
-      docsOf({ deprecated: true, externalDocs: { url: "https://x", description: "More" } }),
-    ).toMatchObject({ deprecated: true, externalDocs: { url: "https://x", description: "More" } });
+    expect(docsOf({ deprecated: true, externalDocs: { url: "https://x", description: "More" } })).toMatchObject({
+      deprecated: true,
+      externalDocs: { url: "https://x", description: "More" },
+    });
   });
 
   it("returns nothing for a non-object", () => {

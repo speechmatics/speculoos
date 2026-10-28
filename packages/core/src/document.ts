@@ -17,16 +17,7 @@
  *     Specs are untrusted input; sanitising is the renderer's job.
  */
 
-import type {
-  Diagnostic,
-  Docs,
-  Node,
-  Property,
-  SourceLocation,
-  TypeId,
-  TypeRegistry,
-  View,
-} from "./schema.js";
+import type { Diagnostic, Docs, Node, Property, SourceLocation, TypeId, TypeRegistry, View } from "./schema.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Document metadata
@@ -153,12 +144,7 @@ export interface OtherSecurityScheme extends SecuritySchemeBase {
   type: string;
 }
 
-export type SecurityScheme =
-  | ApiKeyScheme
-  | HttpScheme
-  | OAuth2Scheme
-  | OpenIdConnectScheme
-  | OtherSecurityScheme;
+export type SecurityScheme = ApiKeyScheme | HttpScheme | OAuth2Scheme | OpenIdConnectScheme | OtherSecurityScheme;
 
 export interface SecurityRequirement {
   /** Key into `ApiIR.securitySchemes`. */
@@ -282,15 +268,7 @@ export interface WsMessage {
 // Endpoints & operations
 // ─────────────────────────────────────────────────────────────────────────────
 
-export type HttpMethod =
-  | "get"
-  | "put"
-  | "post"
-  | "delete"
-  | "patch"
-  | "head"
-  | "options"
-  | "trace";
+export type HttpMethod = "get" | "put" | "post" | "delete" | "patch" | "head" | "options" | "trace";
 
 interface OperationBase {
   /** operationId / AsyncAPI operation key, or derived from the address. Unique project-wide. */

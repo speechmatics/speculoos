@@ -152,30 +152,36 @@ export function entryExamples(entry: ApiEntry): EntryExample[] {
     if (operation.kind === "message") {
       const of = (messages: WsMessage[], reply: boolean) =>
         messages.flatMap((message) =>
-          message.examples.map((ex, i): EntryExample => ({
-            id: `${message.slug ?? message.id}-example-${i}`,
-            of: { kind: "message", operation, message, reply },
-            ...(ex.name !== undefined && { name: ex.name }),
-            ...(ex.summary !== undefined && { summary: ex.summary }),
-            value: ex.payload,
-          })),
+          message.examples.map(
+            (ex, i): EntryExample => ({
+              id: `${message.slug ?? message.id}-example-${i}`,
+              of: { kind: "message", operation, message, reply },
+              ...(ex.name !== undefined && { name: ex.name }),
+              ...(ex.summary !== undefined && { summary: ex.summary }),
+              value: ex.payload,
+            }),
+          ),
         );
       return [...of(operation.messages, false), ...of(operation.reply?.messages ?? [], true)];
     }
     const request = (operation.requestBody?.content ?? []).flatMap((variant) =>
-      variant.examples.map((ex, i): EntryExample => ({
-        ...ex,
-        id: `${operation.slug}-request-${variant.mediaType}-example-${i}`,
-        of: { kind: "request", operation, mediaType: variant.mediaType },
-      })),
+      variant.examples.map(
+        (ex, i): EntryExample => ({
+          ...ex,
+          id: `${operation.slug}-request-${variant.mediaType}-example-${i}`,
+          of: { kind: "request", operation, mediaType: variant.mediaType },
+        }),
+      ),
     );
     const responses = operation.responses.flatMap((response) =>
       response.content.flatMap((variant) =>
-        variant.examples.map((ex, i): EntryExample => ({
-          ...ex,
-          id: `${operation.slug}-${response.status}-${variant.mediaType}-example-${i}`,
-          of: { kind: "response", operation, status: response.status, mediaType: variant.mediaType },
-        })),
+        variant.examples.map(
+          (ex, i): EntryExample => ({
+            ...ex,
+            id: `${operation.slug}-${response.status}-${variant.mediaType}-example-${i}`,
+            of: { kind: "response", operation, status: response.status, mediaType: variant.mediaType },
+          }),
+        ),
       ),
     );
     return [...request, ...responses];
@@ -213,16 +219,19 @@ export function endpointHandshake(endpoint: Endpoint, ir: Pick<ApiIR, "servers">
     endpoint.servers.length === 0 ? ir.servers : ir.servers.filter((s) => endpoint.servers.includes(s.id));
   // Alternatives from every applicable server, once each.
   const seen = new Set<string>();
-  const security = servers.flatMap((s) => s.security).filter((alternative) => {
-    const key = JSON.stringify(alternative);
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
+  const security = servers
+    .flatMap((s) => s.security)
+    .filter((alternative) => {
+      const key = JSON.stringify(alternative);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
   const ws = endpoint.bindings?.["ws"];
-  const method = typeof ws === "object" && ws !== null && typeof (ws as { method?: unknown }).method === "string"
-    ? ((ws as { method: string }).method).toUpperCase()
-    : "GET";
+  const method =
+    typeof ws === "object" && ws !== null && typeof (ws as { method?: unknown }).method === "string"
+      ? (ws as { method: string }).method.toUpperCase()
+      : "GET";
   const only = servers.length === 1 ? servers[0] : undefined;
   return {
     method,
@@ -242,13 +251,17 @@ export function endpointHandshake(endpoint: Endpoint, ir: Pick<ApiIR, "servers">
 export function securityUsage(scheme: SecurityScheme): string | undefined {
   switch (scheme.kind) {
     case "http":
-      return scheme.scheme === "bearer" ? "Authorization: Bearer <token>"
-        : scheme.scheme === "basic" ? "Authorization: Basic <credentials>"
-        : undefined;
+      return scheme.scheme === "bearer"
+        ? "Authorization: Bearer <token>"
+        : scheme.scheme === "basic"
+          ? "Authorization: Basic <credentials>"
+          : undefined;
     case "apiKey":
-      return scheme.in === "header" ? `${scheme.name}: <key>`
-        : scheme.in === "query" ? `?${scheme.name}=<key>`
-        : `Cookie: ${scheme.name}=<key>`;
+      return scheme.in === "header"
+        ? `${scheme.name}: <key>`
+        : scheme.in === "query"
+          ? `?${scheme.name}=<key>`
+          : `Cookie: ${scheme.name}=<key>`;
     default:
       return undefined;
   }
@@ -259,13 +272,13 @@ export function securityUsage(scheme: SecurityScheme): string | undefined {
  * usage line says it and the name does not ("oauth (oauth2)"), then any
  * scopes. Shared by both renderers.
  */
-export function securityLabel(
-  req: { scheme: string; scopes: string[] },
-  scheme: SecurityScheme | undefined,
-): string {
+export function securityLabel(req: { scheme: string; scopes: string[] }, scheme: SecurityScheme | undefined): string {
   const kind = scheme === undefined ? undefined : scheme.kind === "http" ? scheme.scheme : scheme.kind;
   const named =
-    scheme === undefined || securityUsage(scheme) !== undefined || kind === undefined || kind.toLowerCase() === req.scheme.toLowerCase()
+    scheme === undefined ||
+    securityUsage(scheme) !== undefined ||
+    kind === undefined ||
+    kind.toLowerCase() === req.scheme.toLowerCase()
       ? req.scheme
       : `${req.scheme} (${kind})`;
   return req.scopes.length === 0 ? named : `${named}: ${req.scopes.join(", ")}`;
@@ -299,9 +312,7 @@ export function groupMediaVariants(variants: MediaVariant[]): { mediaTypes: stri
 
 /** Every operation in the document, in endpoint then source order. */
 export function allOperations(ir: Pick<ApiIR, "endpoints">): OperationEntry[] {
-  return ir.endpoints.flatMap((endpoint) =>
-    endpoint.operations.map((operation) => ({ endpoint, operation })),
-  );
+  return ir.endpoints.flatMap((endpoint) => endpoint.operations.map((operation) => ({ endpoint, operation })));
 }
 
 /**
@@ -337,11 +348,7 @@ export function resolveRef(id: TypeId, schemas: TypeRegistry): TypeDef | undefin
  * they are registry entries, and following them would not terminate. Walk the
  * registry separately if you need every node in the document.
  */
-export function walk(
-  node: Node,
-  visit: (node: Node, path: string[]) => void,
-  path: string[] = [],
-): void {
+export function walk(node: Node, visit: (node: Node, path: string[]) => void, path: string[] = []): void {
   visit(node, path);
   const go = (child: Node, segment: string): void => walk(child, visit, [...path, segment]);
 

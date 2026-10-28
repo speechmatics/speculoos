@@ -85,10 +85,7 @@ export function buildOpenApi({ project, document }: BuildOptions): ApiIR {
     }
   }
 
-  const endpoints = [
-    ...buildPaths(ctx, "/paths", false),
-    ...buildPaths(ctx, "/webhooks", true),
-  ];
+  const endpoints = [...buildPaths(ctx, "/paths", false), ...buildPaths(ctx, "/webhooks", true)];
 
   const finished = schemas.finish();
 
@@ -128,7 +125,6 @@ const loc = (ctx: Ctx, pointer: string): SourceLocation => ({ document: ctx.name
 function deref(ctx: Ctx, value: unknown, pointer: string): Resolved {
   return derefRef(ctx, value, loc(ctx, pointer));
 }
-
 
 function buildInfo(doc: Record<string, unknown>): ApiInfo {
   const info = isObject(doc["info"]) ? doc["info"] : {};
@@ -249,7 +245,12 @@ function buildSecuritySchemes(ctx: Ctx): Record<string, SecurityScheme> {
         source,
         flows: Object.entries(flows).flatMap(([flowType, flow]) => {
           if (!isObject(flow)) return [];
-          if (flowType !== "implicit" && flowType !== "password" && flowType !== "clientCredentials" && flowType !== "authorizationCode") {
+          if (
+            flowType !== "implicit" &&
+            flowType !== "password" &&
+            flowType !== "clientCredentials" &&
+            flowType !== "authorizationCode"
+          ) {
             return [];
           }
           const scopes = isObject(flow["scopes"]) ? flow["scopes"] : {};
@@ -337,9 +338,7 @@ function buildOperation(
   isWebhook: boolean,
 ): Operation {
   const id = str(raw, "operationId") ?? `${method}-${address}`;
-  const body = isObject(raw["requestBody"])
-    ? deref(ctx, raw["requestBody"], `${pointer}/requestBody`)
-    : undefined;
+  const body = isObject(raw["requestBody"]) ? deref(ctx, raw["requestBody"], `${pointer}/requestBody`) : undefined;
 
   const callbacks = isObject(raw["callbacks"])
     ? Object.entries(raw["callbacks"]).flatMap(([name, cb]) => {
@@ -363,13 +362,14 @@ function buildOperation(
     deprecated: raw["deprecated"] === true,
     security: securityFromMaps(raw["security"]),
     parameters: buildParameters(ctx, raw["parameters"], `${pointer}/parameters`),
-    ...(body !== undefined && isObject(body.value) && {
-      requestBody: {
-        required: body.value["required"] === true,
-        docs: docsOf(body.value),
-        content: buildContent(ctx, body.value["content"], `${body.source.pointer}/content`, "request"),
-      },
-    }),
+    ...(body !== undefined &&
+      isObject(body.value) && {
+        requestBody: {
+          required: body.value["required"] === true,
+          docs: docsOf(body.value),
+          content: buildContent(ctx, body.value["content"], `${body.source.pointer}/content`, "request"),
+        },
+      }),
     responses: buildResponses(ctx, raw["responses"], `${pointer}/responses`),
     callbacks,
     links: isObject(raw["responses"])
@@ -396,9 +396,7 @@ function buildParameters(ctx: Ctx, value: unknown, pointer: string): Parameter[]
 
     const where = str(raw, "in");
     const placement: Parameter["in"] =
-      where === "query" || where === "header" || where === "cookie" || where === "path"
-        ? where
-        : "query";
+      where === "query" || where === "header" || where === "cookie" || where === "path" ? where : "query";
 
     const schema = raw["schema"];
     const node =
@@ -487,12 +485,7 @@ function buildLinks(ctx: Ctx, value: unknown, pointer: string): Link[] {
   });
 }
 
-function buildContent(
-  ctx: Ctx,
-  value: unknown,
-  pointer: string,
-  view: "request" | "response",
-): MediaVariant[] {
+function buildContent(ctx: Ctx, value: unknown, pointer: string, view: "request" | "response"): MediaVariant[] {
   if (!isObject(value)) return [];
   return Object.entries(value).flatMap(([mediaType, entry]) => {
     if (!isObject(entry)) return [];
@@ -541,6 +534,3 @@ function buildExamples(ctx: Ctx, entry: Record<string, unknown>, pointer: string
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────────────────────────────────────
-
-
-

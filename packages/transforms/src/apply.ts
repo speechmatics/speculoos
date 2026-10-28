@@ -50,11 +50,7 @@ export function nameOf(t: Transform): string {
 }
 
 /** Applies transforms left to right. */
-export function applyTransforms(
-  ir: ApiIR,
-  transforms: readonly Transform[],
-  opts: ApplyOptions = {},
-): ApiIR {
+export function applyTransforms(ir: ApiIR, transforms: readonly Transform[], opts: ApplyOptions = {}): ApiIR {
   let current = ir;
   transforms.forEach((transform, step) => {
     const next = transform(current);

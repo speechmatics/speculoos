@@ -56,11 +56,7 @@ function attrs(a: Attrs): string {
  * One element. `children` are already-escaped markup; `undefined` and `false`
  * are dropped so call sites can write `cond && h(...)` without a ternary.
  */
-export function h(
-  tag: string,
-  a: Attrs = {},
-  ...children: (Html | undefined | false | null)[]
-): Html {
+export function h(tag: string, a: Attrs = {}, ...children: (Html | undefined | false | null)[]): Html {
   const open = `<${tag}${attrs(a)}>`;
   if (VOID.has(tag)) return open;
   return `${open}${join(children)}</${tag}>`;

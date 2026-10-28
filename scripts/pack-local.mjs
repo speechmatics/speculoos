@@ -27,7 +27,8 @@ import { fileURLToPath } from "node:url";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const out = join(root, ".packs");
 
-const run = (cmd, args, cwd = root) => execFileSync(cmd, args, { cwd, stdio: ["ignore", "pipe", "inherit"] }).toString();
+const run = (cmd, args, cwd = root) =>
+  execFileSync(cmd, args, { cwd, stdio: ["ignore", "pipe", "inherit"] }).toString();
 
 console.log("building…");
 run("pnpm", ["-r", "build"]);

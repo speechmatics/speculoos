@@ -38,7 +38,11 @@ const license = readFileSync(join(root, "LICENSE"), "utf8");
 const problems = [];
 
 const packages = readdirSync(join(root, "packages"))
-  .map((dir) => ({ dir, path: join(root, "packages", dir), pkg: readJson(join(root, "packages", dir, "package.json")) }))
+  .map((dir) => ({
+    dir,
+    path: join(root, "packages", dir),
+    pkg: readJson(join(root, "packages", dir, "package.json")),
+  }))
   .filter(({ pkg }) => pkg.private !== true);
 
 // 1. Versions and metadata.
@@ -77,7 +81,10 @@ run("node", [join(root, "scripts", "pack-local.mjs")], root);
 const consumer = mkdtempSync(join(tmpdir(), "speculoos-consumer-"));
 try {
   const tarballs = Object.fromEntries(
-    packages.map(({ pkg }) => [pkg.name, `file:${join(root, ".packs", `${pkg.name.replace("@speculoos/", "speculoos-")}.tgz`)}`]),
+    packages.map(({ pkg }) => [
+      pkg.name,
+      `file:${join(root, ".packs", `${pkg.name.replace("@speculoos/", "speculoos-")}.tgz`)}`,
+    ]),
   );
   // Peers and TypeScript, at the versions the packages are developed against.
   const dev = (name, version) => ({ [name]: version });
@@ -108,7 +115,13 @@ try {
   writeFileSync(
     join(consumer, "tsconfig.json"),
     JSON.stringify({
-      compilerOptions: { module: "nodenext", moduleResolution: "nodenext", strict: true, noEmit: true, jsx: "react-jsx" },
+      compilerOptions: {
+        module: "nodenext",
+        moduleResolution: "nodenext",
+        strict: true,
+        noEmit: true,
+        jsx: "react-jsx",
+      },
       files: ["esm.mts", "cjs.cts"],
     }),
   );

@@ -38,8 +38,7 @@ beforeAll(async () => {
 });
 
 /** `data-key` is emitted by both: the fake `FieldRow` and the `<li>`. */
-const keys = (html: string): Set<string> =>
-  new Set([...html.matchAll(/data-key="([^"]*)"/g)].map((m) => m[1] ?? ""));
+const keys = (html: string): Set<string> => new Set([...html.matchAll(/data-key="([^"]*)"/g)].map((m) => m[1] ?? ""));
 
 /** `data-href` from the fake `Link`; `href` from the real `<a>`. */
 const hrefs = (html: string): Set<string> =>
@@ -85,10 +84,7 @@ describe("the same operations, two renderers", () => {
   it("finds no field at all in neither or both", () => {
     // Guards the assertions above against passing by comparing two empty sets
     // for every operation.
-    const total = allOperations(rest).reduce(
-      (n, entry) => n + keys(bothWays(rest, entry).html).size,
-      0,
-    );
+    const total = allOperations(rest).reduce((n, entry) => n + keys(bothWays(rest, entry).html).size, 0);
     expect(total).toBeGreaterThan(20);
   });
 });
@@ -122,8 +118,7 @@ describe("the same type sections, two renderers", () => {
   it("gives every named type the same anchor", () => {
     const react = viaReact(rest, <TypeSections />);
     const html = renderTypes(rest);
-    const ids = (s: string): Set<string> =>
-      new Set([...s.matchAll(/ id="([^"]*)"/g)].map((m) => m[1] ?? ""));
+    const ids = (s: string): Set<string> => new Set([...s.matchAll(/ id="([^"]*)"/g)].map((m) => m[1] ?? ""));
     expect(ids(html)).toEqual(ids(react));
   });
 });

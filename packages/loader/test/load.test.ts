@@ -42,23 +42,23 @@ describe("load — a project, not a document", () => {
 
   it("resolves same-document refs", async () => {
     const project = await load({ root, documents: [{ name: "batch", path: "batch.yaml" }] });
-    expect(
-      project.resolve("#/components/schemas/JobConfig", { document: "batch", pointer: "" }),
-    ).toEqual({ document: "batch", pointer: "/components/schemas/JobConfig" });
+    expect(project.resolve("#/components/schemas/JobConfig", { document: "batch", pointer: "" })).toEqual({
+      document: "batch",
+      pointer: "/components/schemas/JobConfig",
+    });
   });
 
   it("returns undefined for a ref whose target does not exist", async () => {
     const project = await load({ root, documents: [{ name: "batch", path: "batch.yaml" }] });
-    expect(
-      project.resolve("#/components/schemas/Nope", { document: "batch", pointer: "" }),
-    ).toBeUndefined();
+    expect(project.resolve("#/components/schemas/Nope", { document: "batch", pointer: "" })).toBeUndefined();
   });
 
   it("reads values at a canonical location", async () => {
     const project = await load({ root, documents: [{ name: "batch", path: "batch.yaml" }] });
-    expect(
-      project.at({ document: "common.yaml", pointer: "/components/schemas/Language" }),
-    ).toMatchObject({ type: "string", pattern: "^[a-z]{2}$" });
+    expect(project.at({ document: "common.yaml", pointer: "/components/schemas/Language" })).toMatchObject({
+      type: "string",
+      pattern: "^[a-z]{2}$",
+    });
   });
 
   it("detects the dialect of each entry document", async () => {
@@ -101,9 +101,7 @@ describe("load — failure modes", () => {
   it("refuses remote refs unless asked", async () => {
     const project = await load({
       root,
-      documents: [
-        { name: "remote", content: { openapi: "3.1.0", a: { $ref: "https://example.com/s.yaml#/x" } } },
-      ],
+      documents: [{ name: "remote", content: { openapi: "3.1.0", a: { $ref: "https://example.com/s.yaml#/x" } } }],
     });
     expect(project.diagnostics.map((d) => d.code)).toContain("REMOTE_REF_DISABLED");
   });

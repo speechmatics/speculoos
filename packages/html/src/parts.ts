@@ -113,11 +113,7 @@ export function codeBlock(c: Ctx, value: string, language?: string): Html {
   return h(
     "pre",
     { class: c.o.cls("codeblock"), ...(language !== undefined ? { "data-language": language } : {}) },
-    h(
-      "code",
-      { ...(language !== undefined ? { class: `language-${language}` } : {}) },
-      text(value),
-    ),
+    h("code", { ...(language !== undefined ? { class: `language-${language}` } : {}) }, text(value)),
   );
 }
 

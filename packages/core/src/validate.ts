@@ -21,8 +21,7 @@ export interface ValidationResult {
 }
 
 // ajv v8 is CJS; the shape of its default export differs between module systems.
-const Ajv = ((AjvModule as unknown as { default?: typeof AjvModule }).default ??
-  AjvModule) as typeof AjvModule;
+const Ajv = ((AjvModule as unknown as { default?: typeof AjvModule }).default ?? AjvModule) as typeof AjvModule;
 
 let compiled: ReturnType<InstanceType<typeof Ajv>["compile"]> | undefined;
 
@@ -49,9 +48,7 @@ export function parseApiIR(value: unknown): import("./document.js").ApiIR {
       .slice(0, 5)
       .map((e) => `  ${e.instancePath || "/"} ${e.message ?? "is invalid"}`)
       .join("\n");
-    throw new Error(
-      `Invalid ApiIR (${errors.length} error${errors.length === 1 ? "" : "s"}):\n${summary}`,
-    );
+    throw new Error(`Invalid ApiIR (${errors.length} error${errors.length === 1 ? "" : "s"}):\n${summary}`);
   }
   return value as import("./document.js").ApiIR;
 }

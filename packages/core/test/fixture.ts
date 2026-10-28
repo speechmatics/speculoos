@@ -3,23 +3,17 @@
  * of refs, readOnly/writeOnly behind a ref, and an unsupported node. If the
  * presentation layer survives this, the node set is probably about right.
  */
-import type {
-  ApiIR,
-  Docs,
-  EnumNode,
-  Node,
-  ObjectNode,
-  Property,
-  StringNode,
-  TypeDef,
-} from "../src/index.js";
+import type { ApiIR, Docs, EnumNode, Node, ObjectNode, Property, StringNode, TypeDef } from "../src/index.js";
 
 export const loc = (pointer: string) => ({ document: "demo", pointer });
 
-export const str = (
-  constraints: StringNode["constraints"] = {},
-  docs: Docs = {},
-): StringNode => ({ kind: "string", source: loc("#"), docs, nullable: false, constraints });
+export const str = (constraints: StringNode["constraints"] = {}, docs: Docs = {}): StringNode => ({
+  kind: "string",
+  source: loc("#"),
+  docs,
+  nullable: false,
+  constraints,
+});
 
 export const num = (integer = false, constraints = {}, docs: Docs = {}): Node => ({
   kind: "number",
@@ -54,11 +48,7 @@ export const arr = (items: Node, constraints = {}): Node => ({
   constraints,
 });
 
-export const prop = (
-  name: string,
-  node: Node,
-  extra: Partial<Omit<Property, "name" | "node">> = {},
-): Property => ({
+export const prop = (name: string, node: Node, extra: Partial<Omit<Property, "name" | "node">> = {}): Property => ({
   name,
   node,
   required: false,

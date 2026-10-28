@@ -33,12 +33,11 @@ export interface InspectOptions {
 }
 
 export function renderInspect(ir: ApiIR, opts: InspectOptions): string {
-  const view = (["request", "response", "neutral"].includes(opts.view ?? "")
-    ? opts.view
-    : "neutral") as View;
-  const expandRefs = (["never", "depth", "always"].includes(opts.expand ?? "")
-    ? opts.expand
-    : "depth") as "never" | "depth" | "always";
+  const view = (["request", "response", "neutral"].includes(opts.view ?? "") ? opts.view : "neutral") as View;
+  const expandRefs = (["never", "depth", "always"].includes(opts.expand ?? "") ? opts.expand : "depth") as
+    | "never"
+    | "depth"
+    | "always";
   const maxDepth = Number(opts.depth ?? "2");
   const options = { view, expandRefs, maxDepth: Number.isFinite(maxDepth) ? maxDepth : 2 };
 
@@ -80,7 +79,8 @@ export function renderInspect(ir: ApiIR, opts: InspectOptions): string {
       if (endpoint.parameters.length > 0) out.push("");
 
       for (const message of operation.messages) {
-        const label = message.discriminatorValue === undefined ? "" : ` — ${JSON.stringify(message.discriminatorValue)}`;
+        const label =
+          message.discriminatorValue === undefined ? "" : ` — ${JSON.stringify(message.discriminatorValue)}`;
         out.push(`  Message ${message.name}${label}`);
         out.push(table(message.payload, ir, options));
         out.push("");
@@ -104,9 +104,7 @@ export function renderInspect(ir: ApiIR, opts: InspectOptions): string {
     if (params.length > 0) {
       out.push("  Parameters");
       for (const p of params) {
-        out.push(
-          `    ${pad(p.name + (p.required ? "*" : ""), 24)}${pad(`in ${p.in}`, 12)}${typeLabel(p.node, ir)}`,
-        );
+        out.push(`    ${pad(p.name + (p.required ? "*" : ""), 24)}${pad(`in ${p.in}`, 12)}${typeLabel(p.node, ir)}`);
       }
       out.push("");
     }
@@ -120,7 +118,9 @@ export function renderInspect(ir: ApiIR, opts: InspectOptions): string {
     }
 
     for (const response of operation.responses) {
-      out.push(`  Response ${response.status}${response.docs.description === undefined ? "" : ` — ${response.docs.description}`}`);
+      out.push(
+        `  Response ${response.status}${response.docs.description === undefined ? "" : ` — ${response.docs.description}`}`,
+      );
       for (const variant of response.content) {
         out.push(table(variant.node, ir, { ...options, view: variant.view }));
       }

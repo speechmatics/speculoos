@@ -159,7 +159,10 @@ describe("lower — composition", () => {
 describe("lower — unions", () => {
   it("labels variants from an explicit discriminator mapping", () => {
     const doc = {
-      $defs: { Cat: { type: "object", properties: { t: { const: "cat" } } }, Dog: { type: "object", properties: { t: { const: "dog" } } } },
+      $defs: {
+        Cat: { type: "object", properties: { t: { const: "cat" } } },
+        Dog: { type: "object", properties: { t: { const: "dog" } } },
+      },
     };
     const { node } = lowerOne(
       {
@@ -223,9 +226,7 @@ describe("lower — keywords sitting alongside a union", () => {
       properties: { a: { type: "string" }, b: { type: "string" }, c: { type: "string" } },
       oneOf: [{ required: ["a", "b"] }, { required: ["c"] }],
     });
-    expect(node.docs.notes).toEqual([
-      "Exactly one of these is required: `a` and `b`, `c`.",
-    ]);
+    expect(node.docs.notes).toEqual(["Exactly one of these is required: `a` and `b`, `c`."]);
   });
 
   it("intersects when the branches carry real structure of their own", () => {
@@ -272,10 +273,7 @@ describe("lower — keywords sitting alongside a union", () => {
   });
 
   it("keeps OAS 3.0 nullability, which belongs to the union itself", () => {
-    const { node } = lowerOne(
-      { nullable: true, anyOf: [{ type: "string" }, { type: "number" }] },
-      "openapi-3.0",
-    );
+    const { node } = lowerOne({ nullable: true, anyOf: [{ type: "string" }, { type: "number" }] }, "openapi-3.0");
     expect(node.kind).toBe("union");
     expect(node.nullable).toBe(true);
   });
@@ -383,7 +381,9 @@ describe("registry", () => {
     const doc = { $defs: { Untitled: { type: "string" }, Titled: { title: "Nice Name", type: "string" } } };
     const h = harness(doc);
     h.lower({ anyOf: [{ $ref: "#/$defs/Untitled" }, { $ref: "#/$defs/Titled" }] });
-    const names = Object.values(h.finish().schemas).map((d) => d.name).sort();
+    const names = Object.values(h.finish().schemas)
+      .map((d) => d.name)
+      .sort();
     expect(names).toEqual(["Nice Name", "Untitled"]);
   });
 });

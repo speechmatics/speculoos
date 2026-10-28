@@ -87,21 +87,40 @@ function named(name: FieldRowProps["name"]): boolean {
  * rows, and a badge on most rows is noise. A row with no name — an enum's
  * value, a union's branch — is neither.
  */
-function Marks({ named: hasName, required, deprecated, colors, presence }: {
+function Marks({
+  named: hasName,
+  required,
+  deprecated,
+  colors,
+  presence,
+}: {
   named: boolean;
   required: boolean;
   deprecated: boolean;
   colors: BadgeColors;
   presence: Presence;
 }): ReactNode {
-  const mark =
-    !hasName ? null
-    : presence === "optional" ? (!required && <Text size="1" color="gray">optional</Text>)
-    : required && <Text size="1" color={colors.tone.required}>required</Text>;
+  const mark = !hasName
+    ? null
+    : presence === "optional"
+      ? !required && (
+          <Text size="1" color="gray">
+            optional
+          </Text>
+        )
+      : required && (
+          <Text size="1" color={colors.tone.required}>
+            required
+          </Text>
+        );
   return (
     <>
       {mark}
-      {deprecated && <Badge color={colors.tone.deprecated} size="1">deprecated</Badge>}
+      {deprecated && (
+        <Badge color={colors.tone.deprecated} size="1">
+          deprecated
+        </Badge>
+      )}
     </>
   );
 }
@@ -118,15 +137,20 @@ function toggleLabel(field: FieldRowProps["field"], open: boolean): string {
  * Type, then "one of", then constraint chips — what the value may be. The type
  * is left out when it already stands in for the name.
  */
-function TypeLine({ name, type, variantsLabel, chips }: Pick<FieldRowProps, "name" | "type" | "variantsLabel" | "chips">): ReactNode {
+function TypeLine({
+  name,
+  type,
+  variantsLabel,
+  chips,
+}: Pick<FieldRowProps, "name" | "type" | "variantsLabel" | "chips">): ReactNode {
   return (
     <Flex gap="2" wrap="wrap" align="center">
-      {named(name) && (
-        <Text style={{ color: "var(--gray-12)" }}>
-          {type}
+      {named(name) && <Text style={{ color: "var(--gray-12)" }}>{type}</Text>}
+      {variantsLabel !== undefined && (
+        <Text size="1" color="gray">
+          {variantsLabel}
         </Text>
       )}
-      {variantsLabel !== undefined && <Text size="1" color="gray">{variantsLabel}</Text>}
       {chips}
     </Flex>
   );
@@ -173,7 +197,13 @@ export function fieldRow(colors: BadgeColors, layout: FieldLayout, presence: Pre
               <Flex gap="2" align="baseline" wrap="wrap">
                 <Name name={name} type={props.type} />
                 {oneLine && <TypeLine {...props} />}
-                <Marks named={named(name)} required={required} deprecated={deprecated} colors={colors} presence={presence} />
+                <Marks
+                  named={named(name)}
+                  required={required}
+                  deprecated={deprecated}
+                  colors={colors}
+                  presence={presence}
+                />
               </Flex>
             </Box>
           </DataList.Label>

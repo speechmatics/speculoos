@@ -17,11 +17,6 @@ import { fileURLToPath } from "node:url";
 /** Directory holding every spec. Pass as `root` to `load`. */
 export const specDir: string = resolve(dirname(fileURLToPath(import.meta.url)), "../specs");
 
-export type SpecName =
-  | "batch.yaml"
-  | "realtime-v2.yaml"
-  | "realtime-v3.yaml"
-  | "reply-v3.yaml"
-  | "avro-v3.yaml";
+export type SpecName = "batch.yaml" | "realtime-v2.yaml" | "realtime-v3.yaml" | "reply-v3.yaml" | "avro-v3.yaml";
 
 export const specPath = (name: SpecName): string => resolve(specDir, name);

@@ -72,10 +72,7 @@ function Examples({ examples, idPrefix }: { examples: Example[]; idPrefix: strin
       <>
         {ex.description !== undefined && <C.Markdown>{ex.description}</C.Markdown>}
         {ex.externalValue !== undefined ? (
-          <C.Link
-            href={ex.externalValue}
-            target={{ kind: "external", url: ex.externalValue }}
-          >
+          <C.Link href={ex.externalValue} target={{ kind: "external", url: ex.externalValue }}>
             {ex.externalValue}
           </C.Link>
         ) : (
@@ -98,7 +95,9 @@ function Content({ content, idPrefix }: { content: MediaVariant[]; idPrefix: str
         {mediaTypes.map((mediaType, i) => (
           <Fragment key={mediaType}>
             {i > 0 && " "}
-            <C.Badge tone="mediaType" value={mediaType}>{mediaType}</C.Badge>
+            <C.Badge tone="mediaType" value={mediaType}>
+              {mediaType}
+            </C.Badge>
           </Fragment>
         ))}
       </>
@@ -142,15 +141,10 @@ function Parameters({
       {PARAM_GROUPS.map(({ in: location, title, channelTitle }) => {
         const group = all.filter((p) => p.in === location);
         if (group.length === 0) return null;
-        const heading =
-          endpoint.addressKind === "channel" && channelTitle !== undefined ? channelTitle : title;
+        const heading = endpoint.addressKind === "channel" && channelTitle !== undefined ? channelTitle : title;
         return (
           <C.Section key={location} kind="parameters" title={heading} level={level}>
-            <SchemaTable
-              node={parametersNode(group, source)}
-              kind="parameters"
-              expandRefs="always"
-            />
+            <SchemaTable node={parametersNode(group, source)} kind="parameters" expandRefs="always" />
           </C.Section>
         );
       })}
@@ -158,7 +152,11 @@ function Parameters({
   );
 }
 
-function Responses({ responses, level, idPrefix }: {
+function Responses({
+  responses,
+  level,
+  idPrefix,
+}: {
   responses: RestResponse[];
   level: number;
   idPrefix: string;
@@ -167,7 +165,11 @@ function Responses({ responses, level, idPrefix }: {
   if (responses.length === 0) return null;
   const tabs: Tab[] = responses.map((response) => ({
     id: `${idPrefix}-${response.status}`,
-    label: <C.Badge tone="status" value={response.status}>{response.status}</C.Badge>,
+    label: (
+      <C.Badge tone="status" value={response.status}>
+        {response.status}
+      </C.Badge>
+    ),
     content: (
       <>
         <DocsBody docs={response.docs} />
@@ -213,7 +215,9 @@ function Message({ message, level }: { message: WsMessage; level: number }): Rea
       {/* No badge for `discriminatorValue`: it is the const field the payload
           table already shows, and it usually repeats the title too. */}
       {message.contentType !== undefined && (
-        <C.Badge tone="mediaType" value={message.contentType}>{message.contentType}</C.Badge>
+        <C.Badge tone="mediaType" value={message.contentType}>
+          {message.contentType}
+        </C.Badge>
       )}
       <SchemaTable node={message.payload} />
       {message.headers !== undefined && (
@@ -300,20 +304,33 @@ export function Operation(props: OperationProps): ReactNode {
  * its title (or its method), and a message operation by what the reader does —
  * "Send", "Receive" — because that is what tells a channel's operations apart.
  */
-function useHeading(endpoint: IREndpoint, operation: IROperation, nested: boolean): { title: ReactNode; subtitle: ReactNode } {
+function useHeading(
+  endpoint: IREndpoint,
+  operation: IROperation,
+  nested: boolean,
+): { title: ReactNode; subtitle: ReactNode } {
   const C = useComponents();
   const { ir } = useSpeculoos();
   const mark =
     operation.kind === "request-response" ? (
       <>
-        <C.Badge tone="method" value={operation.method}>{operation.method.toUpperCase()}</C.Badge>
+        <C.Badge tone="method" value={operation.method}>
+          {operation.method.toUpperCase()}
+        </C.Badge>
         {/* `endpoint.id` namespaces a webhook as "webhook:name" so it cannot
             collide with a path. That is identity, not a label, so the page gets
             the address and a badge saying which it is. */}
-        {operation.isWebhook && <> <C.Badge tone="note">webhook</C.Badge></>}
+        {operation.isWebhook && (
+          <>
+            {" "}
+            <C.Badge tone="note">webhook</C.Badge>
+          </>
+        )}
       </>
     ) : (
-      <C.Badge tone="direction" value={operation.direction}>{DIRECTION_LABEL[operation.direction]}</C.Badge>
+      <C.Badge tone="direction" value={operation.direction}>
+        {DIRECTION_LABEL[operation.direction]}
+      </C.Badge>
     );
   if (!nested) {
     // The full URL when one server applies — what a reader would call — else
@@ -342,7 +359,12 @@ function useHeading(endpoint: IREndpoint, operation: IROperation, nested: boolea
   };
 }
 
-function OperationSection({ endpoint, operation, level, nested }: {
+function OperationSection({
+  endpoint,
+  operation,
+  level,
+  nested,
+}: {
   endpoint: IREndpoint;
   operation: IROperation;
   level: number;
@@ -351,10 +373,7 @@ function OperationSection({ endpoint, operation, level, nested }: {
   const C = useComponents();
   const { ir, options } = useSpeculoos();
   const { title, subtitle } = useHeading(endpoint, operation, nested);
-  const parameters = useMemo(
-    () => operationParameters(endpoint, operation, nested),
-    [endpoint, operation, nested],
-  );
+  const parameters = useMemo(() => operationParameters(endpoint, operation, nested), [endpoint, operation, nested]);
 
   // An operation with no security of its own inherits the document default.
   // Showing the inherited one is the point: "which key do I send" must be
@@ -382,11 +401,7 @@ function OperationSection({ endpoint, operation, level, nested }: {
               kind="request"
               title="Request body"
               level={level + 1}
-              subtitle={
-                operation.requestBody.required ? (
-                  <C.Badge tone="required">required</C.Badge>
-                ) : undefined
-              }
+              subtitle={operation.requestBody.required ? <C.Badge tone="required">required</C.Badge> : undefined}
             >
               <DocsBody docs={operation.requestBody.docs} />
               <Content content={operation.requestBody.content} idPrefix={`${operation.id}-request`} />
@@ -397,12 +412,7 @@ function OperationSection({ endpoint, operation, level, nested }: {
             <C.Section kind="callbacks" title="Callbacks" level={level + 1}>
               {operation.callbacks.map((callback) =>
                 callback.operations.map((callbackOp) => (
-                  <Operation
-                    key={callbackOp.id}
-                    endpoint={callback}
-                    operation={callbackOp}
-                    level={level + 2}
-                  />
+                  <Operation key={callbackOp.id} endpoint={callback} operation={callbackOp} level={level + 2} />
                 )),
               )}
             </C.Section>
@@ -489,7 +499,15 @@ function Protocols({ endpoint }: { endpoint: IREndpoint }): ReactNode {
  * page's to add, through `handshakeExtras`. Nothing for a REST path or a
  * non-WebSocket channel.
  */
-function Handshake({ endpoint, level, extras }: { endpoint: IREndpoint; level: number; extras?: ReactNode }): ReactNode {
+function Handshake({
+  endpoint,
+  level,
+  extras,
+}: {
+  endpoint: IREndpoint;
+  level: number;
+  extras?: ReactNode;
+}): ReactNode {
   const C = useComponents();
   const { ir } = useSpeculoos();
   const handshake = endpointHandshake(endpoint, ir);
@@ -498,7 +516,9 @@ function Handshake({ endpoint, level, extras }: { endpoint: IREndpoint; level: n
     <C.Section kind="handshake" title="Handshake" level={level}>
       <C.List kind="handshake">
         <C.ListItem>
-          <C.Badge tone="method" value={handshake.method.toLowerCase()}>{handshake.method}</C.Badge>{" "}
+          <C.Badge tone="method" value={handshake.method.toLowerCase()}>
+            {handshake.method}
+          </C.Badge>{" "}
           <C.Code>{handshake.url}</C.Code>
         </C.ListItem>
       </C.List>
@@ -533,8 +553,15 @@ function Authentication({ security, level }: { security: SecurityRequirements; l
                 const usage = scheme === undefined ? undefined : securityUsage(scheme);
                 return (
                   <Fragment key={req.scheme}>
-                    <C.Badge tone="securityScheme" value={req.scheme}>{securityLabel(req, scheme)}</C.Badge>
-                    {usage !== undefined && <> <C.Code>{usage}</C.Code></>}
+                    <C.Badge tone="securityScheme" value={req.scheme}>
+                      {securityLabel(req, scheme)}
+                    </C.Badge>
+                    {usage !== undefined && (
+                      <>
+                        {" "}
+                        <C.Code>{usage}</C.Code>
+                      </>
+                    )}
                     {scheme !== undefined && <DocsBody docs={scheme.docs} />}
                   </Fragment>
                 );
@@ -592,10 +619,16 @@ export function Endpoint(props: EndpointProps): ReactNode {
       title={endpoint.docs.title ?? <C.Code>{endpoint.address}</C.Code>}
       subtitle={
         <>
-          {webhook && <><C.Badge tone="note">webhook</C.Badge> </>}
+          {webhook && (
+            <>
+              <C.Badge tone="note">webhook</C.Badge>{" "}
+            </>
+          )}
           {endpoint.protocols.map((protocol) => (
             <Fragment key={protocol}>
-              <C.Badge tone="protocol" value={protocol}>{protocol.toUpperCase()}</C.Badge>{" "}
+              <C.Badge tone="protocol" value={protocol}>
+                {protocol.toUpperCase()}
+              </C.Badge>{" "}
             </Fragment>
           ))}
           {url !== undefined ? <C.Code>{url}</C.Code> : titled && <C.Code>{endpoint.address}</C.Code>}
@@ -605,23 +638,12 @@ export function Endpoint(props: EndpointProps): ReactNode {
     >
       <DocsBody docs={endpoint.docs} />
       <Handshake endpoint={endpoint} level={level + 1} extras={props.handshakeExtras} />
-      <Parameters
-        endpoint={endpoint}
-        parameters={endpoint.parameters}
-        source={endpoint.source}
-        level={level + 1}
-      />
+      <Parameters endpoint={endpoint} parameters={endpoint.parameters} source={endpoint.source} level={level + 1} />
       {endpoint.operations.length === 0 ? (
         <C.Empty>No operations</C.Empty>
       ) : (
         endpoint.operations.map((operation) => (
-          <OperationSection
-            key={operation.id}
-            endpoint={endpoint}
-            operation={operation}
-            level={level + 1}
-            nested
-          />
+          <OperationSection key={operation.id} endpoint={endpoint} operation={operation} level={level + 1} nested />
         ))
       )}
     </C.Section>
@@ -714,13 +736,25 @@ function ExampleLabel({ example }: { example: EntryExample }): ReactNode {
     <>
       {of.kind === "message" ? (
         <>
-          <C.Badge tone="direction" value={of.operation.direction}>{DIRECTION_VERB[of.operation.direction]}</C.Badge>{" "}
+          <C.Badge tone="direction" value={of.operation.direction}>
+            {DIRECTION_VERB[of.operation.direction]}
+          </C.Badge>{" "}
           {of.message.title ?? of.message.name}
         </>
       ) : of.kind === "request" ? (
-        <>Request <C.Badge tone="mediaType" value={of.mediaType}>{of.mediaType}</C.Badge></>
+        <>
+          Request{" "}
+          <C.Badge tone="mediaType" value={of.mediaType}>
+            {of.mediaType}
+          </C.Badge>
+        </>
       ) : (
-        <><C.Badge tone="status" value={of.status}>{of.status}</C.Badge> Response</>
+        <>
+          <C.Badge tone="status" value={of.status}>
+            {of.status}
+          </C.Badge>{" "}
+          Response
+        </>
       )}
       {own !== undefined && <> · {own}</>}
     </>

@@ -5,8 +5,7 @@
  */
 import type { DetailedHTMLProps, HTMLAttributes } from "react";
 
-type FakeElement = DetailedHTMLProps<HTMLAttributes<HTMLElement>, HTMLElement> &
-  Record<string, unknown>;
+type FakeElement = DetailedHTMLProps<HTMLAttributes<HTMLElement>, HTMLElement> & Record<string, unknown>;
 
 declare global {
   namespace JSX {

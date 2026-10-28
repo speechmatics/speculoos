@@ -102,9 +102,12 @@ function lookup<K extends string>(table: Record<K, RadixColor>, key: string | un
 
 export function badgeColor(colors: BadgeColors, { tone, value }: Pick<BadgeProps, "tone" | "value">): RadixColor {
   const byValue =
-    tone === "method" ? lookup(colors.method, value)
-    : tone === "status" ? lookup(colors.status, value === undefined ? undefined : statusClass(value))
-    : tone === "direction" ? lookup(colors.direction, value)
-    : undefined;
+    tone === "method"
+      ? lookup(colors.method, value)
+      : tone === "status"
+        ? lookup(colors.status, value === undefined ? undefined : statusClass(value))
+        : tone === "direction"
+          ? lookup(colors.direction, value)
+          : undefined;
   return byValue ?? colors.tone[tone];
 }

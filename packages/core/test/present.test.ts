@@ -1,17 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { Node } from "../src/index.js";
-import {
-  collectLinks,
-  projectForView,
-  toRows,
-  toTree,
-  typeLabel,
-  type FieldNode,
-} from "../src/index.js";
+import { collectLinks, projectForView, toRows, toTree, typeLabel, type FieldNode } from "../src/index.js";
 import { enumNode, ids, ir, jobRef, messageRef, obj, prop, ref, treeRef } from "./fixture.js";
 
-const find = (rows: FieldNode[], path: string) =>
-  rows.find((r) => r.path.join("/") === path);
+const find = (rows: FieldNode[], path: string) => rows.find((r) => r.path.join("/") === path);
 
 describe("toTree — expansion policy", () => {
   it("links to named types by default, keeping tables shallow", () => {
@@ -86,9 +78,7 @@ describe("toTree — arrays are transparent", () => {
 describe("toTree — docs precedence", () => {
   it("prefers the property's own description over the ref target's", () => {
     const rows = toRows(jobRef, ir, { expandRefs: "always" });
-    expect(find(rows, "config/language")?.docs.description).toBe(
-      "Language of the audio you are submitting.",
-    );
+    expect(find(rows, "config/language")?.docs.description).toBe("Language of the audio you are submitting.");
   });
 
   it("falls back to the type's description when the property has none", () => {
@@ -153,9 +143,7 @@ describe("toRows", () => {
 
 describe("collectLinks", () => {
   it("reports every type a static renderer must emit a section for", () => {
-    expect(collectLinks(toTree(jobRef, ir)).sort()).toEqual(
-      [ids("TranscriptionConfig"), ids("TreeNode")].sort(),
-    );
+    expect(collectLinks(toTree(jobRef, ir)).sort()).toEqual([ids("TranscriptionConfig"), ids("TreeNode")].sort());
   });
 });
 
@@ -202,7 +190,12 @@ describe("chips", () => {
       ...ir,
       schemas: {
         ...ir.schemas,
-        [direction]: { ...ir.schemas[ids("Language")]!, id: direction, name: "Direction", node: enumNode(["ltr", "rtl"]) },
+        [direction]: {
+          ...ir.schemas[ids("Language")]!,
+          id: direction,
+          name: "Direction",
+          node: enumNode(["ltr", "rtl"]),
+        },
       },
     };
     const rows = toRows(obj([prop("dir", ref(direction))]), withEnum, { expandRefs: "always" });
@@ -211,10 +204,13 @@ describe("chips", () => {
   });
 
   it("gives an enum with documented values a row per value, instead of chips", () => {
-    const documented = { ...enumNode(["ok", "busy"]), members: [
-      { value: "ok", docs: { description: "All is well." } },
-      { value: "busy", docs: { description: "Try later." } },
-    ] };
+    const documented = {
+      ...enumNode(["ok", "busy"]),
+      members: [
+        { value: "ok", docs: { description: "All is well." } },
+        { value: "busy", docs: { description: "Try later." } },
+      ],
+    };
     const field = find(toRows(obj([prop("status", documented)]), ir), "status");
     expect(field?.chips).toEqual([]);
     expect(field?.children.kind).toBe("variants");
@@ -231,10 +227,7 @@ describe("chips", () => {
     expect(find(rows, "config/diarization")?.chips).toEqual([
       { kind: "default", label: "default: false", value: false },
     ]);
-    expect(find(rows, "config/internal_flag")?.chips.map((c) => c.kind)).toEqual([
-      "deprecated",
-      "writeOnly",
-    ]);
+    expect(find(rows, "config/internal_flag")?.chips.map((c) => c.kind)).toEqual(["deprecated", "writeOnly"]);
   });
 
   it("does not duplicate required, nullable or format as chips", () => {

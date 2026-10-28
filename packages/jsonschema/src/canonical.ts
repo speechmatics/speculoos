@@ -41,13 +41,7 @@ export const SCHEMA_MAP_KEYWORDS = [
  * would rewrite a user's example payload as if it were a schema — a `nullable`
  * key inside an example is just a field name.
  */
-export const DATA_KEYWORDS = new Set([
-  "default",
-  "const",
-  "enum",
-  "examples",
-  "example",
-]);
+export const DATA_KEYWORDS = new Set(["default", "const", "enum", "examples", "example"]);
 
 export function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);

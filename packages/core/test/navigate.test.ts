@@ -1,5 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { allOperations, apiEntries, createSlugger, endpointHandshake, endpointUrl, entryExamples, entrySlug, groupMediaVariants, securityUsage, groupByTag, slugify, toRows, walk } from "../src/index.js";
+import {
+  allOperations,
+  apiEntries,
+  createSlugger,
+  endpointHandshake,
+  endpointUrl,
+  entryExamples,
+  entrySlug,
+  groupMediaVariants,
+  securityUsage,
+  groupByTag,
+  slugify,
+  toRows,
+  walk,
+} from "../src/index.js";
 import { ir, jobRef, schemas } from "./fixture.js";
 
 describe("apiEntries", () => {
@@ -9,7 +23,8 @@ describe("apiEntries", () => {
       const mine = entries.filter((e) => e.endpoint === endpoint);
       if (endpoint.operations.length === 0) expect(mine).toEqual([]);
       else if (endpoint.addressKind === "channel") expect(mine.map((e) => e.kind)).toEqual(["channel"]);
-      else expect(mine.map((e) => e.kind === "operation" && e.operation.id)).toEqual(endpoint.operations.map((o) => o.id));
+      else
+        expect(mine.map((e) => e.kind === "operation" && e.operation.id)).toEqual(endpoint.operations.map((o) => o.id));
     }
     expect(entries.some((e) => e.kind === "channel")).toBe(true);
     expect(entries.some((e) => e.kind === "operation")).toBe(true);
@@ -78,21 +93,27 @@ describe("the IR round-trips as JSON", () => {
   });
 
   it("is referentially stable — two builds of one tree match", () => {
-    expect(toRows(jobRef, ir, { expandRefs: "always" })).toEqual(
-      toRows(jobRef, ir, { expandRefs: "always" }),
-    );
+    expect(toRows(jobRef, ir, { expandRefs: "always" })).toEqual(toRows(jobRef, ir, { expandRefs: "always" }));
   });
 });
 
 describe("endpointUrl", () => {
   const server = (id: string, url: string) => ({
-    id, url, protocol: "wss", docs: {}, variables: [], security: [], source: { document: "d", pointer: "#" },
+    id,
+    url,
+    protocol: "wss",
+    docs: {},
+    variables: [],
+    security: [],
+    source: { document: "d", pointer: "#" },
   });
 
   it("joins the one applicable server's URL and the address", () => {
     const one = { servers: [server("eu", "wss://eu.example.com/v2")] };
     expect(endpointUrl({ address: "/", servers: [], operations: [] }, one)).toBe("wss://eu.example.com/v2/");
-    expect(endpointUrl({ address: "/jobs", servers: [], operations: [] }, { servers: [server("a", "https://x.com/")] })).toBe("https://x.com/jobs");
+    expect(
+      endpointUrl({ address: "/jobs", servers: [], operations: [] }, { servers: [server("a", "https://x.com/")] }),
+    ).toBe("https://x.com/jobs");
     expect(endpointUrl({ address: "ws", servers: [], operations: [] }, one)).toBe("wss://eu.example.com/v2/ws");
   });
 
@@ -128,14 +149,18 @@ describe("entryExamples", () => {
         operations: [{ ...op, messages: [message], reply: { messages: [{ ...message, slug: "reply" }] } }],
       },
     };
-    expect(entryExamples(withExamples).map((e) => [e.id, e.name, e.value, e.of.kind === "message" && e.of.reply])).toEqual([
+    expect(
+      entryExamples(withExamples).map((e) => [e.id, e.name, e.value, e.of.kind === "message" && e.of.reply]),
+    ).toEqual([
       ["message-example-0", "hello", { type: "hi" }, false],
       ["reply-example-0", "hello", { type: "hi" }, true],
     ]);
   });
 
   it("gathers a REST operation's request examples, then its responses'", () => {
-    const entry = apiEntries(ir).find((e) => e.kind === "operation" && e.operation.kind === "request-response" && e.operation.requestBody)!;
+    const entry = apiEntries(ir).find(
+      (e) => e.kind === "operation" && e.operation.kind === "request-response" && e.operation.requestBody,
+    )!;
     if (entry.kind !== "operation" || entry.operation.kind !== "request-response") throw new Error("expected REST");
     const op = entry.operation;
     const ex = { name: "one", value: 1 };
@@ -157,7 +182,11 @@ describe("entryExamples", () => {
 describe("endpointHandshake", () => {
   const channel = () => apiEntries(ir).find((e) => e.kind === "channel")!.endpoint;
   const server = {
-    id: "eu", url: "wss://eu.example.com/v2", protocol: "wss", docs: {}, variables: [],
+    id: "eu",
+    url: "wss://eu.example.com/v2",
+    protocol: "wss",
+    docs: {},
+    variables: [],
     security: [[{ scheme: "bearer", scopes: [] }], [{ scheme: "jwt", scopes: [] }]],
     source: { document: "d", pointer: "#" },
   };
@@ -209,23 +238,38 @@ describe("securityUsage", () => {
 
 describe("groupMediaVariants", () => {
   const node = { kind: "any", source: { document: "d", pointer: "#" }, docs: {}, nullable: false } as const;
-  const v = (mediaType: string, examples: { value: unknown }[] = []) => ({ mediaType, node, view: "response" as const, examples });
+  const v = (mediaType: string, examples: { value: unknown }[] = []) => ({
+    mediaType,
+    node,
+    view: "response" as const,
+    examples,
+  });
 
   it("groups media types with the same schema, keeping first-seen order", () => {
     const text = { ...node, kind: "string", constraints: {} } as const;
-    const groups = groupMediaVariants([v("application/json"), { ...v("text/plain"), node: text }, v("application/vnd.x+json")]);
+    const groups = groupMediaVariants([
+      v("application/json"),
+      { ...v("text/plain"), node: text },
+      v("application/vnd.x+json"),
+    ]);
     expect(groups.map((g) => g.mediaTypes)).toEqual([["application/json", "application/vnd.x+json"], ["text/plain"]]);
   });
 
   it("ignores where in the spec each schema came from", () => {
-    const elsewhere = { ...v("application/vnd.x+json"), node: { ...node, source: { document: "d", pointer: "#/elsewhere" } } };
+    const elsewhere = {
+      ...v("application/vnd.x+json"),
+      node: { ...node, source: { document: "d", pointer: "#/elsewhere" } },
+    };
     expect(groupMediaVariants([v("application/json"), elsewhere]).map((g) => g.mediaTypes)).toEqual([
       ["application/json", "application/vnd.x+json"],
     ]);
   });
 
   it("gives a group the examples of all its media types, once each", () => {
-    const [group] = groupMediaVariants([v("application/json", [{ value: 1 }]), v("application/vnd.x+json", [{ value: 1 }, { value: 2 }])]);
+    const [group] = groupMediaVariants([
+      v("application/json", [{ value: 1 }]),
+      v("application/vnd.x+json", [{ value: 1 }, { value: 2 }]),
+    ]);
     expect(group?.variant.examples).toEqual([{ value: 1 }, { value: 2 }]);
   });
 });

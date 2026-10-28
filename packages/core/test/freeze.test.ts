@@ -69,9 +69,10 @@ describe("irVersion 1 is frozen", () => {
   it("keeps every node kind", () => {
     // A type-level assertion: this fails to compile if a kind is removed from
     // the union, which is a better error than a failing expectation.
-    const exhaustive: Record<Node["kind"], true> = Object.fromEntries(
-      NODE_KINDS.map((k) => [k, true]),
-    ) as Record<Node["kind"], true>;
+    const exhaustive: Record<Node["kind"], true> = Object.fromEntries(NODE_KINDS.map((k) => [k, true])) as Record<
+      Node["kind"],
+      true
+    >;
     expect(Object.keys(exhaustive).sort()).toEqual([...NODE_KINDS].sort());
   });
 

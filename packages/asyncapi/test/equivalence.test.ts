@@ -71,9 +71,7 @@ describe("2.6 and 3.0 produce the same IR", () => {
 
 describe("direction normalisation", () => {
   const directions = (ir: ApiIR) =>
-    ir.endpoints.flatMap((e) =>
-      e.operations.map((o) => [o.id, o.kind === "message" ? o.direction : "?"] as const),
-    );
+    ir.endpoints.flatMap((e) => e.operations.map((o) => [o.id, o.kind === "message" ? o.direction : "?"] as const));
 
   it("maps 2.x publish and 3.x receive to client-sends", () => {
     expect(directions(v2)).toContainEqual(["sendToServer", "client-sends"]);
@@ -99,10 +97,7 @@ describe("the channel is one endpoint, however operations are spelled", () => {
         addressKind: "channel",
         protocols: ["wss"],
       });
-      expect(ir.endpoints[0]?.operations.map((o) => o.id)).toEqual([
-        "sendToServer",
-        "receiveFromServer",
-      ]);
+      expect(ir.endpoints[0]?.operations.map((o) => o.id)).toEqual(["sendToServer", "receiveFromServer"]);
     }
   });
 
@@ -143,16 +138,11 @@ describe("the channel is one endpoint, however operations are spelled", () => {
 });
 
 describe("messages", () => {
-  const messages = (ir: ApiIR) =>
-    ir.endpoints[0]!.operations.flatMap((o) => (o.kind === "message" ? o.messages : []));
+  const messages = (ir: ApiIR) => ir.endpoints[0]!.operations.flatMap((o) => (o.kind === "message" ? o.messages : []));
 
   it("resolves both the 2.x oneOf form and the 3.x list form to the same messages", () => {
     for (const ir of [v2, v3]) {
-      expect(messages(ir).map((m) => m.name)).toEqual([
-        "StartRecognition",
-        "AddAudio",
-        "RecognitionStarted",
-      ]);
+      expect(messages(ir).map((m) => m.name)).toEqual(["StartRecognition", "AddAudio", "RecognitionStarted"]);
     }
   });
 

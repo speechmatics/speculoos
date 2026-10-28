@@ -88,20 +88,13 @@ function fieldItem(c: Ctx, field: FieldNode, opts: FieldOptions): Html {
   const chips = [...field.chips.filter((x) => x.kind !== "extends"), ...shapeChips(field)];
   const deprecated = field.docs.deprecated === true;
   const kids =
-    opts.nested && (field.children.kind === "inline" || field.children.kind === "variants")
-      ? field.children.nodes
-      : [];
+    opts.nested && (field.children.kind === "inline" || field.children.kind === "variants") ? field.children.nodes : [];
   const variantsLabel = field.children.kind === "variants" ? field.children.label : undefined;
 
   return h(
     "li",
     {
-      class: c.o.cls(
-        "field",
-        field.required && "required",
-        deprecated && "deprecated",
-        opts.location,
-      ),
+      class: c.o.cls("field", field.required && "required", deprecated && "deprecated", opts.location),
       // `key` is unique within one tree but not within one page, so it is data
       // rather than an id. Two operations may both have a `config/language`.
       "data-key": field.key,
@@ -115,9 +108,7 @@ function fieldItem(c: Ctx, field: FieldNode, opts: FieldOptions): Html {
       "div",
       { class: c.o.cls("field-head") },
       inline(
-        field.name !== undefined
-          ? h("span", { class: c.o.cls("field-name") }, code(c, field.name))
-          : undefined,
+        field.name !== undefined ? h("span", { class: c.o.cls("field-name") }, code(c, field.name)) : undefined,
         h("span", { class: c.o.cls("field-type") }, typeCell(c, field)),
         field.required ? badge(c, "required", text("required")) : undefined,
         chipBadges(c, chips),
@@ -125,16 +116,8 @@ function fieldItem(c: Ctx, field: FieldNode, opts: FieldOptions): Html {
     ),
     composed.length > 0 ? composition(c, composed) : undefined,
     h("div", { class: c.o.cls("field-docs") }, docsBody(c, field.docs)),
-    variantsLabel !== undefined
-      ? h("p", { class: c.o.cls("field-variants") }, text(variantsLabel))
-      : undefined,
-    kids.length > 0
-      ? h(
-          "div",
-          { class: c.o.cls("field-children") },
-          fieldList(c, kids, { nested: true }),
-        )
-      : undefined,
+    variantsLabel !== undefined ? h("p", { class: c.o.cls("field-variants") }, text(variantsLabel)) : undefined,
+    kids.length > 0 ? h("div", { class: c.o.cls("field-children") }, fieldList(c, kids, { nested: true })) : undefined,
   );
 }
 
@@ -194,10 +177,6 @@ export function schemaTable(c: Ctx, node: Node, opts: SchemaOptions = {}): Html 
  * and nothing else — but note that the `$ref` links it emits point at type
  * sections, so a page using it should also render `renderTypes`.
  */
-export function renderSchema(
-  node: Node,
-  ir: ApiIR,
-  options: HtmlOptions & SchemaOptions = {},
-): Html {
+export function renderSchema(node: Node, ir: ApiIR, options: HtmlOptions & SchemaOptions = {}): Html {
   return schemaTable({ ir, o: resolve(options) }, node, options);
 }

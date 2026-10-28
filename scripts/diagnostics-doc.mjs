@@ -16,9 +16,7 @@ const sorted = [...DIAGNOSTIC_CODES].sort(
   (a, b) => ORDER[a.severity] - ORDER[b.severity] || a.code.localeCompare(b.code),
 );
 
-const rows = sorted
-  .map((d) => `| \`${d.code}\` | ${d.severity} | \`${d.source}\` | ${d.meaning} |`)
-  .join("\n");
+const rows = sorted.map((d) => `| \`${d.code}\` | ${d.severity} | \`${d.source}\` | ${d.meaning} |`).join("\n");
 
 const bySeverity = {};
 for (const d of sorted) bySeverity[d.severity] = (bySeverity[d.severity] ?? 0) + 1;

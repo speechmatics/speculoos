@@ -17,10 +17,7 @@
 import type { Node, View } from "./schema.js";
 
 /** True when a property should be shown in the given view. */
-export function appliesToView(
-  flags: { readOnly: boolean; writeOnly: boolean },
-  view: View,
-): boolean {
+export function appliesToView(flags: { readOnly: boolean; writeOnly: boolean }, view: View): boolean {
   switch (view) {
     case "request":
       return !flags.readOnly;
@@ -77,10 +74,7 @@ export function projectForView(node: Node, view: View): Node {
       return {
         ...node,
         prefixItems: node.prefixItems.map((n) => projectForView(n, view)),
-        rest:
-          node.rest.kind === "schema"
-            ? { kind: "schema", node: projectForView(node.rest.node, view) }
-            : node.rest,
+        rest: node.rest.kind === "schema" ? { kind: "schema", node: projectForView(node.rest.node, view) } : node.rest,
       };
 
     case "union":

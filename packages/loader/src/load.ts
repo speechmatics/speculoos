@@ -87,7 +87,12 @@ export async function load(input: ProjectInput): Promise<LoadedProject> {
   const entry: LoadedDocument[] = [];
   for (const spec of input.documents) {
     if (isAbsolute(spec.name) || spec.name.includes(sep)) {
-      report("error", "BAD_DOCUMENT_NAME", `Document name "${spec.name}" looks like a path. Names appear in every URL and must be stable across machines.`, spec.name);
+      report(
+        "error",
+        "BAD_DOCUMENT_NAME",
+        `Document name "${spec.name}" looks like a path. Names appear in every URL and must be stable across machines.`,
+        spec.name,
+      );
       continue;
     }
     const doc = await loadOne(spec, root, report);
@@ -106,15 +111,30 @@ export async function load(input: ProjectInput): Promise<LoadedProject> {
 
       if (/^[a-z][a-z0-9+.-]*:/i.test(uri)) {
         if (input.allowRemoteRefs !== true) {
-          report("error", "REMOTE_REF_DISABLED", `Remote $ref "${uri}" was not followed. Pass allowRemoteRefs to enable it.`, doc.name);
+          report(
+            "error",
+            "REMOTE_REF_DISABLED",
+            `Remote $ref "${uri}" was not followed. Pass allowRemoteRefs to enable it.`,
+            doc.name,
+          );
         } else {
-          report("error", "REMOTE_REF_UNSUPPORTED", `Remote $ref "${uri}" cannot be followed: remote loading is not implemented yet.`, doc.name);
+          report(
+            "error",
+            "REMOTE_REF_UNSUPPORTED",
+            `Remote $ref "${uri}" cannot be followed: remote loading is not implemented yet.`,
+            doc.name,
+          );
         }
         continue;
       }
 
       if (doc.path === undefined) {
-        report("error", "NO_BASE_PATH", `Cannot resolve "${uri}" from in-memory document "${doc.name}", which has no path to resolve against.`, doc.name);
+        report(
+          "error",
+          "NO_BASE_PATH",
+          `Cannot resolve "${uri}" from in-memory document "${doc.name}", which has no path to resolve against.`,
+          doc.name,
+        );
         continue;
       }
 
@@ -165,11 +185,7 @@ type Report = (
   pointer?: string,
 ) => void;
 
-async function loadOne(
-  spec: DocumentInput,
-  root: string,
-  report: Report,
-): Promise<LoadedDocument | undefined> {
+async function loadOne(spec: DocumentInput, root: string, report: Report): Promise<LoadedDocument | undefined> {
   let data: unknown;
   let path: string | undefined;
 

@@ -142,21 +142,23 @@ describe("field rows in tree layout", () => {
 describe("messages", () => {
   const messageOp = () => {
     const api = ir("realtime-v3.yaml");
-    const withTwo = allOperations(api).find(
-      (e) => e.operation.kind === "message" && e.operation.messages.length > 1,
-    );
+    const withTwo = allOperations(api).find((e) => e.operation.kind === "message" && e.operation.messages.length > 1);
     if (withTwo === undefined) throw new Error("the realtime fixture has an operation with two messages");
     return render(<Operation id={withTwo.operation.id} />, api, radixThemes({ markdown: Markdown }));
   };
 
   it("gives each message a card of its own, headed one level down and anchored", () => {
     const html = messageOp();
-    expect(html).toMatch(/<section data-kind="message" id="start-recognition" class="[^"]*rt-Card[^"]*"><div[^>]*><h3 [^>]*>Start recognition<\/h3>/);
+    expect(html).toMatch(
+      /<section data-kind="message" id="start-recognition" class="[^"]*rt-Card[^"]*"><div[^>]*><h3 [^>]*>Start recognition<\/h3>/,
+    );
     expect(html).not.toContain('role="tablist" aria-orientation="horizontal" data-kind="message"');
   });
 
   it("no longer says 'or' between them: they are a vocabulary, not alternatives", () => {
-    const text = messageOp().replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
+    const text = messageOp()
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ");
     expect(text).not.toMatch(/ or /);
   });
 
@@ -211,7 +213,11 @@ describe("links", () => {
         {children}
       </a>
     );
-    const html = render(everything(ir("batch.yaml")), ir("batch.yaml"), radixThemes({ markdown: Markdown, linkAs: RouterLink }));
+    const html = render(
+      everything(ir("batch.yaml")),
+      ir("batch.yaml"),
+      radixThemes({ markdown: Markdown, linkAs: RouterLink }),
+    );
     expect(html).toMatch(/<a[^>]*data-router=""[^>]*href="#|<a[^>]*href="#[^"]*"[^>]*data-router=""/);
     expect(html).not.toMatch(/<a[^>]*href="https?:[^"]*"[^>]*data-router/);
   });
@@ -220,7 +226,10 @@ describe("links", () => {
 describe("replacement", () => {
   it("is a spread, with no API for it", () => {
     const Badge = ({ children }: { children: ReactNode }) => <mark>{children}</mark>;
-    const html = render(<Operation id="listJobs" />, ir("batch.yaml"), { ...radixThemes({ markdown: Markdown }), Badge });
+    const html = render(<Operation id="listJobs" />, ir("batch.yaml"), {
+      ...radixThemes({ markdown: Markdown }),
+      Badge,
+    });
     expect(html).toContain("<mark>GET</mark>");
   });
 });
@@ -230,7 +239,11 @@ describe("field rows", () => {
     render(<Operation id="createJob" />, ir("batch.yaml"), radixThemes({ markdown: Markdown }), options);
 
   // Each row's label only: the request body's own "required" stays a badge, in its heading.
-  const labelsOf = (html: string) => html.split("rt-DataListLabel").slice(1).map((c) => c.slice(0, c.indexOf("</dt>")));
+  const labelsOf = (html: string) =>
+    html
+      .split("rt-DataListLabel")
+      .slice(1)
+      .map((c) => c.slice(0, c.indexOf("</dt>")));
 
   it("marks optional fields by default, in text on the name's line, and leaves required ones quiet", () => {
     const labels = labelsOf(createJob());
@@ -239,7 +252,11 @@ describe("field rows", () => {
   });
 
   it("marks required fields instead with presence: required, never as a badge", () => {
-    const html = render(<Operation id="createJob" />, ir("batch.yaml"), radixThemes({ markdown: Markdown, presence: "required" }));
+    const html = render(
+      <Operation id="createJob" />,
+      ir("batch.yaml"),
+      radixThemes({ markdown: Markdown, presence: "required" }),
+    );
     const labels = labelsOf(html);
     expect(labels.some((l) => /<span[^>]*rt-Text[^>]*>required<\/span>/.test(l))).toBe(true);
     expect(labels.some((l) => /rt-Badge[^>]*>required</.test(l))).toBe(false);
@@ -248,7 +265,9 @@ describe("field rows", () => {
 
   it("collapses nested rows behind a toggle that says how many there are", () => {
     const html = createJob({ expandRefs: "always" });
-    expect(html).toMatch(/aria-expanded="false"[^>]*><span aria-hidden="true">▸<\/span>Show \d+ (properties|property|options?)<\/button>/);
+    expect(html).toMatch(
+      /aria-expanded="false"[^>]*><span aria-hidden="true">▸<\/span>Show \d+ (properties|property|options?)<\/button>/,
+    );
     expect(html).toMatch(/<div id="[^"]+" style="display:none">/);
   });
 
@@ -264,7 +283,9 @@ describe("field rows", () => {
   });
 
   it("offers no toggle when nothing is nested", () => {
-    expect(render(<Operation id="listJobs" />, ir("batch.yaml"), radixThemes({ markdown: Markdown }), { layout: "rows" })).not.toContain("aria-expanded");
+    expect(
+      render(<Operation id="listJobs" />, ir("batch.yaml"), radixThemes({ markdown: Markdown }), { layout: "rows" }),
+    ).not.toContain("aria-expanded");
   });
 });
 
@@ -284,8 +305,12 @@ describe("direction badges", () => {
   it("carry an arrow — up for what the reader sends, down for what they receive", () => {
     const html = render(<Endpoint id="/v2/{language}" />, ir("realtime-v3.yaml"), radixThemes({ markdown: Markdown }));
     // The arrow is all that shows: the label is for screen readers, and the tooltip.
-    expect(html).toMatch(/data-radius="full"[^>]*><span aria-hidden="true">↑<\/span><span[^>]*>client → server<\/span>/);
-    expect(html).toMatch(/data-radius="full"[^>]*><span aria-hidden="true">↓<\/span><span[^>]*>server → client<\/span>/);
+    expect(html).toMatch(
+      /data-radius="full"[^>]*><span aria-hidden="true">↑<\/span><span[^>]*>client → server<\/span>/,
+    );
+    expect(html).toMatch(
+      /data-radius="full"[^>]*><span aria-hidden="true">↓<\/span><span[^>]*>server → client<\/span>/,
+    );
   });
 });
 
@@ -302,9 +327,17 @@ describe("snapshots", () => {
 });
 
 describe("fieldLayout", () => {
-  const labels = (html: string) => html.split("rt-DataListLabel").slice(1).map((c) => c.slice(0, c.indexOf("</dt>")));
+  const labels = (html: string) =>
+    html
+      .split("rt-DataListLabel")
+      .slice(1)
+      .map((c) => c.slice(0, c.indexOf("</dt>")));
   const job = (fieldLayout?: "columns" | "vertical" | "stacked") =>
-    render(<Operation id="createJob" />, ir("batch.yaml"), radixThemes({ markdown: Markdown, ...(fieldLayout ? { fieldLayout } : {}) }));
+    render(
+      <Operation id="createJob" />,
+      ir("batch.yaml"),
+      radixThemes({ markdown: Markdown, ...(fieldLayout ? { fieldLayout } : {}) }),
+    );
 
   it("is stacked by default", () => {
     expect(job()).toBe(job("stacked"));
@@ -333,16 +366,42 @@ describe("rows with no name", () => {
   it("are headed by their type, not a dash: an enum's documented values read as a list", () => {
     const source = { document: "d", pointer: "#" };
     const status = {
-      kind: "enum" as const, source, docs: {}, nullable: false, baseType: "string" as const,
-      members: [{ value: "ok", docs: { description: "Fine." } }, { value: "busy", docs: { description: "Later." } }],
+      kind: "enum" as const,
+      source,
+      docs: {},
+      nullable: false,
+      baseType: "string" as const,
+      members: [
+        { value: "ok", docs: { description: "Fine." } },
+        { value: "busy", docs: { description: "Later." } },
+      ],
     };
     const node = {
-      kind: "object" as const, source, docs: {}, nullable: false, additional: { kind: "any" as const },
-      patternProperties: [], constraints: {}, composedFrom: [],
-      properties: [{ name: "status", node: status, required: false, readOnly: false, writeOnly: false, deprecated: false, docs: {} }],
+      kind: "object" as const,
+      source,
+      docs: {},
+      nullable: false,
+      additional: { kind: "any" as const },
+      patternProperties: [],
+      constraints: {},
+      composedFrom: [],
+      properties: [
+        {
+          name: "status",
+          node: status,
+          required: false,
+          readOnly: false,
+          writeOnly: false,
+          deprecated: false,
+          docs: {},
+        },
+      ],
     };
     const html = render(<SchemaTable node={node} />, ir("batch.yaml"), radixThemes({ markdown: Markdown }));
-    const labels = html.split("rt-DataListLabel").slice(1).map((c) => c.slice(0, c.indexOf("</dt>")));
+    const labels = html
+      .split("rt-DataListLabel")
+      .slice(1)
+      .map((c) => c.slice(0, c.indexOf("</dt>")));
     expect(labels.some((l) => l.includes("—"))).toBe(false);
     expect(labels.some((l) => l.includes("&quot;ok&quot;"))).toBe(true);
   });
@@ -355,7 +414,9 @@ describe("gathered examples", () => {
     const html = render(<EntryExamples entry={channel} />, api, radixThemes({ markdown: Markdown }));
     expect(html).toMatch(/data-kind="examples"/);
     expect(html).not.toContain('role="tablist"');
-    expect(html).toMatch(/<button type="button" aria-expanded="false" aria-controls="start-recognition-example-0-body"/);
+    expect(html).toMatch(
+      /<button type="button" aria-expanded="false" aria-controls="start-recognition-example-0-body"/,
+    );
     expect(html).toMatch(/<div id="start-recognition-example-0-body" hidden=""/);
   });
 });
@@ -385,7 +446,9 @@ describe("security alternatives", () => {
     const html = render(<Endpoint id="/v2/{language}" />, ir("realtime-v3.yaml"), radixThemes({ markdown: Markdown }));
     const from = html.indexOf('data-kind="security"', html.indexOf("Authentication"));
     const list = html.slice(from, html.indexOf("</ul>", from));
-    expect(list).toMatch(/<li style="border-top:1px solid var\(--gray-a4\)"[^>]*><span[^>]*rt-Badge[^>]*>bearer<\/span> <code[^>]*>Authorization: Bearer &lt;token&gt;<\/code><div data-md="">A JWT.<\/div><\/li>/);
+    expect(list).toMatch(
+      /<li style="border-top:1px solid var\(--gray-a4\)"[^>]*><span[^>]*rt-Badge[^>]*>bearer<\/span> <code[^>]*>Authorization: Bearer &lt;token&gt;<\/code><div data-md="">A JWT.<\/div><\/li>/,
+    );
   });
 });
 

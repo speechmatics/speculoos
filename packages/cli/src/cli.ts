@@ -114,7 +114,10 @@ export async function main(argv: string[]): Promise<number> {
 
     case "lint": {
       const allow = new Set(
-        (flag(args, "allow") ?? "").split(",").map((c) => c.trim()).filter(Boolean),
+        (flag(args, "allow") ?? "")
+          .split(",")
+          .map((c) => c.trim())
+          .filter(Boolean),
       );
       // A typo in an allow-list silently allows nothing, and the build stays
       // red for a reason nobody can see. Say so rather than letting it rot.
@@ -126,9 +129,7 @@ export async function main(argv: string[]): Promise<number> {
       for (const line of lines) process.stdout.write(`${line}\n`);
 
       const threshold = flag(args, "max-severity") ?? "warning";
-      const offending = built.ir.diagnostics.filter(
-        (d) => !allow.has(d.code) && rank(d.severity) >= rank(threshold),
-      );
+      const offending = built.ir.diagnostics.filter((d) => !allow.has(d.code) && rank(d.severity) >= rank(threshold));
       if (offending.length === 0) {
         process.stdout.write(`${summarise(built.ir)} — no diagnostics at or above ${threshold}.\n`);
         return 0;

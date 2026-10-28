@@ -7,9 +7,7 @@ export function harness(document: unknown, dialect: Dialect = "json-schema") {
     resolve(ref: string, from: SourceLocation): SourceLocation | undefined {
       if (!ref.startsWith("#")) return undefined;
       const pointer = ref.slice(1);
-      return at(document, pointer) === undefined
-        ? undefined
-        : { document: from.document, pointer };
+      return at(document, pointer) === undefined ? undefined : { document: from.document, pointer };
     },
     at(loc: SourceLocation): unknown {
       return at(document, loc.pointer);

@@ -66,9 +66,7 @@ export function constUnionToEnum(node: Node): Node {
   const kinds = new Set(members.map((m) => typeof m.value));
   const baseType =
     kinds.size === 1
-      ? ({ string: "string", boolean: "boolean", number: "number" } as const)[
-          [...kinds][0] as string
-        ]
+      ? ({ string: "string", boolean: "boolean", number: "number" } as const)[[...kinds][0] as string]
       : undefined;
 
   return {
@@ -78,9 +76,7 @@ export function constUnionToEnum(node: Node): Node {
     nullable: node.nullable,
     ...(baseType !== undefined && {
       baseType:
-        baseType === "number" && members.every((m) => Number.isInteger(m.value))
-          ? ("integer" as const)
-          : baseType,
+        baseType === "number" && members.every((m) => Number.isInteger(m.value)) ? ("integer" as const) : baseType,
     }),
     members,
   };
@@ -188,9 +184,7 @@ export function mapChildren(node: Node, fn: (child: Node) => Node): Node {
         ...node,
         properties: node.properties.map((p) => ({ ...p, node: fn(p.node) })),
         additional:
-          node.additional.kind === "schema"
-            ? { kind: "schema", node: fn(node.additional.node) }
-            : node.additional,
+          node.additional.kind === "schema" ? { kind: "schema", node: fn(node.additional.node) } : node.additional,
         patternProperties: node.patternProperties.map((pp) => ({ ...pp, node: fn(pp.node) })),
       };
     case "map":

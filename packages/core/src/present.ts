@@ -227,8 +227,7 @@ function buildField(c: Ctx, input: FieldInput): FieldNode {
   const { node, path, depth, required, ancestors } = input;
   const expansion = expand(c, node, depth, ancestors, path);
 
-  const target =
-    expansion.typeRef === undefined ? undefined : c.schemas[expansion.typeRef];
+  const target = expansion.typeRef === undefined ? undefined : c.schemas[expansion.typeRef];
   const chipOpts: ChipOptions = { maxInlineEnum: c.opts.label.maxVariants ?? 3 };
 
   const composedFrom = composedTypes(c, target?.node ?? node);
@@ -276,15 +275,9 @@ function buildField(c: Ctx, input: FieldInput): FieldNode {
  *
  * Most renderers collapse the first two into the last and get this backwards.
  */
-function mergeDocs(
-  usage: Docs | undefined,
-  own: Docs,
-  typeDocs?: Docs,
-  typeNode?: Docs,
-): Docs {
+function mergeDocs(usage: Docs | undefined, own: Docs, typeDocs?: Docs, typeNode?: Docs): Docs {
   const sources = [usage, own, typeDocs, typeNode].filter((d): d is Docs => d !== undefined);
-  const pick = (key: keyof Docs): unknown =>
-    sources.find((d) => d[key] !== undefined)?.[key];
+  const pick = (key: keyof Docs): unknown => sources.find((d) => d[key] !== undefined)?.[key];
 
   const merged: Docs = {};
   for (const key of ["title", "description", "default", "externalDocs", "examples"] as const) {
@@ -410,9 +403,7 @@ function expand(
     }
 
     case "map": {
-      const keyLabel = eff.keys
-        ? `[key: ${typeLabel(eff.keys, c, c.opts.label)}]`
-        : "[key: string]";
+      const keyLabel = eff.keys ? `[key: ${typeLabel(eff.keys, c, c.opts.label)}]` : "[key: string]";
       return {
         children: {
           kind: "inline",
@@ -511,13 +502,7 @@ function expand(
   }
 }
 
-function propertyField(
-  c: Ctx,
-  p: Property,
-  depth: number,
-  ancestors: ReadonlySet<TypeId>,
-  path: string[],
-): FieldNode {
+function propertyField(c: Ctx, p: Property, depth: number, ancestors: ReadonlySet<TypeId>, path: string[]): FieldNode {
   const extraChips: Chip[] = [];
   if (p.deprecated) extraChips.push({ kind: "deprecated", label: "deprecated" });
   if (p.readOnly) extraChips.push({ kind: "readOnly", label: "read-only" });
@@ -594,11 +579,7 @@ export function chipsFor(node: Node, opts: ChipOptions = {}): Chip[] {
     }
 
     case "array": {
-      const items = describeLength(
-        node.constraints.minItems,
-        node.constraints.maxItems,
-        "items",
-      );
+      const items = describeLength(node.constraints.minItems, node.constraints.maxItems, "items");
       if (items !== undefined) push("items", items);
       if (node.constraints.uniqueItems) push("uniqueItems", "unique items");
       break;
@@ -626,11 +607,7 @@ export function chipsFor(node: Node, opts: ChipOptions = {}): Chip[] {
   return chips;
 }
 
-function describeLength(
-  min: number | undefined,
-  max: number | undefined,
-  unit: string,
-): string | undefined {
+function describeLength(min: number | undefined, max: number | undefined, unit: string): string | undefined {
   if (min !== undefined && max !== undefined) {
     return min === max ? `exactly ${min} ${unit}` : `${min}–${max} ${unit}`;
   }

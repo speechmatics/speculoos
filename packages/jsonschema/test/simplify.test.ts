@@ -114,10 +114,7 @@ describe("inferDiscriminator", () => {
     });
     if (node.kind !== "union") throw new Error("expected union");
     expect(node.discriminator).toEqual({ propertyName: "message", inferred: true });
-    expect(node.variants.map((v) => v.discriminatorValue)).toEqual([
-      "StartRecognition",
-      "AddAudio",
-    ]);
+    expect(node.variants.map((v) => v.discriminatorValue)).toEqual(["StartRecognition", "AddAudio"]);
   });
 
   it("ignores a const property whose values repeat", () => {

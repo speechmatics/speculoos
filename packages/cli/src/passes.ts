@@ -36,7 +36,10 @@ export interface PassFlags {
 }
 
 const list = (value: string): string[] =>
-  value.split(",").map((s) => s.trim()).filter((s) => s.length > 0);
+  value
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
 
 export function parseRenames(value: string): Record<string, string> {
   const out: Record<string, string> = {};
@@ -56,14 +59,10 @@ export function passesFor(flags: PassFlags): Transform[] {
   const passes: Transform[] = [];
 
   if (flags.hideInternal !== undefined) {
-    passes.push(
-      flags.hideInternal === true ? hideInternal() : hideInternal(flags.hideInternal),
-    );
+    passes.push(flags.hideInternal === true ? hideInternal() : hideInternal(flags.hideInternal));
   }
   if (flags.tag !== undefined) {
-    passes.push(
-      filterByTag(list(flags.tag), flags.keepUntagged === true ? { keepUntagged: true } : {}),
-    );
+    passes.push(filterByTag(list(flags.tag), flags.keepUntagged === true ? { keepUntagged: true } : {}));
   }
   if (flags.sortTags !== undefined) passes.push(sortTags(list(flags.sortTags)));
   if (flags.rename !== undefined) passes.push(renameTypes(parseRenames(flags.rename)));

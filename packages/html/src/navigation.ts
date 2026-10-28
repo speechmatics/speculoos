@@ -159,9 +159,7 @@ export function renderType(def: TypeDef, ir: ApiIR, options: TypeOptions = {}): 
 function typeSection(c: Ctx, def: TypeDef, level: number): Html {
   // "Referenced by" is the reason a reader can navigate *up* out of a type,
   // which is otherwise a dead end on a long page.
-  const referencedBy = def.referencedBy
-    .map((id) => c.ir.schemas[id])
-    .filter((d): d is TypeDef => d !== undefined);
+  const referencedBy = def.referencedBy.map((id) => c.ir.schemas[id]).filter((d): d is TypeDef => d !== undefined);
 
   return section(
     c,
@@ -180,9 +178,7 @@ function typeSection(c: Ctx, def: TypeDef, level: number): Html {
           { class: c.o.cls("referenced-by") },
           h("span", { class: c.o.cls("referenced-by-label") }, text("Referenced by")),
           inline(
-            ...referencedBy.map((other) =>
-              link(c, { kind: "type", id: other.id, def: other }, code(c, other.name)),
-            ),
+            ...referencedBy.map((other) => link(c, { kind: "type", id: other.id, def: other }, code(c, other.name))),
           ),
         )
       : undefined,

@@ -79,10 +79,7 @@ describe("endpoints and operations", () => {
     const operation = op("createJob")!.operation;
     if (operation.kind !== "request-response") throw new Error("expected rest");
     expect(operation.requestBody?.required).toBe(true);
-    expect(operation.requestBody?.content.map((c) => c.mediaType)).toEqual([
-      "application/json",
-      "multipart/form-data",
-    ]);
+    expect(operation.requestBody?.content.map((c) => c.mediaType)).toEqual(["application/json", "multipart/form-data"]);
   });
 
   it("captures response headers as properties", () => {
@@ -165,7 +162,17 @@ describe("schemas", () => {
   });
 
   it("handles a self-referential schema without expanding forever", () => {
-    const rows = toRows({ kind: "ref", target: "batch#/components/schemas/Job", source: { document: "batch", pointer: "" }, docs: {}, nullable: false }, ir, { expandRefs: "always" });
+    const rows = toRows(
+      {
+        kind: "ref",
+        target: "batch#/components/schemas/Job",
+        source: { document: "batch", pointer: "" },
+        docs: {},
+        nullable: false,
+      },
+      ir,
+      { expandRefs: "always" },
+    );
     expect(rows.find((r) => r.name === "parent")?.children).toMatchObject({ kind: "cycle" });
   });
 

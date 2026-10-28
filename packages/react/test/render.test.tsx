@@ -34,12 +34,7 @@ beforeAll(async () => {
   ws = buildAsyncApi({ project: realtime });
 });
 
-function render(
-  ui: ReactNode,
-  ir: ApiIR,
-  components: Components = boxy,
-  options?: SpeculoosOptions,
-): string {
+function render(ui: ReactNode, ir: ApiIR, components: Components = boxy, options?: SpeculoosOptions): string {
   return renderToStaticMarkup(
     <SpeculoosProvider ir={ir} components={components} {...(options ? { options } : {})}>
       {ui}
@@ -119,25 +114,35 @@ describe("SchemaTable", () => {
   });
 
   it("renders allOf ancestors as links rather than bare chips", () => {
-    const html = render(
-      <SchemaTable typeId="batch#/components/schemas/TranscriptionConfig" />,
-      rest,
-    );
+    const html = render(<SchemaTable typeId="batch#/components/schemas/TranscriptionConfig" />, rest);
     expect(html).toContain("extends");
     expect(html).toContain('data-href="#base-config"');
     // The plain "extends BaseConfig" chip must not appear alongside the link.
-    expect(html).not.toContain("<x-badge data-tone=\"constraint\">extends");
+    expect(html).not.toContain('<x-badge data-tone="constraint">extends');
   });
 
   it("says a field is nullable once, in its type", () => {
     const source = { document: "d", pointer: "#" };
     const node = {
-      kind: "object" as const, source, docs: {}, nullable: false, additional: { kind: "any" as const },
-      patternProperties: [], constraints: {}, composedFrom: [],
-      properties: [{
-        name: "name", required: false, readOnly: false, writeOnly: false, deprecated: false, docs: {},
-        node: { kind: "string" as const, source, docs: {}, nullable: true, constraints: {} },
-      }],
+      kind: "object" as const,
+      source,
+      docs: {},
+      nullable: false,
+      additional: { kind: "any" as const },
+      patternProperties: [],
+      constraints: {},
+      composedFrom: [],
+      properties: [
+        {
+          name: "name",
+          required: false,
+          readOnly: false,
+          writeOnly: false,
+          deprecated: false,
+          docs: {},
+          node: { kind: "string" as const, source, docs: {}, nullable: true, constraints: {} },
+        },
+      ],
     };
     const html = render(<SchemaTable node={node} />, rest);
     expect(html).toContain("string | null");
@@ -202,18 +207,24 @@ describe("Operation", () => {
       endpoints: rest.endpoints.map((e) => ({
         ...e,
         operations: e.operations.map((o) =>
-          o.kind !== "request-response" ? o : {
-            ...o,
-            responses: o.responses.map((r) => ({
-              ...r,
-              content: r.content.flatMap((v) => (v.mediaType === "application/json" ? [v, { ...v, mediaType: "application/vnd.x+json" }] : [v])),
-            })),
-          },
+          o.kind !== "request-response"
+            ? o
+            : {
+                ...o,
+                responses: o.responses.map((r) => ({
+                  ...r,
+                  content: r.content.flatMap((v) =>
+                    v.mediaType === "application/json" ? [v, { ...v, mediaType: "application/vnd.x+json" }] : [v],
+                  ),
+                })),
+              },
         ),
       })),
     };
     const html = render(<Operation id="listJobs" />, aliased);
-    expect(html).toContain('<x-label><x-badge data-tone="mediaType">application/json</x-badge> <x-badge data-tone="mediaType">application/vnd.x+json</x-badge></x-label>');
+    expect(html).toContain(
+      '<x-label><x-badge data-tone="mediaType">application/json</x-badge> <x-badge data-tone="mediaType">application/vnd.x+json</x-badge></x-label>',
+    );
   });
 
   it("presents authentication as the handshake does: each way in, how to send it, what it is", () => {
@@ -221,7 +232,6 @@ describe("Operation", () => {
     expect(html).toContain('<x-section data-kind="security" data-level="3"><x-title>Authentication</x-title>');
     expect(html).not.toContain("<x-title>Security</x-title>");
   });
-
 
   it("renders the method, the full URL and the operation's own slug as an anchor", () => {
     const html = render(<Operation id="listJobs" />, rest);
@@ -343,7 +353,9 @@ describe("message operations", () => {
   it("gives each message a section of its own, anchored, straight under its operation", () => {
     const first = ws.endpoints.flatMap((e) => e.operations)[0]!;
     const html = render(<Operation id={first.id} level={2} />, ws);
-    expect(html).toContain('<x-section data-kind="message" data-level="3" id="start-recognition"><x-title>Start recognition</x-title>');
+    expect(html).toContain(
+      '<x-section data-kind="message" data-level="3" id="start-recognition"><x-title>Start recognition</x-title>',
+    );
     expect(html).not.toContain('data-kind="messages"');
     expect(html).not.toContain('<x-tabs data-kind="message">');
   });
@@ -373,9 +385,7 @@ describe("message operations", () => {
 describe("OperationList", () => {
   it("groups under the document's tags in declared order", () => {
     const html = render(<OperationList />, rest);
-    expect(html.indexOf("<x-title>Jobs</x-title>")).toBeLessThan(
-      html.indexOf("<x-title>Other</x-title>"),
-    );
+    expect(html.indexOf("<x-title>Jobs</x-title>")).toBeLessThan(html.indexOf("<x-title>Other</x-title>"));
     expect(html).toContain('data-href="#create-job"');
   });
 
@@ -436,7 +446,9 @@ describe("Endpoint", () => {
 
   it("heads a channel with its address and shows what it shares once", () => {
     const html = render(<Endpoint id="/v2/{language}" />, ws);
-    expect(html).toContain('<x-section data-kind="endpoint" data-level="2" id="v2-language"><x-title><x-code>/v2/{language}</x-code>');
+    expect(html).toContain(
+      '<x-section data-kind="endpoint" data-level="2" id="v2-language"><x-title><x-code>/v2/{language}</x-code>',
+    );
     // The channel's own description. Before <Endpoint> nothing rendered it.
     expect(html).toContain("<x-md>The transcription socket.</x-md>");
     expect(count(html, "Address parameters")).toBe(1);
@@ -488,7 +500,10 @@ describe("Endpoint", () => {
 
   it("covers every operation exactly once across every endpoint", () => {
     for (const ir of [rest, ws]) {
-      const html = render(ir.endpoints.map((e) => <Endpoint key={e.id} endpoint={e} />), ir);
+      const html = render(
+        ir.endpoints.map((e) => <Endpoint key={e.id} endpoint={e} />),
+        ir,
+      );
       for (const e of ir.endpoints) for (const o of e.operations) expect(count(html, `id="${o.slug}"`)).toBe(1);
     }
   });
@@ -505,7 +520,11 @@ describe("Endpoint", () => {
 });
 
 describe("EntryList", () => {
-  const text = (html: string) => html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  const text = (html: string) =>
+    html
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
 
   it("lists each REST operation as its own entry, method then summary", () => {
     const html = render(<EntryList />, rest);
@@ -537,7 +556,11 @@ describe("EntryList", () => {
 
 describe("Entry", () => {
   it("renders a REST entry as its operation, standing alone", () => {
-    const entry = { kind: "operation" as const, endpoint: rest.endpoints[0]!, operation: rest.endpoints[0]!.operations[0]! };
+    const entry = {
+      kind: "operation" as const,
+      endpoint: rest.endpoints[0]!,
+      operation: rest.endpoints[0]!.operations[0]!,
+    };
     expect(render(<Entry entry={entry} />, rest)).toBe(
       render(<Operation endpoint={entry.endpoint} operation={entry.operation} />, rest),
     );
@@ -555,9 +578,7 @@ describe("Entry", () => {
 
 describe("the provider", () => {
   it("says what is wrong when a component is used outside it", () => {
-    expect(() => renderToStaticMarkup(<SchemaTable typeId="x" />)).toThrow(
-      /inside a <SpeculoosProvider>/,
-    );
+    expect(() => renderToStaticMarkup(<SchemaTable typeId="x" />)).toThrow(/inside a <SpeculoosProvider>/);
   });
 });
 
@@ -566,8 +587,12 @@ describe("EntryExamples", () => {
 
   it("gathers an entry's examples into one section, each labelled by what it is of", () => {
     const html = render(<EntryExamples entry={channel()} level={3} />, ws);
-    expect(html).toContain('<x-section data-kind="examples" data-level="3"><x-title>Examples</x-title><x-tabs data-kind="examples">');
-    expect(html).toContain('<x-tab data-id="start-recognition-example-0"><x-label><x-badge data-tone="direction">Send</x-badge> Start recognition · minimal</x-label>');
+    expect(html).toContain(
+      '<x-section data-kind="examples" data-level="3"><x-title>Examples</x-title><x-tabs data-kind="examples">',
+    );
+    expect(html).toContain(
+      '<x-tab data-id="start-recognition-example-0"><x-label><x-badge data-tone="direction">Send</x-badge> Start recognition · minimal</x-label>',
+    );
   });
 
   it("shows the examples it is given, in the order given", () => {
@@ -595,7 +620,9 @@ describe("Handshake", () => {
   it("opens a WebSocket channel with its upgrade request and how to authenticate", () => {
     const html = render(<Endpoint id="/v2/{language}" />, ws);
     expect(html).toContain('<x-section data-kind="handshake" data-level="3"><x-title>Handshake</x-title>');
-    expect(html).toContain('<x-badge data-tone="method">GET</x-badge> <x-code>wss://eu2.rt.example.com/v2/v2/{language}</x-code>');
+    expect(html).toContain(
+      '<x-badge data-tone="method">GET</x-badge> <x-code>wss://eu2.rt.example.com/v2/v2/{language}</x-code>',
+    );
     expect(html).toContain('<x-section data-kind="security" data-level="4"><x-title>Authentication</x-title>');
     expect(html).toContain("<x-code>Authorization: Bearer &lt;token&gt;</x-code>");
     // The one server's description: where a spec says how to pick another.

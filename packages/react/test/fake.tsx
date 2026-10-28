@@ -30,13 +30,24 @@ export const boxy: Components = {
   // pretending otherwise would be the one mistake this package warns about.
   Markdown: ({ children }) => <x-md>{children}</x-md>,
   Code: ({ children }) => <x-code>{children}</x-code>,
-  CodeBlock: ({ children, language }) => (
-    <x-pre {...(language ? { "data-lang": language } : {})}>{children}</x-pre>
-  ),
+  CodeBlock: ({ children, language }) => <x-pre {...(language ? { "data-lang": language } : {})}>{children}</x-pre>,
   Badge: ({ tone, children }) => <x-badge data-tone={tone}>{children}</x-badge>,
   Link: ({ href, children }) => <x-link data-href={href}>{children}</x-link>,
   Fields: ({ kind, children }) => <x-fields data-kind={kind}>{children}</x-fields>,
-  FieldRow: ({ field, depth, name, type, chips, docs, required, deprecated, location, variantsLabel, expanded, children }) => (
+  FieldRow: ({
+    field,
+    depth,
+    name,
+    type,
+    chips,
+    docs,
+    required,
+    deprecated,
+    location,
+    variantsLabel,
+    expanded,
+    children,
+  }) => (
     <x-row data-depth={String(depth)} data-key={field.key} {...(expanded ? { "data-expanded": "" } : {})}>
       <x-name>{name}</x-name>
       <x-type>{type}</x-type>
@@ -84,7 +95,13 @@ export const terse: Components = {
       {type}
     </y-dt>
   ),
-  Tabs: ({ tabs }) => <y-set>{tabs.map((t) => <y-one key={t.id}>{t.content}</y-one>)}</y-set>,
+  Tabs: ({ tabs }) => (
+    <y-set>
+      {tabs.map((t) => (
+        <y-one key={t.id}>{t.content}</y-one>
+      ))}
+    </y-set>
+  ),
   List: ({ children }) => <y-ul>{children}</y-ul>,
   ListItem: ({ children }) => <y-li>{children}</y-li>,
   Empty: ({ children }) => <y-none>{children}</y-none>,

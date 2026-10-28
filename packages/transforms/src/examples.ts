@@ -31,5 +31,4 @@ function strip(value: unknown): unknown {
  * Empties every `examples` array in the document. `default` and `const` are
  * left alone: those are part of the contract, not illustrations of it.
  */
-export const redactExamples = (): Transform =>
-  named("redactExamples", (ir: ApiIR): ApiIR => strip(ir) as ApiIR);
+export const redactExamples = (): Transform => named("redactExamples", (ir: ApiIR): ApiIR => strip(ir) as ApiIR);

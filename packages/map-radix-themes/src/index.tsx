@@ -138,7 +138,14 @@ function clampLevel(level: number): 1 | 2 | 3 | 4 | 5 | 6 {
 }
 
 export function radixThemes(options: RadixThemesOptions): Components {
-  const { markdown, size = "2", fieldLayout = "stacked", presence = "optional", linkAs, messageExtras: MessageExtras } = options;
+  const {
+    markdown,
+    size = "2",
+    fieldLayout = "stacked",
+    presence = "optional",
+    linkAs,
+    messageExtras: MessageExtras,
+  } = options;
   const colors = mergeColors(options.colors);
 
   function Section(props: SectionProps): ReactNode {
@@ -344,9 +351,25 @@ export function radixThemes(options: RadixThemesOptions): Components {
     return (
       <Box id={tab.id}>
         {!first && <Separator size="4" my="1" />}
-        <Flex asChild align="center" gap="2" width="100%" py="1" style={{ cursor: "pointer", background: "none", border: 0, textAlign: "left", font: "inherit", color: "inherit" }}>
+        <Flex
+          asChild
+          align="center"
+          gap="2"
+          width="100%"
+          py="1"
+          style={{
+            cursor: "pointer",
+            background: "none",
+            border: 0,
+            textAlign: "left",
+            font: "inherit",
+            color: "inherit",
+          }}
+        >
           <button type="button" aria-expanded={open} aria-controls={body} onClick={() => setOpen((o) => !o)}>
-            <Text size="1" color="gray" aria-hidden="true">{open ? "▾" : "▸"}</Text>
+            <Text size="1" color="gray" aria-hidden="true">
+              {open ? "▾" : "▸"}
+            </Text>
             <Text size="2">{tab.label}</Text>
           </button>
         </Flex>
@@ -366,7 +389,15 @@ export function radixThemes(options: RadixThemesOptions): Components {
     const nested = useContext(InList);
     // Lists nest, and an item answers to its own list's kind.
     return (
-      <Flex asChild direction="column" gap={LIST_GAP[kind]} my={nested ? "1" : "3"} p="0" pl={nested ? "3" : "0"} width="100%">
+      <Flex
+        asChild
+        direction="column"
+        gap={LIST_GAP[kind]}
+        my={nested ? "1" : "3"}
+        p="0"
+        pl={nested ? "3" : "0"}
+        width="100%"
+      >
         <ul style={{ listStyle: "none" }} data-kind={kind}>
           <InList.Provider value={true}>
             <ListKind.Provider value={kind}>{children}</ListKind.Provider>

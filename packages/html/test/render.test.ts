@@ -76,7 +76,7 @@ describe("escaping", () => {
   it("escapes spec text into element content", () => {
     const hostile: ApiIR = {
       ...rest,
-      info: { ...rest.info, title: '</h2><script>alert(1)</script>' },
+      info: { ...rest.info, title: "</h2><script>alert(1)</script>" },
     };
     const html = renderApi(hostile);
     expect(html).not.toContain("<script>");
@@ -156,9 +156,7 @@ describe("operations", () => {
   it("shows a webhook's address and a badge, not its namespaced id", () => {
     // `Endpoint.id` namespaces webhooks as "webhook:name" so they cannot
     // collide with a path. That is identity, not a label.
-    const hook = allOperations(rest).find(
-      (e) => e.operation.kind === "request-response" && e.operation.isWebhook,
-    );
+    const hook = allOperations(rest).find((e) => e.operation.kind === "request-response" && e.operation.isWebhook);
     expect(hook, "the batch fixture declares a webhook").toBeDefined();
     const html = renderOperation(hook!, rest);
     expect(html).not.toContain("webhook:");
@@ -242,7 +240,9 @@ describe("endpoints", () => {
 
   it("gives each message an anchored section straight under its operation, without a discriminator badge", () => {
     const html = renderEndpointById("/v2/{language}", ws);
-    expect(html).toContain('<section class="spec-section spec-section--message" id="start-recognition" data-level="4">');
+    expect(html).toContain(
+      '<section class="spec-section spec-section--message" id="start-recognition" data-level="4">',
+    );
     expect(html).not.toContain("spec-section--messages");
     expect(html).not.toContain("spec-group--message");
     expect(html).not.toContain('spec-badge--constraint">&quot;StartRecognition&quot;');
@@ -323,7 +323,10 @@ describe("navigation", () => {
 describe("legible without CSS", () => {
   /** The page as a reader mode or a text browser would see it. */
   const asText = (html: string): string =>
-    html.replace(/<[^>]+>/g, "").replace(/&quot;/g, '"').replace(/\s+/g, " ");
+    html
+      .replace(/<[^>]+>/g, "")
+      .replace(/&quot;/g, '"')
+      .replace(/\s+/g, " ");
 
   it("separates a field's name, type and constraints", () => {
     // Adjacent inline elements with no whitespace render flush together:
@@ -403,10 +406,12 @@ describe("renderEntryExamples", () => {
 describe("handshake", () => {
   it("opens a WebSocket channel with its upgrade request and how to authenticate", () => {
     const html = renderEndpointById("/v2/{language}", ws);
-    expect(html).toContain('spec-section spec-section--handshake');
+    expect(html).toContain("spec-section spec-section--handshake");
     expect(html).toContain(">wss://eu2.rt.example.com/v2/v2/{language}</code>");
     expect(html).toContain(">Authorization: Bearer &lt;token&gt;</code>");
-    expect(html.slice(html.indexOf("spec-section--handshake"), html.indexOf("Authentication"))).toContain("Production endpoint.");
+    expect(html.slice(html.indexOf("spec-section--handshake"), html.indexOf("Authentication"))).toContain(
+      "Production endpoint.",
+    );
     expect(html.indexOf("spec-section--handshake")).toBeLessThan(html.indexOf("spec-section--operation"));
   });
 

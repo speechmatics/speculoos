@@ -15,15 +15,17 @@ describe("upcast — OpenAPI 3.0", () => {
   });
 
   it("converts boolean exclusive bounds to the numeric form", () => {
-    expect(
-      upcast({ type: "number", minimum: 0, exclusiveMinimum: true }, "openapi-3.0"),
-    ).toEqual({ type: "number", exclusiveMinimum: 0 });
+    expect(upcast({ type: "number", minimum: 0, exclusiveMinimum: true }, "openapi-3.0")).toEqual({
+      type: "number",
+      exclusiveMinimum: 0,
+    });
   });
 
   it("drops a boolean exclusiveMinimum that is false", () => {
-    expect(
-      upcast({ type: "number", minimum: 0, exclusiveMinimum: false }, "openapi-3.0"),
-    ).toEqual({ type: "number", minimum: 0 });
+    expect(upcast({ type: "number", minimum: 0, exclusiveMinimum: false }, "openapi-3.0")).toEqual({
+      type: "number",
+      minimum: 0,
+    });
   });
 
   it("promotes singular example to examples", () => {
@@ -42,16 +44,14 @@ describe("upcast — draft-07 (AsyncAPI 2.x)", () => {
   });
 
   it("converts tuple-style items to prefixItems and additionalItems to items", () => {
-    expect(
-      upcast({ items: [{ type: "string" }], additionalItems: { type: "number" } }, "asyncapi-2"),
-    ).toEqual({ prefixItems: [{ type: "string" }], items: { type: "number" } });
+    expect(upcast({ items: [{ type: "string" }], additionalItems: { type: "number" } }, "asyncapi-2")).toEqual({
+      prefixItems: [{ type: "string" }],
+      items: { type: "number" },
+    });
   });
 
   it("splits dependencies into dependentRequired and dependentSchemas", () => {
-    const out = upcast(
-      { dependencies: { a: ["b"], c: { type: "string" } } },
-      "asyncapi-2",
-    ) as Record<string, unknown>;
+    const out = upcast({ dependencies: { a: ["b"], c: { type: "string" } } }, "asyncapi-2") as Record<string, unknown>;
     expect(out["dependentRequired"]).toEqual({ a: ["b"] });
     expect(out["dependentSchemas"]).toEqual({ c: { type: "string" } });
   });
@@ -67,10 +67,10 @@ describe("upcast — instance data is never rewritten", () => {
   it("leaves a `nullable` key inside an example alone", () => {
     // An example payload may contain any field names at all, including ones
     // that happen to be schema keywords. Recursing into it would corrupt them.
-    const out = upcast(
-      { type: "object", example: { nullable: true, items: [1, 2] } },
-      "openapi-3.0",
-    ) as Record<string, unknown>;
+    const out = upcast({ type: "object", example: { nullable: true, items: [1, 2] } }, "openapi-3.0") as Record<
+      string,
+      unknown
+    >;
     expect(out["examples"]).toEqual([{ nullable: true, items: [1, 2] }]);
   });
 
@@ -82,11 +82,9 @@ describe("upcast — instance data is never rewritten", () => {
   });
 
   it("recurses into nested subschemas", () => {
-    expect(
-      upcast(
-        { type: "object", properties: { a: { type: "string", nullable: true } } },
-        "openapi-3.0",
-      ),
-    ).toEqual({ type: "object", properties: { a: { type: ["string", "null"] } } });
+    expect(upcast({ type: "object", properties: { a: { type: "string", nullable: true } } }, "openapi-3.0")).toEqual({
+      type: "object",
+      properties: { a: { type: ["string", "null"] } },
+    });
   });
 });

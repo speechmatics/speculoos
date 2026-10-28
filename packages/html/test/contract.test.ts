@@ -74,8 +74,23 @@ describe("no styling", () => {
 
   it("uses only ordinary semantic elements", () => {
     const allowed = new Set([
-      "a", "code", "div", "h1", "h2", "h3", "h4", "h5", "h6",
-      "header", "li", "nav", "p", "pre", "section", "span", "ul",
+      "a",
+      "code",
+      "div",
+      "h1",
+      "h2",
+      "h3",
+      "h4",
+      "h5",
+      "h6",
+      "header",
+      "li",
+      "nav",
+      "p",
+      "pre",
+      "section",
+      "span",
+      "ul",
     ]);
     expect(tagsIn(everything).filter((t) => !allowed.has(t))).toEqual([]);
   });

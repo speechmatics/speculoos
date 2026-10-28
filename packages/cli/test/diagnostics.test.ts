@@ -63,7 +63,10 @@ describe("the diagnostic catalogue", () => {
   it("spells generated codes the way `lower` generates them", () => {
     // `code(keyword)` strips a leading $ and converts camelCase to SNAKE_CASE.
     const generate = (keyword: string): string =>
-      keyword.replace(/^\$/, "").replace(/([a-z])([A-Z])/g, "$1_$2").toUpperCase();
+      keyword
+        .replace(/^\$/, "")
+        .replace(/([a-z])([A-Z])/g, "$1_$2")
+        .toUpperCase();
     const keywords = ["if", "not", "dependentSchemas", "unevaluatedProperties", "unevaluatedItems", "$dynamicRef"];
     expect(keywords.map(generate).sort()).toEqual([...UNSUPPORTED_KEYWORD_CODES].sort());
   });

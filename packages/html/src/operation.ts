@@ -109,20 +109,13 @@ function operationParameters(endpoint: Endpoint, operation: Operation, nested: b
   return nested ? own : [...endpoint.parameters, ...own];
 }
 
-function parameters(
-  c: Ctx,
-  endpoint: Endpoint,
-  all: Parameter[],
-  source: Operation["source"],
-  level: number,
-): Html {
+function parameters(c: Ctx, endpoint: Endpoint, all: Parameter[], source: Operation["source"], level: number): Html {
   if (all.length === 0) return "";
   return join(
     PARAM_GROUPS.map(({ in: location, title, channelTitle }) => {
       const members = all.filter((p) => p.in === location);
       if (members.length === 0) return "";
-      const heading =
-        endpoint.addressKind === "channel" && channelTitle !== undefined ? channelTitle : title;
+      const heading = endpoint.addressKind === "channel" && channelTitle !== undefined ? channelTitle : title;
       return section(
         c,
         { kind: "parameters", title: text(heading), level },
@@ -156,11 +149,7 @@ function responses(c: Ctx, list: RestResponse[], level: number, idPrefix: string
       content(c, response.content, `${idPrefix}-${response.status}`, level + 2),
     ]),
   }));
-  return section(
-    c,
-    { kind: "response", title: text("Responses"), level },
-    group(c, "status", items, level + 1),
-  );
+  return section(c, { kind: "response", title: text("Responses"), level }, group(c, "status", items, level + 1));
 }
 
 /**
@@ -231,9 +220,7 @@ function links(c: Ctx, operation: Operation, level: number): Html {
       { class: c.o.cls("list", "links") },
       ...operation.links.map((l) => {
         const target: OperationEntry | undefined =
-          l.operationId === undefined
-            ? undefined
-            : entries.find((e) => e.operation.id === l.operationId);
+          l.operationId === undefined ? undefined : entries.find((e) => e.operation.id === l.operationId);
         const label =
           target === undefined
             ? code(c, l.name)
@@ -318,21 +305,13 @@ export interface RenderOperationOptions extends HtmlOptions {
 }
 
 /** One operation, with everything hanging off it. */
-export function renderOperation(
-  entry: OperationEntry,
-  ir: ApiIR,
-  options: RenderOperationOptions = {},
-): Html {
+export function renderOperation(entry: OperationEntry, ir: ApiIR, options: RenderOperationOptions = {}): Html {
   const c: Ctx = { ir, o: resolve(options) };
   return operationSection(c, entry, options.level ?? c.o.headingLevel);
 }
 
 /** Looks an operation up by id, for callers who have the id and not the pair. */
-export function renderOperationById(
-  id: string,
-  ir: ApiIR,
-  options: RenderOperationOptions = {},
-): Html {
+export function renderOperationById(id: string, ir: ApiIR, options: RenderOperationOptions = {}): Html {
   const c: Ctx = { ir, o: resolve(options) };
   const entry = allOperations(ir).find((e) => e.operation.id === id);
   if (entry === undefined) return empty(c, `No operation ${id}`);
@@ -376,9 +355,7 @@ export function operationSection(c: Ctx, entry: OperationEntry, level: number, n
                   kind: "request",
                   title: text("Request body"),
                   level: level + 1,
-                  subtitle: operation.requestBody.required
-                    ? badge(c, "required", text("required"))
-                    : undefined,
+                  subtitle: operation.requestBody.required ? badge(c, "required", text("required")) : undefined,
                 },
                 docsBody(c, operation.requestBody.docs),
                 content(c, operation.requestBody.content, `${operation.slug}-request`, level + 2),

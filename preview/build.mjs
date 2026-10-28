@@ -99,9 +99,7 @@ async function main() {
         )
       : PAGES.map((p) => ({ ...p, root: specDir }));
 
-  const index = specs
-    .map((s) => `<li><a href="${s.name}.html">${s.title}</a></li>`)
-    .join("");
+  const index = specs.map((s) => `<li><a href="${s.name}.html">${s.title}</a></li>`).join("");
 
   for (const spec of specs) {
     const started = Date.now();

@@ -97,8 +97,7 @@ describe("inspect", () => {
 
 describe("AsyncAPI through the CLI", () => {
   const rtRoot = specDir;
-  const buildRt = (file: string) =>
-    run({ specs: [{ name: "rt", path: resolve(rtRoot, file) }], root: rtRoot });
+  const buildRt = (file: string) => run({ specs: [{ name: "rt", path: resolve(rtRoot, file) }], root: rtRoot });
 
   it("emits AsyncAPI IR that validates against the published schema", async () => {
     const { ir } = await buildRt("realtime-v3.yaml");
@@ -115,8 +114,7 @@ describe("AsyncAPI through the CLI", () => {
   it("renders the same page from the 2.6 and 3.0 spellings of one API", async () => {
     const v2 = await buildRt("realtime-v2.yaml");
     const v3 = await buildRt("realtime-v3.yaml");
-    const render = (ir: typeof v2.ir) =>
-      renderInspect(ir!, { operation: "sendToServer", expand: "always" });
+    const render = (ir: typeof v2.ir) => renderInspect(ir!, { operation: "sendToServer", expand: "always" });
     expect(render(v3.ir)).toEqual(render(v2.ir));
   });
 
@@ -143,12 +141,7 @@ describe("transform passes", () => {
       tag: "Jobs",
       hideInternal: true,
     }).map((t) => t.displayName);
-    expect(names).toEqual([
-      "hideInternal(x-internal)",
-      "filterByTag(Jobs)",
-      "renameTypes",
-      "pruneUnreachableTypes",
-    ]);
+    expect(names).toEqual(["hideInternal(x-internal)", "filterByTag(Jobs)", "renameTypes", "pruneUnreachableTypes"]);
   });
 
   it("is empty when no transform flag was given", () => {
@@ -156,9 +149,7 @@ describe("transform passes", () => {
   });
 
   it("takes a custom extension key", () => {
-    expect(passesFor({ hideInternal: "x-private" })[0]?.displayName).toBe(
-      "hideInternal(x-private)",
-    );
+    expect(passesFor({ hideInternal: "x-private" })[0]?.displayName).toBe("hideInternal(x-private)");
   });
 
   it("rejects a rename that is not Old=New", () => {

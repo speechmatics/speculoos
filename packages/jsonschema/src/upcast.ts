@@ -15,12 +15,7 @@ import {
   type Schema,
 } from "./canonical.js";
 
-export type Dialect =
-  | "openapi-3.0"
-  | "openapi-3.1"
-  | "asyncapi-2"
-  | "asyncapi-3"
-  | "json-schema";
+export type Dialect = "openapi-3.0" | "openapi-3.1" | "asyncapi-2" | "asyncapi-3" | "json-schema";
 
 /** Recursively converts a schema of `dialect` into canonical form. Pure. */
 export function upcast(schema: unknown, dialect: Dialect): Schema {
@@ -36,9 +31,7 @@ export function upcast(schema: unknown, dialect: Dialect): Schema {
     }
     if ((SCHEMA_KEYWORDS as readonly string[]).includes(key)) {
       // draft-07 tuple form: `items: [...]` is an array of schemas, not one schema.
-      out[key] = Array.isArray(value)
-        ? value.map((v) => upcast(v, dialect))
-        : upcast(value, dialect);
+      out[key] = Array.isArray(value) ? value.map((v) => upcast(v, dialect)) : upcast(value, dialect);
       continue;
     }
     if ((SCHEMA_ARRAY_KEYWORDS as readonly string[]).includes(key)) {

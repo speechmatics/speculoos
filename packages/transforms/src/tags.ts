@@ -9,10 +9,13 @@ export interface SortTagsOptions {
 /** Reorders `ir.tags`, which is the navigation order. Operations are untouched. */
 export const sortTags = (order: readonly string[], opts: SortTagsOptions = {}): Transform => {
   const unlisted = opts.unlisted ?? "after";
-  return named(`sortTags(${order.join(", ")})`, (ir: ApiIR): ApiIR => ({
-    ...ir,
-    tags: reorder(ir.tags, order, unlisted),
-  }));
+  return named(
+    `sortTags(${order.join(", ")})`,
+    (ir: ApiIR): ApiIR => ({
+      ...ir,
+      tags: reorder(ir.tags, order, unlisted),
+    }),
+  );
 };
 
 /** Exported because `filterByTag` wants exactly this and should not reimplement it. */

@@ -88,8 +88,7 @@ export const DIAGNOSTIC_CODES: readonly DiagnosticCode[] = [
     code: "NO_DIALECT",
     severity: "info",
     source: "@speculoos/loader",
-    meaning:
-      "A document declares no $schema. The default dialect is assumed; say so explicitly if that is wrong.",
+    meaning: "A document declares no $schema. The default dialect is assumed; say so explicitly if that is wrong.",
   },
 
   // ── jsonschema ──────────────────────────────────────────────────────────
@@ -139,7 +138,8 @@ export const DIAGNOSTIC_CODES: readonly DiagnosticCode[] = [
     code: "REF_CYCLE",
     severity: "error",
     source: "@speculoos/adapter-kit",
-    meaning: "A $ref chain closes on itself with nothing in between. A self-referential *type* is fine; this is a ref pointing at a ref pointing back.",
+    meaning:
+      "A $ref chain closes on itself with nothing in between. A self-referential *type* is fine; this is a ref pointing at a ref pointing back.",
   },
 
   // ── asyncapi ────────────────────────────────────────────────────────────

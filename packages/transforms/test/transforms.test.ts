@@ -26,16 +26,21 @@ beforeAll(async () => {
 });
 
 const ops = (ir: ApiIR) => allOperations(ir).map((e) => e.operation.id);
-const typeNames = (ir: ApiIR) => Object.values(ir.schemas).map((d) => d.name).sort();
+const typeNames = (ir: ApiIR) =>
+  Object.values(ir.schemas)
+    .map((d) => d.name)
+    .sort();
 const id = (name: string) => `batch#/components/schemas/${name}`;
 
 describe("applyTransforms", () => {
   it("applies in order and leaves the input untouched", () => {
     const seen: string[] = [];
-    const mark = (name: string): Transform => (ir) => {
-      seen.push(name);
-      return { ...ir, info: { ...ir.info, title: name } };
-    };
+    const mark =
+      (name: string): Transform =>
+      (ir) => {
+        seen.push(name);
+        return { ...ir, info: { ...ir.info, title: name } };
+      };
     const out = applyTransforms(base, [mark("a"), mark("b")]);
     expect(seen).toEqual(["a", "b"]);
     expect(out.info.title).toBe("b");
@@ -124,22 +129,22 @@ describe("hideWhere", () => {
     const withCallback: ApiIR = {
       ...base,
       endpoints: base.endpoints.map((e) =>
-        e.address !== "/jobs" ? e : {
-          ...e,
-          operations: e.operations.map((o) =>
-            o.kind === "request-response" && o.id === "createJob"
-              ? { ...o, callbacks: [{ ...base.endpoints[2]! }] }
-              : o,
-          ),
-        },
+        e.address !== "/jobs"
+          ? e
+          : {
+              ...e,
+              operations: e.operations.map((o) =>
+                o.kind === "request-response" && o.id === "createJob"
+                  ? { ...o, callbacks: [{ ...base.endpoints[2]! }] }
+                  : o,
+              ),
+            },
       ),
     };
     const target = withCallback.endpoints[0]!.operations.find((o) => o.id === "createJob");
     expect(target?.kind === "request-response" && target.callbacks.length).toBe(1);
 
-    const out = hideWhere((s) => s.kind === "operation" && s.operation.id === "jobFinished")(
-      withCallback,
-    );
+    const out = hideWhere((s) => s.kind === "operation" && s.operation.id === "jobFinished")(withCallback);
     const after = out.endpoints[0]!.operations.find((o) => o.id === "createJob");
     expect(after?.kind === "request-response" && after.callbacks.length).toBe(0);
   });
@@ -188,20 +193,12 @@ describe("sortTags", () => {
   });
 
   it("can put them before, or drop them", () => {
-    expect(sortTags(["Internal"], { unlisted: "before" })(base).tags.map((t) => t.name)).toEqual([
-      "Jobs",
-      "Internal",
-    ]);
-    expect(sortTags(["Internal"], { unlisted: "drop" })(base).tags.map((t) => t.name)).toEqual([
-      "Internal",
-    ]);
+    expect(sortTags(["Internal"], { unlisted: "before" })(base).tags.map((t) => t.name)).toEqual(["Jobs", "Internal"]);
+    expect(sortTags(["Internal"], { unlisted: "drop" })(base).tags.map((t) => t.name)).toEqual(["Internal"]);
   });
 
   it("names a tag that does not exist without inventing it", () => {
-    expect(sortTags(["Ghost", "Internal"])(base).tags.map((t) => t.name)).toEqual([
-      "Internal",
-      "Jobs",
-    ]);
+    expect(sortTags(["Ghost", "Internal"])(base).tags.map((t) => t.name)).toEqual(["Internal", "Jobs"]);
   });
 
   it("leaves operations alone", () => {
@@ -268,9 +265,7 @@ describe("redactExamples", () => {
   it("reaches the pass-through bags too", () => {
     const withBindings: ApiIR = {
       ...base,
-      endpoints: base.endpoints.map((e, i) =>
-        i === 0 ? { ...e, bindings: { ws: { examples: ["secret"] } } } : e,
-      ),
+      endpoints: base.endpoints.map((e, i) => (i === 0 ? { ...e, bindings: { ws: { examples: ["secret"] } } } : e)),
     };
     const out = redactExamples()(withBindings);
     const ws = out.endpoints[0]?.bindings?.["ws"] as { examples: unknown[] };

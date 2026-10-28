@@ -152,11 +152,7 @@ function lowerUnion(
   loc: SourceLocation,
   ctx: LowerContext,
 ): Node | undefined {
-  const keyword = Array.isArray(schema["oneOf"])
-    ? "oneOf"
-    : Array.isArray(schema["anyOf"])
-      ? "anyOf"
-      : undefined;
+  const keyword = Array.isArray(schema["oneOf"]) ? "oneOf" : Array.isArray(schema["anyOf"]) ? "anyOf" : undefined;
   if (keyword === undefined) return undefined;
 
   const branches = schema[keyword] as unknown[];
@@ -233,9 +229,7 @@ function requiredOnlyNote(branches: unknown[], keyword: "oneOf" | "anyOf"): stri
   const labels: string[] = [];
   for (const branch of branches) {
     if (!isObject(branch)) return undefined;
-    const extra = Object.keys(branch).filter(
-      (k) => k !== "required" && !k.startsWith("$") && !DOC_KEYWORDS.has(k),
-    );
+    const extra = Object.keys(branch).filter((k) => k !== "required" && !k.startsWith("$") && !DOC_KEYWORDS.has(k));
     if (extra.length > 0) return undefined;
     const required = branch["required"];
     if (!Array.isArray(required) || required.length === 0) return undefined;
@@ -255,9 +249,7 @@ function withNote(node: Node, note: string): Node {
  */
 function restatesConsts(node: Node, variants: { node: Node }[]): boolean {
   const kind =
-    node.kind === "string" || node.kind === "boolean" ? node.kind
-    : node.kind === "number" ? "number"
-    : undefined;
+    node.kind === "string" || node.kind === "boolean" ? node.kind : node.kind === "number" ? "number" : undefined;
   if (kind === undefined || variants.length === 0) return false;
   if ("constraints" in node && Object.keys(node.constraints).length > 0) return false;
   return variants.every((v) => v.node.kind === "const" && typeof v.node.value === kind);
@@ -283,12 +275,7 @@ function addsNothing(node: Node): boolean {
  * a name the reader knows. Anything that cannot merge falls back to
  * `intersection` plus a diagnostic rather than a silent guess.
  */
-function lowerAllOf(
-  schema: Record<string, unknown>,
-  head: Head,
-  loc: SourceLocation,
-  ctx: LowerContext,
-): Node {
+function lowerAllOf(schema: Record<string, unknown>, head: Head, loc: SourceLocation, ctx: LowerContext): Node {
   const branches = schema["allOf"] as unknown[];
   const members = branches.map((b, i) => lower(b, child(loc, `allOf/${i}`), ctx));
 
@@ -309,9 +296,7 @@ function lowerAllOf(
   }
 
   if (!mergeable || (objects.length === 0 && composedFrom.length === 0)) {
-    ctx.report(
-      diag("info", "ALLOF_UNMERGED", "allOf members could not be merged into one object", loc),
-    );
+    ctx.report(diag("info", "ALLOF_UNMERGED", "allOf members could not be merged into one object", loc));
     return { kind: "intersection", ...head, members };
   }
 
@@ -331,9 +316,7 @@ function lowerAllOf(
       // away the other's constraints.
       const merged = mergeProperties(properties[at]!, p);
       if (merged === undefined) {
-        ctx.report(
-          diag("warning", "ALLOF_CONFLICT", `allOf members give "${p.name}" incompatible types`, loc),
-        );
+        ctx.report(diag("warning", "ALLOF_CONFLICT", `allOf members give "${p.name}" incompatible types`, loc));
         continue; // keep the first; the conflict is on the record
       }
       properties[at] = merged;
@@ -449,12 +432,7 @@ function mergeNodes(a: Node, b: Node): Node | undefined {
 // Structural kinds
 // ─────────────────────────────────────────────────────────────────────────────
 
-function lowerObject(
-  schema: Record<string, unknown>,
-  head: Head,
-  loc: SourceLocation,
-  ctx: LowerContext,
-): Node {
+function lowerObject(schema: Record<string, unknown>, head: Head, loc: SourceLocation, ctx: LowerContext): Node {
   const props = isObject(schema["properties"]) ? schema["properties"] : {};
   const requiredList = Array.isArray(schema["required"])
     ? schema["required"].filter((r): r is string => typeof r === "string")
@@ -493,10 +471,7 @@ function lowerObject(
     : [];
 
   const propertyNames = schema["propertyNames"];
-  const names =
-    propertyNames === undefined
-      ? undefined
-      : lower(propertyNames, child(loc, "propertyNames"), ctx);
+  const names = propertyNames === undefined ? undefined : lower(propertyNames, child(loc, "propertyNames"), ctx);
 
   const constraints: ObjectConstraints = {};
   const minP = num(schema, "minProperties");
@@ -510,20 +485,13 @@ function lowerObject(
     properties,
     additional,
     patternProperties,
-    ...(names !== undefined && (names.kind === "string" || names.kind === "enum")
-      ? { propertyNames: names }
-      : {}),
+    ...(names !== undefined && (names.kind === "string" || names.kind === "enum") ? { propertyNames: names } : {}),
     constraints,
     composedFrom: [],
   };
 }
 
-function lowerArray(
-  schema: Record<string, unknown>,
-  head: Head,
-  loc: SourceLocation,
-  ctx: LowerContext,
-): Node {
+function lowerArray(schema: Record<string, unknown>, head: Head, loc: SourceLocation, ctx: LowerContext): Node {
   const constraints: ArrayConstraints = {};
   const minItems = num(schema, "minItems");
   const maxItems = num(schema, "maxItems");
@@ -541,9 +509,7 @@ function lowerArray(
   }
 
   if (Array.isArray(schema["prefixItems"])) {
-    const prefixItems = schema["prefixItems"].map((s, i) =>
-      lower(s, child(loc, `prefixItems/${i}`), ctx),
-    );
+    const prefixItems = schema["prefixItems"].map((s, i) => lower(s, child(loc, `prefixItems/${i}`), ctx));
     const items = schema["items"];
     const rest: Extract<Node, { kind: "tuple" }>["rest"] =
       items === false
@@ -604,14 +570,7 @@ function numberConstraints(schema: Record<string, unknown>): NumberConstraints {
 // Helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
-const DOC_KEYWORDS = new Set([
-  "title",
-  "description",
-  "deprecated",
-  "default",
-  "examples",
-  "externalDocs",
-]);
+const DOC_KEYWORDS = new Set(["title", "description", "deprecated", "default", "examples", "externalDocs"]);
 
 export function extractDocs(schema: Record<string, unknown>): Docs {
   const docs: Docs = {};
@@ -643,14 +602,15 @@ function dependentRequiredNotes(schema: Record<string, unknown>): string[] {
   if (!isObject(dr)) return [];
   return Object.entries(dr)
     .filter(([, v]) => Array.isArray(v) && v.length > 0)
-    .map(([key, v]) => `If \`${key}\` is present, ${(v as string[]).map((n) => `\`${n}\``).join(", ")} ${(v as string[]).length === 1 ? "is" : "are"} required.`);
+    .map(
+      ([key, v]) =>
+        `If \`${key}\` is present, ${(v as string[]).map((n) => `\`${n}\``).join(", ")} ${(v as string[]).length === 1 ? "is" : "are"} required.`,
+    );
 }
 
 /** Does this schema say anything a reader would see, beyond bookkeeping? */
 function hasDisplayableContent(schema: Record<string, unknown>): boolean {
-  return Object.keys(schema).some(
-    (k) => !k.startsWith("$") && !DOC_KEYWORDS.has(k) && k !== "$speculoosNullableAny",
-  );
+  return Object.keys(schema).some((k) => !k.startsWith("$") && !DOC_KEYWORDS.has(k) && k !== "$speculoosNullableAny");
 }
 
 function inferType(schema: Record<string, unknown>): string | undefined {
@@ -661,10 +621,7 @@ function inferType(schema: Record<string, unknown>): string | undefined {
   return undefined;
 }
 
-function inferEnumBase(
-  values: unknown[],
-  typeList: string[],
-): "string" | "number" | "integer" | "boolean" | undefined {
+function inferEnumBase(values: unknown[], typeList: string[]): "string" | "number" | "integer" | "boolean" | undefined {
   const declared = typeList.find((t) => t !== "null");
   if (declared === "string" || declared === "number" || declared === "integer" || declared === "boolean") {
     return declared;
@@ -764,14 +721,12 @@ export function escapePointer(segment: string): string {
 }
 
 function code(keyword: string): string {
-  return keyword.replace(/^\$/, "").replace(/([a-z])([A-Z])/g, "$1_$2").toUpperCase();
+  return keyword
+    .replace(/^\$/, "")
+    .replace(/([a-z])([A-Z])/g, "$1_$2")
+    .toUpperCase();
 }
 
-function diag(
-  severity: Diagnostic["severity"],
-  code: string,
-  message: string,
-  source: SourceLocation,
-): Diagnostic {
+function diag(severity: Diagnostic["severity"], code: string, message: string, source: SourceLocation): Diagnostic {
   return { severity, code, message, source };
 }

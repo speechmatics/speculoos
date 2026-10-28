@@ -11,13 +11,7 @@
  * the schemas.
  */
 
-import type {
-  Diagnostic,
-  Docs,
-  Node,
-  SecurityRequirements,
-  SourceLocation,
-} from "@speculoos/core";
+import type { Diagnostic, Docs, Node, SecurityRequirements, SourceLocation } from "@speculoos/core";
 import { isObject, str } from "@speculoos/jsonschema";
 
 /** The minimum an adapter needs from a loaded project. */
@@ -64,12 +58,7 @@ export interface Resolved {
  * so the registry keeps the type's name. These have no display identity of their
  * own, so resolving them in place is right.
  */
-export function deref(
-  ctx: AdapterContext,
-  value: unknown,
-  source: SourceLocation,
-  depth = 0,
-): Resolved {
+export function deref(ctx: AdapterContext, value: unknown, source: SourceLocation, depth = 0): Resolved {
   if (!isObject(value) || typeof value["$ref"] !== "string") return { value, source };
 
   if (depth > 32) {
@@ -79,9 +68,7 @@ export function deref(
 
   const target = ctx.project.resolve(value["$ref"], source);
   if (target === undefined) {
-    ctx.report(
-      diagnostic("error", "UNRESOLVED_REF", `Cannot resolve $ref "${value["$ref"]}"`, source),
-    );
+    ctx.report(diagnostic("error", "UNRESOLVED_REF", `Cannot resolve $ref "${value["$ref"]}"`, source));
     return { value: undefined, source };
   }
 
@@ -147,9 +134,7 @@ export function securityFromMaps(value: unknown): SecurityRequirements {
     return [
       Object.entries(alternative).map(([scheme, scopes]) => ({
         scheme,
-        scopes: Array.isArray(scopes)
-          ? scopes.filter((s): s is string => typeof s === "string")
-          : [],
+        scopes: Array.isArray(scopes) ? scopes.filter((s): s is string => typeof s === "string") : [],
       })),
     ];
   });

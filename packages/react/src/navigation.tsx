@@ -28,12 +28,19 @@ function OperationLabel({ endpoint, operation }: { endpoint: Endpoint; operation
   return (
     <>
       {operation.kind === "request-response" ? (
-        <C.Badge tone="method" value={operation.method}>{operation.method.toUpperCase()}</C.Badge>
+        <C.Badge tone="method" value={operation.method}>
+          {operation.method.toUpperCase()}
+        </C.Badge>
       ) : (
-        <C.Badge tone="direction" value={operation.direction}>{DIRECTION_LABEL[operation.direction]}</C.Badge>
+        <C.Badge tone="direction" value={operation.direction}>
+          {DIRECTION_LABEL[operation.direction]}
+        </C.Badge>
       )}
       {operation.kind === "request-response" && operation.isWebhook && (
-        <> <C.Badge tone="note">webhook</C.Badge></>
+        <>
+          {" "}
+          <C.Badge tone="note">webhook</C.Badge>
+        </>
       )}{" "}
       <C.Code>{endpoint.address}</C.Code>
       {operation.docs.title !== undefined && <> {operation.docs.title}</>}
@@ -54,11 +61,20 @@ function EntryLabel({ entry }: { entry: ApiEntry }): ReactNode {
     return (
       <>
         {operation.kind === "request-response" ? (
-          <C.Badge tone="method" value={operation.method}>{operation.method.toUpperCase()}</C.Badge>
+          <C.Badge tone="method" value={operation.method}>
+            {operation.method.toUpperCase()}
+          </C.Badge>
         ) : (
-          <C.Badge tone="direction" value={operation.direction}>{DIRECTION_LABEL[operation.direction]}</C.Badge>
+          <C.Badge tone="direction" value={operation.direction}>
+            {DIRECTION_LABEL[operation.direction]}
+          </C.Badge>
         )}
-        {operation.kind === "request-response" && operation.isWebhook && <> <C.Badge tone="note">webhook</C.Badge></>}{" "}
+        {operation.kind === "request-response" && operation.isWebhook && (
+          <>
+            {" "}
+            <C.Badge tone="note">webhook</C.Badge>
+          </>
+        )}{" "}
         {operation.docs.title ?? <C.Code>{endpoint.address}</C.Code>}
       </>
     );
@@ -68,7 +84,9 @@ function EntryLabel({ entry }: { entry: ApiEntry }): ReactNode {
     <>
       {endpoint.protocols.map((protocol) => (
         <Fragment key={protocol}>
-          <C.Badge tone="protocol" value={protocol}>{protocol.toUpperCase()}</C.Badge>{" "}
+          <C.Badge tone="protocol" value={protocol}>
+            {protocol.toUpperCase()}
+          </C.Badge>{" "}
         </Fragment>
       ))}
       {endpoint.docs.title ?? <C.Code>{endpoint.address}</C.Code>}
@@ -103,7 +121,13 @@ export function EntryList(): ReactNode {
         const label = <EntryLabel entry={entry} />;
         return (
           <C.ListItem key={entrySlug(entry)}>
-            {href === undefined ? label : <C.Link href={href} target={target}>{label}</C.Link>}
+            {href === undefined ? (
+              label
+            ) : (
+              <C.Link href={href} target={target}>
+                {label}
+              </C.Link>
+            )}
           </C.ListItem>
         );
       })}
@@ -150,10 +174,7 @@ export function OperationList({ level }: OperationListProps = {}): ReactNode {
                   {href === undefined ? (
                     label
                   ) : (
-                    <C.Link
-                      href={href}
-                      target={{ kind: "operation", id: operation.id, operation, endpoint }}
-                    >
+                    <C.Link href={href} target={{ kind: "operation", id: operation.id, operation, endpoint }}>
                       {label}
                     </C.Link>
                   )}

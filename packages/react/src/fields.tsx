@@ -25,8 +25,10 @@ export function DocsBody({ docs }: { docs: Docs }): ReactNode {
     <>
       {docs.description !== undefined && <C.Markdown>{docs.description}</C.Markdown>}
       {external !== undefined && (
-        <C.Link href={options.href({ kind: "external", url: external.url }) ?? external.url}
-          target={{ kind: "external", url: external.url }}>
+        <C.Link
+          href={options.href({ kind: "external", url: external.url }) ?? external.url}
+          target={{ kind: "external", url: external.url }}
+        >
           {external.description ?? external.url}
         </C.Link>
       )}
@@ -72,7 +74,11 @@ function Composition({ ids }: { ids: TypeId[] }): ReactNode {
       {ids.map((id) => {
         const def = ir.schemas[id];
         const href = options.href({ kind: "type", id, def });
-        const body = <>extends <C.Code>{def?.name ?? id}</C.Code></>;
+        const body = (
+          <>
+            extends <C.Code>{def?.name ?? id}</C.Code>
+          </>
+        );
         return (
           <Fragment key={id}>
             {href === undefined ? (
@@ -125,10 +131,7 @@ function rowProps(
   expanded?: boolean,
 ): Omit<FieldRowProps, "children"> {
   const composed = field.composedFrom ?? [];
-  const chips = [
-    ...field.chips.filter((c) => c.kind !== "extends"),
-    ...shapeChips(field),
-  ];
+  const chips = [...field.chips.filter((c) => c.kind !== "extends"), ...shapeChips(field)];
   return {
     field,
     depth: field.depth,
@@ -246,10 +249,7 @@ function SchemaTableBody({ node, kind, nested, view, expandRefs, maxDepth, empty
   // Which rows to show, and what a dropped root row was carrying, are decisions
   // about content rather than markup, so `@speculoos/core` takes them and both
   // renderers get the same answer.
-  const { fields, composedFrom } = useMemo(
-    () => toFieldList(tree, nested ? "tree" : "rows"),
-    [tree, nested],
-  );
+  const { fields, composedFrom } = useMemo(() => toFieldList(tree, nested ? "tree" : "rows"), [tree, nested]);
 
   if (fields.length === 0 && composedFrom.length === 0) {
     return empty === undefined ? null : <C.Empty>{empty}</C.Empty>;

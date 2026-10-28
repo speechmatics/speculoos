@@ -45,9 +45,7 @@ function servers(c: Ctx, list: Server[], level: number): Html {
                     { class: c.o.cls("server-variable") },
                     code(c, v.name),
                     text(` default ${v.default}`),
-                    v.enum !== undefined && v.enum.length > 0
-                      ? text(` — one of ${v.enum.join(", ")}`)
-                      : undefined,
+                    v.enum !== undefined && v.enum.length > 0 ? text(` — one of ${v.enum.join(", ")}`) : undefined,
                     v.description !== undefined ? markdown(c, v.description) : undefined,
                   ),
                 ),
@@ -86,9 +84,7 @@ export function renderApi(ir: ApiIR, options: RenderApiOptions = {}): Html {
             { class: c.o.cls("info") },
             h(c.o.heading(level), { class: c.o.cls("title") }, text(ir.info.title)),
             h("p", { class: c.o.cls("version") }, text(`Version ${ir.info.version}`)),
-            ir.info.summary !== undefined
-              ? h("p", { class: c.o.cls("summary") }, text(ir.info.summary))
-              : undefined,
+            ir.info.summary !== undefined ? h("p", { class: c.o.cls("summary") }, text(ir.info.summary)) : undefined,
             ir.info.description !== undefined ? markdown(c, ir.info.description) : undefined,
           ),
           servers(c, ir.servers, level + 1),

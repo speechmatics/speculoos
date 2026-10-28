@@ -92,9 +92,7 @@ export const hideWhere = (hide: HidePredicate): Transform =>
     // was already unused was declared that way on purpose and stays.
     const before = usedTags(ir.endpoints);
     const after = usedTags(endpoints);
-    const tags = ir.tags.filter(
-      (tag) => !hide({ kind: "tag", tag }) && (after.has(tag.name) || !before.has(tag.name)),
-    );
+    const tags = ir.tags.filter((tag) => !hide({ kind: "tag", tag }) && (after.has(tag.name) || !before.has(tag.name)));
 
     return {
       ...ir,
@@ -114,10 +112,13 @@ export const hideInternal = (key = "x-internal"): Transform =>
   named(`hideInternal(${key})`, (ir) =>
     hideWhere((s) => {
       const docs =
-        s.kind === "endpoint" ? s.endpoint.docs
-        : s.kind === "operation" ? s.operation.docs
-        : s.kind === "tag" ? s.tag.docs
-        : s.type.docs;
+        s.kind === "endpoint"
+          ? s.endpoint.docs
+          : s.kind === "operation"
+            ? s.operation.docs
+            : s.kind === "tag"
+              ? s.tag.docs
+              : s.type.docs;
       return Boolean(docs.extensions?.[key]);
     })(ir),
   );
@@ -144,13 +145,10 @@ export const filterByTag = (tags: readonly string[], opts: FilterByTagOptions = 
   return named(`filterByTag(${[...wanted].join(", ")})`, (ir: ApiIR): ApiIR => {
     const declared = new Set(ir.tags.map((t) => t.name));
     const keep = (op: Operation): boolean =>
-      op.tags.some((t) => wanted.has(t)) ||
-      (opts.keepUntagged === true && !op.tags.some((t) => declared.has(t)));
+      op.tags.some((t) => wanted.has(t)) || (opts.keepUntagged === true && !op.tags.some((t) => declared.has(t)));
 
     const hidden = hideWhere((s) =>
-      s.kind === "operation" ? !keep(s.operation)
-      : s.kind === "tag" ? !wanted.has(s.tag.name)
-      : false,
+      s.kind === "operation" ? !keep(s.operation) : s.kind === "tag" ? !wanted.has(s.tag.name) : false,
     )(ir);
     return { ...hidden, tags: reorder(hidden.tags, [...wanted], "after") };
   });

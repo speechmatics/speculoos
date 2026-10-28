@@ -214,9 +214,7 @@ function buildServers(ctx: Ctx): Server[] {
             },
           ];
         }),
-        security: ctx.v3
-          ? securityFromSchemeList(server["security"])
-          : securityFromMaps(server["security"]),
+        security: ctx.v3 ? securityFromSchemeList(server["security"]) : securityFromMaps(server["security"]),
         ...bindingsOf(server),
         source: loc(ctx, joinPointer("/servers", id)),
       },
@@ -235,9 +233,7 @@ function buildTags(ctx: Ctx): TagDef[] {
   return tags.flatMap((tag, i) => {
     if (!isObject(tag)) return [];
     const name = str(tag, "name");
-    return name === undefined
-      ? []
-      : [{ name, docs: docsOf(tag), source: loc(ctx, `${pointer}/${i}`) }];
+    return name === undefined ? [] : [{ name, docs: docsOf(tag), source: loc(ctx, `${pointer}/${i}`) }];
   });
 }
 
@@ -523,11 +519,7 @@ function buildV3Endpoints(ctx: Ctx): Endpoint[] {
 }
 
 /** AsyncAPI 3.x request/reply — unrepresentable if operations fold into channels. */
-function buildReply(
-  ctx: Ctx,
-  value: unknown,
-  pointer: string,
-): { reply?: NonNullable<MessageOperation["reply"]> } {
+function buildReply(ctx: Ctx, value: unknown, pointer: string): { reply?: NonNullable<MessageOperation["reply"]> } {
   const resolved = deref(ctx, value, pointer);
   if (!isObject(resolved.value)) return {};
   const reply = resolved.value;
