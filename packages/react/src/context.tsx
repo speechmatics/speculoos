@@ -96,6 +96,7 @@ export function useSpeculoos(): SpeculoosContextValue {
   return value;
 }
 
+/** The component map in context: render through it to look like the shipped components. */
 export function useComponents(): Components {
   return useSpeculoos().components;
 }

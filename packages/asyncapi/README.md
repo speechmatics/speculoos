@@ -18,5 +18,5 @@ never depends on which version a spec happens to use. The same API written in
 2.6 and in 3.0 produces the same IR.
 
 Message payloads in JSON Schema (AsyncAPI's own schema format, or JSON Schema
-itself) are lowered like any other schema; `isJsonSchemaFormat` says which
-formats those are. Server security, bindings and message examples come along.
+itself) are lowered like any other schema. Server security, bindings and message
+examples come along.

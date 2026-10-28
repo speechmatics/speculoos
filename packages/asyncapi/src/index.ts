@@ -6,11 +6,3 @@
  */
 
 export { type BuildOptions, buildAsyncApi } from "./build.js";
-export {
-  directionFromV2,
-  directionFromV3,
-  V2_OPERATIONS,
-  type V2Operation,
-  type V3Action,
-} from "./direction.js";
-export { isJsonSchemaFormat, type PayloadSchema, payloadSchema } from "./schema-format.js";

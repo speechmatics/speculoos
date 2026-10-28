@@ -135,6 +135,19 @@ const Field = ({ f }: { f: FieldNode }) => (
 these, so writing your own markup entirely is not a lesser path:
 `SchemaTable` is forty lines over `useFieldTree`.
 
+## Parts for your own sections
+
+To lay a page out your own way — a panel beside the reference, a schema table in
+a guide — without giving up the map:
+
+| Part | What it is for |
+|---|---|
+| `useComponents()` | The map in context, to render through the same `Section`, `Badge` or `Code` the shipped components use |
+| `useHref(target)` | Where a link target points, through the `href` option, so your links agree with the page's |
+| `<DocsBody docs>` | A `Docs`' description and external link, through the map's `Markdown` and `Link` |
+| `<FieldRows fields nested>` | Field rows from `useFieldRows`/`toFieldList`, through `FieldRow` — the body of a `SchemaTable` |
+| `<SchemaTable node expanded>` | A whole field table for any node, not only a named type. `expanded` starts nested rows open, for a table whose point is its nesting, such as one property shown on its own |
+
 ## Views
 
 Request bodies hide `readOnly` fields and responses hide `writeOnly` ones — but

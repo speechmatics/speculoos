@@ -12,7 +12,9 @@ diagnostics rather than dropping it.
 
 This package is for adapter authors: `@speculoos/openapi` and
 `@speculoos/asyncapi` are built on it. If you are rendering a spec, you want one
-of those instead.
+of those instead. Its exports are what those adapters use — `buildSchemas`,
+`upcast`, `lower`, `simplify`, the `Registry`, and small readers of raw input
+(`isObject`, `str`, `types`) — and nothing more.
 
 ```ts
 import { buildSchemas } from "@speculoos/jsonschema";

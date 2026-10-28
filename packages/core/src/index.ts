@@ -75,5 +75,5 @@ export {
 } from "./present.js";
 export type * from "./schema.js";
 export { createSlugger, slugify } from "./slug.js";
-export { parameterProperty, parametersNode, propertiesNode } from "./synth.js";
-export { appliesToView, projectForView } from "./view.js";
+export { parametersNode, propertiesNode } from "./synth.js";
+export { projectForView } from "./view.js";

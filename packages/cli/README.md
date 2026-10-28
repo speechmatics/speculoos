@@ -19,3 +19,21 @@ npx @speculoos/cli inspect openapi.yaml --operation createJob --expand always
 `build` applies `@speculoos/transforms` passes from flags, in a fixed order:
 `--hide-internal`, `--tag`, `--sort-tags`, `--rename`, `--redact-examples`,
 `--prune`. `speculoos --help` lists every option.
+
+## As a library
+
+The command is built on `run`, which returns the IR and its diagnostics as data
+rather than exiting:
+
+```ts
+import { run } from "@speculoos/cli";
+import { hideInternal } from "@speculoos/transforms";
+
+const { ir, diagnostics } = await run({
+  root: "specs",
+  specs: [{ name: "api", path: "openapi.yaml" }],
+  transforms: [hideInternal()],
+});
+```
+
+`ir` is absent when loading failed; `diagnostics` says why.

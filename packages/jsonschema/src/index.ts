@@ -12,29 +12,9 @@
  */
 
 export { type BuildSchemasOptions, type BuildSchemasResult, buildSchemas } from "./build.js";
-export {
-  bool,
-  DATA_KEYWORDS,
-  isObject,
-  isSchema,
-  num,
-  SCHEMA_ARRAY_KEYWORDS,
-  SCHEMA_KEYWORDS,
-  SCHEMA_MAP_KEYWORDS,
-  type Schema,
-  str,
-  types,
-} from "./canonical.js";
-export { child, escapePointer, extractDocs, type LowerContext, lower } from "./lower.js";
-export { type Lowerer, Registry, type Resolver, typeIdOf, typeNameOf } from "./registry.js";
-export {
-  constUnionToEnum,
-  detectMap,
-  foldNullableUnion,
-  inferDiscriminator,
-  mapChildren,
-  PASSES,
-  simplify,
-  unwrapSingleVariant,
-} from "./simplify.js";
+// Small readers of raw, untyped spec input, shared with the adapters.
+export { isObject, type Schema, str, types } from "./canonical.js";
+export { type LowerContext, lower } from "./lower.js";
+export { type Lowerer, Registry, type Resolver } from "./registry.js";
+export { simplify } from "./simplify.js";
 export { type Dialect, upcast } from "./upcast.js";

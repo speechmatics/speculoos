@@ -79,4 +79,4 @@ export {
   Operation,
   type OperationProps,
 } from "./operation.js";
-export { parameterProperty, parametersNode, propertiesNode } from "./synth.js";
+export { parametersNode, propertiesNode } from "./synth.js";

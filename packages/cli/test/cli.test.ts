@@ -4,7 +4,9 @@ import type { ApiIR } from "@speculoos/core";
 import { parseApiIR } from "@speculoos/core/validate";
 import { specDir } from "@speculoos/fixtures";
 import { describe, expect, it } from "vitest";
-import { parseRenames, passesFor, renderInspect, renderLint, run, summarise } from "../src/index.js";
+import { run } from "../src/index.js";
+import { parseRenames, passesFor } from "../src/passes.js";
+import { renderInspect, renderLint, summarise } from "../src/report.js";
 
 const root = specDir;
 const build = () => run({ specs: [{ name: "batch", path: resolve(root, "batch.yaml") }], root });

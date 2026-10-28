@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { apiIRSchema, parseApiIR, validateApiIR } from "../src/validate.js";
+import apiIRSchema from "../schema/apiir.schema.json";
+import { parseApiIR, validateApiIR } from "../src/validate.js";
 import { ir } from "./fixture.js";
 
 const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v)) as T;

@@ -33,6 +33,19 @@ pure and returns a new document; none mutates its input.
 | `redactExamples()` | Empties every `examples` array in the document |
 | `pruneUnreachableTypes()` | Drops named types no endpoint can reach |
 
+## Writing your own pass
+
+A pass is `(ir: ApiIR) => ApiIR`, so it is a function you write. The parts the
+built-ins are made of are exported for it:
+
+| Part | What it is for |
+|---|---|
+| `recomputeReferencedBy(schemas)` | Any pass that removes an operation or a type must call this, or "referenced by" lists point at things that are gone |
+| `reachableTypes(ir)` | The types reachable from the endpoints, chased through the registry |
+| `endpointNodes(endpoint)` | Every `Node` an endpoint owns directly, callbacks included |
+| `typesIn(node)` | The types a node names: `$ref` targets and `allOf` ancestors |
+| `TransformError` | What `applyTransforms` throws, naming the pass, when `validate` finds invalid IR |
+
 ## Things worth knowing
 
 **`renameTypes` does not change a `TypeId`.** An id is source identity: every

@@ -14,7 +14,7 @@ import AjvModule from "ajv";
 import schema from "../schema/apiir.schema.json" with { type: "json" };
 
 /** JSON Schema (2020-12 compatible) describing a complete `ApiIR` document. */
-export const apiIRSchema: Record<string, unknown> = schema as Record<string, unknown>;
+const apiIRSchema: Record<string, unknown> = schema as Record<string, unknown>;
 
 export interface ValidationResult {
   valid: boolean;

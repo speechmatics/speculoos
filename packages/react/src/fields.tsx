@@ -16,6 +16,7 @@ import { useComponents, useSpeculoos } from "./context.js";
 import { useFieldTree } from "./hooks.js";
 
 /** Description, external link and the title when it adds something. */
+/** A `Docs`' description and external link, through the map's `Markdown` and `Link`. */
 export function DocsBody({ docs }: { docs: Docs }): ReactNode {
   const C = useComponents();
   const { options } = useSpeculoos();
