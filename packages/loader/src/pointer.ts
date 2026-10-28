@@ -25,7 +25,7 @@ export function at(doc: unknown, pointer: string): unknown {
       continue;
     }
     if (current === null || typeof current !== "object") return undefined;
-    if (!Object.prototype.hasOwnProperty.call(current, key)) return undefined;
+    if (!Object.hasOwn(current, key)) return undefined;
     current = (current as Record<string, unknown>)[key];
   }
   return current;

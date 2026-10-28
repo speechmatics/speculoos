@@ -215,7 +215,9 @@ export function endpointHandshake(endpoint: Endpoint, ir: Pick<ApiIR, "servers">
   const seen = new Set<string>();
   const security = servers.flatMap((s) => s.security).filter((alternative) => {
     const key = JSON.stringify(alternative);
-    return seen.has(key) ? false : (seen.add(key), true);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
   });
   const ws = endpoint.bindings?.["ws"];
   const method = typeof ws === "object" && ws !== null && typeof (ws as { method?: unknown }).method === "string"
@@ -357,14 +359,20 @@ export function walk(
       if (node.constraints.contains) go(node.constraints.contains.node, "[contains]");
       break;
     case "tuple":
-      node.prefixItems.forEach((n, i) => go(n, String(i)));
+      node.prefixItems.forEach((n, i) => {
+        go(n, String(i));
+      });
       if (node.rest.kind === "schema") go(node.rest.node, "[rest]");
       break;
     case "union":
-      node.variants.forEach((v, i) => go(v.node, v.label || `option-${i + 1}`));
+      node.variants.forEach((v, i) => {
+        go(v.node, v.label || `option-${i + 1}`);
+      });
       break;
     case "intersection":
-      node.members.forEach((n, i) => go(n, `member-${i + 1}`));
+      node.members.forEach((n, i) => {
+        go(n, `member-${i + 1}`);
+      });
       break;
     case "unsupported":
       if (node.partial) go(node.partial, "[partial]");

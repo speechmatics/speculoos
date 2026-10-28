@@ -92,7 +92,7 @@ export async function main(argv: string[]): Promise<number> {
   });
 
   if (built.ir === undefined) {
-    for (const line of renderLint(built.diagnostics, new Set())) process.stderr.write(line + "\n");
+    for (const line of renderLint(built.diagnostics, new Set())) process.stderr.write(`${line}\n`);
     return 1;
   }
 
@@ -101,12 +101,12 @@ export async function main(argv: string[]): Promise<number> {
       const json = JSON.stringify(built.ir, null, args.flags.has("pretty") ? 2 : 0);
       const out = flag(args, "out") ?? flag(args, "o");
       if (out === undefined) {
-        process.stdout.write(json + "\n");
+        process.stdout.write(`${json}\n`);
       } else {
         // Build scripts point -o at generated directories that a clean
         // checkout does not have yet.
         await mkdir(dirname(resolve(out)), { recursive: true });
-        await writeFile(resolve(out), json + "\n");
+        await writeFile(resolve(out), `${json}\n`);
         process.stderr.write(`${summarise(built.ir)} → ${out}\n`);
       }
       return 0;
@@ -123,7 +123,7 @@ export async function main(argv: string[]): Promise<number> {
         process.stderr.write(`warning: --allow ${c} is not a known diagnostic code\n`);
       }
       const lines = renderLint(built.ir.diagnostics, allow);
-      for (const line of lines) process.stdout.write(line + "\n");
+      for (const line of lines) process.stdout.write(`${line}\n`);
 
       const threshold = flag(args, "max-severity") ?? "warning";
       const offending = built.ir.diagnostics.filter(

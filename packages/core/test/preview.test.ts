@@ -36,7 +36,7 @@ describe("preview", () => {
   it("renders the fixture", () => {
     const out: string[] = [];
 
-    out.push("── Navigation " + "─".repeat(66));
+    out.push(`── Navigation ${"─".repeat(66)}`);
     for (const { endpoint, operation } of allOperations(ir)) {
       const label =
         operation.kind === "request-response"
@@ -45,7 +45,7 @@ describe("preview", () => {
       out.push(`  ${pad(label, 30)} tags: ${operation.tags.join(", ") || "—"}`);
     }
 
-    out.push("\n── Job, default policy (named types link out) " + "─".repeat(35));
+    out.push(`\n── Job, default policy (named types link out) ${"─".repeat(35)}`);
     out.push(table(toRows(jobRef, ir)));
     out.push(
       "  must also emit: " +
@@ -54,12 +54,12 @@ describe("preview", () => {
           .join(", "),
     );
 
-    out.push("\n── Job, fully expanded, response view " + "─".repeat(43));
+    out.push(`\n── Job, fully expanded, response view ${"─".repeat(43)}`);
     out.push(table(toRows(jobRef, ir, { expandRefs: "always", view: "response" })));
 
-    out.push("\n── Message, a discriminated union " + "─".repeat(47));
+    out.push(`\n── Message, a discriminated union ${"─".repeat(47)}`);
     out.push(table(toRows(messageRef, ir, { expandRefs: "always" })));
 
-    console.log("\n" + out.join("\n") + "\n");
+    console.log(`\n${out.join("\n")}\n`);
   });
 });

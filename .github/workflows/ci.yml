@@ -32,6 +32,8 @@ jobs:
 
       - run: pnpm typecheck
 
+      - run: pnpm lint
+
       - run: pnpm test
 
       # The IR's JSON Schema is generated from the types. A change to `ApiIR`

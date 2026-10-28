@@ -296,10 +296,9 @@ function mergeDocs(
   const notes = sources.flatMap((d) => d.notes ?? []);
   if (notes.length > 0) merged.notes = notes;
 
-  const extensions = sources.reduceRight<Record<string, unknown>>(
-    (acc, d) => ({ ...acc, ...d.extensions }),
-    {},
-  );
+  // Earlier sources win, so later ones are laid down first.
+  const extensions: Record<string, unknown> = {};
+  for (const d of [...sources].reverse()) Object.assign(extensions, d.extensions);
   if (Object.keys(extensions).length > 0) merged.extensions = extensions;
 
   return merged;

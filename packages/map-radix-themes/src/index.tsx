@@ -142,9 +142,10 @@ export function radixThemes(options: RadixThemesOptions): Components {
   const colors = mergeColors(options.colors);
 
   function Section(props: SectionProps): ReactNode {
+    // Before the early return: a hook must run on every render.
+    const inCard = useContext(InCard);
     if (props.kind === "message" || props.kind === "handshake") return <CardSection {...props} />;
     const { kind, id, title, subtitle, level, deprecated, children } = props;
-    const inCard = useContext(InCard);
     const h = clampLevel(level);
     const major = MAJOR.has(kind);
     return (

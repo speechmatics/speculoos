@@ -522,8 +522,9 @@ function Authentication({ security, level }: { security: SecurityRequirements; l
     <C.Section kind="security" title="Authentication" level={level}>
       {security.length > 1 && <C.Markdown>Any one of:</C.Markdown>}
       <C.List kind="security">
-        {security.map((alternative, i) => (
-          <C.ListItem key={i}>
+        {security.map((alternative) => (
+          // An alternative is its schemes: listed once each, so they name it.
+          <C.ListItem key={alternative.map((req) => req.scheme).join("+") || "none"}>
             {alternative.length === 0 ? (
               <C.Badge tone="securityScheme">none</C.Badge>
             ) : (

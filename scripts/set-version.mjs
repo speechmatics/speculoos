@@ -24,7 +24,7 @@ const files = [
 ];
 for (const file of files) {
   const text = readFileSync(file, "utf8");
-  const next = text.replace(/^(  "version": )"[^"]*"/m, `$1"${version}"`);
+  const next = text.replace(/^( {2}"version": )"[^"]*"/m, `$1"${version}"`);
   if (next === text && !text.includes(`"version": "${version}"`)) throw new Error(`no version field in ${file}`);
   writeFileSync(file, next);
 }

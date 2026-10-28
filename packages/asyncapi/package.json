@@ -48,8 +48,7 @@
   "scripts": {
     "build": "tsup",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
-    "lint": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json"
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json"
   },
   "dependencies": {
     "@speculoos/core": "workspace:*",

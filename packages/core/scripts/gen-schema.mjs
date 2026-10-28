@@ -36,7 +36,7 @@ const sortKeys = (value) => {
   );
 };
 
-const text = JSON.stringify(sortKeys(schema), null, 2) + "\n";
+const text = `${JSON.stringify(sortKeys(schema), null, 2)}\n`;
 
 if (process.argv.includes("--check")) {
   const current = readFileSync(out, "utf8");

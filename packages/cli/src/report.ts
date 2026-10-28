@@ -57,7 +57,7 @@ export function renderInspect(ir: ApiIR, opts: InspectOptions): string {
     if (def.referencedBy.length > 0) {
       out.push(`\n  referenced by: ${def.referencedBy.map(shortId).join(", ")}`);
     }
-    return out.join("\n") + "\n";
+    return `${out.join("\n")}\n`;
   }
 
   if (opts.operation !== undefined) {
@@ -75,7 +75,7 @@ export function renderInspect(ir: ApiIR, opts: InspectOptions): string {
       if (operation.docs.description !== undefined) out.push(`  ${operation.docs.description}\n`);
 
       for (const parameter of endpoint.parameters) {
-        out.push(`  ${pad(parameter.name + "*", 24)}${pad("in address", 12)}${typeLabel(parameter.node, ir)}`);
+        out.push(`  ${pad(`${parameter.name}*`, 24)}${pad("in address", 12)}${typeLabel(parameter.node, ir)}`);
       }
       if (endpoint.parameters.length > 0) out.push("");
 
@@ -148,7 +148,7 @@ export function renderInspect(ir: ApiIR, opts: InspectOptions): string {
     out.push(heading(`${ir.diagnostics.length} diagnostic(s)`));
     out.push(...renderLint(ir.diagnostics, new Set()));
   }
-  return out.join("\n") + "\n";
+  return `${out.join("\n")}\n`;
 }
 
 function table(
@@ -213,5 +213,5 @@ function heading(text: string): string {
 
 function pad(text: string, width: number): string {
   const length = [...text].length;
-  return length >= width ? text + " " : text + " ".repeat(width - length);
+  return length >= width ? `${text} ` : text + " ".repeat(width - length);
 }

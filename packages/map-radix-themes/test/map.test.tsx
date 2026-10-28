@@ -276,7 +276,7 @@ describe("messageExtras", () => {
       ir("realtime-v3.yaml"),
       radixThemes({ markdown: Markdown, messageExtras: Extras }),
     );
-    expect(html).toMatch(/rt-Card[^]*?<aside data-extra="StartRecognition"><\/aside>/);
+    expect(html).toMatch(/rt-Card[\s\S]*?<aside data-extra="StartRecognition"><\/aside>/);
   });
 });
 

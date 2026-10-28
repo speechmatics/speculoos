@@ -20,9 +20,9 @@ const rows = sorted
   .map((d) => `| \`${d.code}\` | ${d.severity} | \`${d.source}\` | ${d.meaning} |`)
   .join("\n");
 
-const counts = Object.entries(
-  sorted.reduce((acc, d) => ({ ...acc, [d.severity]: (acc[d.severity] ?? 0) + 1 }), {}),
-)
+const bySeverity = {};
+for (const d of sorted) bySeverity[d.severity] = (bySeverity[d.severity] ?? 0) + 1;
+const counts = Object.entries(bySeverity)
   .map(([k, v]) => `${v} ${k}`)
   .join(", ");
 

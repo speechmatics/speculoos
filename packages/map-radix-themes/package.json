@@ -50,8 +50,7 @@
     "build": "tsup",
     "dev": "vite --config dev/vite.config.mts",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
-    "lint": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json"
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json"
   },
   "peerDependencies": {
     "@radix-ui/themes": "^3.0.0",

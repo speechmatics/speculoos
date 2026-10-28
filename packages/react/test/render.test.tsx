@@ -488,7 +488,7 @@ describe("Endpoint", () => {
 
   it("covers every operation exactly once across every endpoint", () => {
     for (const ir of [rest, ws]) {
-      const html = render(<>{ir.endpoints.map((e) => <Endpoint key={e.id} endpoint={e} />)}</>, ir);
+      const html = render(ir.endpoints.map((e) => <Endpoint key={e.id} endpoint={e} />), ir);
       for (const e of ir.endpoints) for (const o of e.operations) expect(count(html, `id="${o.slug}"`)).toBe(1);
     }
   });

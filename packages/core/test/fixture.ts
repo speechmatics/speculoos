@@ -155,6 +155,7 @@ const job = obj([
     docs: {},
     nullable: false,
     reason: "if/then/else has no display form",
+    // biome-ignore lint/suspicious/noThenProperty: JSON Schema's own `then` keyword.
     raw: { if: {}, then: {} },
   }),
 ]);

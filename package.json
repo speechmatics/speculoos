@@ -9,7 +9,7 @@
     "build": "pnpm -r build",
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",
-    "lint": "pnpm -r lint",
+    "lint": "biome lint .",
     "speculoos": "node packages/cli/dist/cli.js",
     "preview": "node preview/build.mjs",
     "preview:serve": "node preview/build.mjs --serve",
@@ -19,9 +19,11 @@
     "docs:check": "node scripts/diagnostics-doc.mjs --check",
     "set-version": "node scripts/set-version.mjs",
     "release:check": "node scripts/release-check.mjs",
-    "release": "pnpm build && pnpm release:check && pnpm -r publish"
+    "release": "pnpm build && pnpm release:check && pnpm -r publish",
+    "format": "biome format --write ."
   },
   "devDependencies": {
+    "@biomejs/biome": "2.2.4",
     "@speculoos/asyncapi": "workspace:*",
     "@speculoos/core": "workspace:*",
     "@speculoos/fixtures": "workspace:*",

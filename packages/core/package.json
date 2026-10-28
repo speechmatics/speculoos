@@ -62,7 +62,6 @@
     "build": "pnpm schema && tsup",
     "test": "vitest run",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
-    "lint": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
     "schema": "node scripts/gen-schema.mjs",
     "schema:check": "node scripts/gen-schema.mjs --check"
   },

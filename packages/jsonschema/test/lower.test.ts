@@ -303,6 +303,7 @@ describe("lower — keywords sitting alongside a union", () => {
 
 describe("lower — lossy, but never silently", () => {
   it.each([
+    // biome-ignore lint/suspicious/noThenProperty: JSON Schema's own `then` keyword.
     ["if", { if: { type: "string" }, then: true }],
     ["not", { not: { type: "string" } }],
     ["dependentSchemas", { dependentSchemas: { a: true } }],
