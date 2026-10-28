@@ -12,6 +12,14 @@ renderers consume it, and neither knows about the other.
 spec documents → loader → adapter → ApiIR → your components (or HTML)
 ```
 
+> **Alpha.** Releases are `0.1.0-alpha.N`, under npm's `alpha` tag, so ask for it.
+> The IR (`irVersion: 1`) only gains optional fields from here, but any package's
+> API may still change between alphas. See [`CHANGELOG.md`](CHANGELOG.md).
+
+```sh
+npm install @speculoos/loader@alpha @speculoos/openapi@alpha @speculoos/react@alpha
+```
+
 ## Packages
 
 | Package | What it does |
@@ -24,19 +32,18 @@ spec documents → loader → adapter → ApiIR → your components (or HTML)
 | `@speculoos/asyncapi` | AsyncAPI 2.x / 3.x → `ApiIR` |
 | `@speculoos/transforms` | IR-to-IR passes: hide, filter, sort, rename, redact, prune |
 | `@speculoos/react` | Headless React binding. No styles, no CSS, no DOM |
+| `@speculoos/map-radix-themes` | A component map for `@speculoos/react`, built from Radix Themes |
 | `@speculoos/html` | Framework-free HTML renderer. Emits documented class names, never styles |
 | `@speculoos/cli` | `build`, `lint` and `inspect` |
 
 ## Try it
 
 ```sh
-pnpm install && pnpm build
-
-node packages/cli/dist/cli.js inspect path/to/openapi.yaml
-node packages/cli/dist/cli.js inspect path/to/openapi.yaml --operation createJob --expand always
-node packages/cli/dist/cli.js build  path/to/openapi.yaml -o ir.json --pretty
-node packages/cli/dist/cli.js lint   path/to/openapi.yaml --allow NOT,IF
-node packages/cli/dist/cli.js build  path/to/openapi.yaml --tag Jobs --hide-internal --prune
+npx @speculoos/cli@alpha inspect path/to/openapi.yaml
+npx @speculoos/cli@alpha inspect path/to/openapi.yaml --operation createJob --expand always
+npx @speculoos/cli@alpha build   path/to/openapi.yaml -o ir.json --pretty
+npx @speculoos/cli@alpha lint    path/to/openapi.yaml --allow NOT,IF
+npx @speculoos/cli@alpha build   path/to/openapi.yaml --tag Jobs --hide-internal --prune
 ```
 
 ## Rendering it
@@ -52,7 +59,9 @@ node packages/cli/dist/cli.js build  path/to/openapi.yaml --tag Jobs --hide-inte
 `yourComponents` is a map of twelve components from your own library — `Section`,
 `Markdown`, `Code`, `Badge`, `Link`, `Fields`, `FieldRow`, `Tabs`, and a few more.
 All required; there are no defaults, because a default is a style decision taken
-on your behalf. See [`packages/react/README.md`](packages/react/README.md).
+on your behalf. See [`packages/react/README.md`](packages/react/README.md) — or
+start from [`@speculoos/map-radix-themes`](packages/map-radix-themes/README.md),
+a complete map for Radix Themes.
 
 Or, for a static site that builds pages by concatenating strings:
 
@@ -78,16 +87,19 @@ pnpm preview:serve   # http://localhost:8137
 
 ## Documentation
 
-- [`docs/PLAN.md`](docs/PLAN.md) — the plan, the open decisions and what each milestone proved
+- [`docs/WRITING-A-RENDERER.md`](docs/WRITING-A-RENDERER.md) and
+  [`docs/WRITING-AN-ADAPTER.md`](docs/WRITING-AN-ADAPTER.md)
 - [`docs/DIAGNOSTICS.md`](docs/DIAGNOSTICS.md) — all 25 diagnostic codes, their severities and meanings
-- [`docs/WRITING-A-RENDERER.md`](docs/WRITING-A-RENDERER.md)
-- [`docs/WRITING-AN-ADAPTER.md`](docs/WRITING-AN-ADAPTER.md)
-- [`docs/M6-COMPONENT-MAPS.md`](docs/M6-COMPONENT-MAPS.md) — the next milestone: a shipped Radix Themes component map
+- [`docs/PLAN.md`](docs/PLAN.md) — the design, the decisions taken and what each milestone proved
+- [`docs/M6-COMPONENT-MAPS.md`](docs/M6-COMPONENT-MAPS.md) — the Radix Themes map, and what piloting it on a real docs site taught
+- [`docs/RELEASING.md`](docs/RELEASING.md) and [`CHANGELOG.md`](CHANGELOG.md)
 
 ## Status
 
-Both dialects work and both renderers are in. M5 of the plan in
-[`docs/PLAN.md`](docs/PLAN.md) is done — 370 tests across ten packages:
+Both dialects, both renderers and the Radix Themes map are in. On a branch of
+the Speechmatics docs, their whole API reference — four APIs, REST and WebSocket
+— renders from Speculoos, with nothing left on the renderer it replaced. 491
+tests across eleven packages.
 
 - The OpenAPI pipeline builds the 13.5 MB GitHub REST description in under three
   seconds, deterministically. All 1242 operations and 996 type sections then
@@ -103,7 +115,14 @@ Both dialects work and both renderers are in. M5 of the plan in
   elements, and the test fails if any tag in the output did not come from the
   map.
 - Two independent renderers — one React, one strings — show the same fields and
-  link to the same places over the same IR, with no element name in common. That
-  was the test `irVersion: 1` was waiting on.
-- `@speculoos/html` renders all 1242 GitHub operations and 996 type sections in
-  ~660 ms with zero dangling anchors and zero duplicate ids.
+  link to the same places over the same IR, with no element name in common.
+
+## Developing
+
+```sh
+pnpm install && pnpm build
+pnpm test && pnpm typecheck && pnpm lint
+pnpm preview:serve        # every fixture through the HTML renderer, http://localhost:8137
+pnpm preview:radix        # every fixture through the Radix map
+pnpm release:check        # what a consumer would install; see docs/RELEASING.md
+```
