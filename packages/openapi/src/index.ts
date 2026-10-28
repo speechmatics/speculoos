@@ -5,4 +5,4 @@
  * supporting it would roughly double the upcast surface in @speculoos/jsonschema.
  */
 
-export { buildOpenApi, type BuildOptions } from "./build.js";
+export { type BuildOptions, buildOpenApi } from "./build.js";

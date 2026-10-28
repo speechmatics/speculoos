@@ -15,54 +15,7 @@
  *   ./navigation.tsx  `EntryList`, `OperationList`, `TypeSection`, `TypeSections`
  */
 
-export {
-  SpeculoosProvider,
-  useSpeculoos,
-  useComponents,
-  useHref,
-  defaultHref,
-  type SpeculoosOptions,
-  type SpeculoosProviderProps,
-  type SpeculoosContextValue,
-} from "./context.js";
-
-export {
-  useFieldTree,
-  useFieldRows,
-  useEndpoint,
-  useEndpoints,
-  useEntries,
-  useOperation,
-  useOperations,
-  useTagGroups,
-  useTypeLabel,
-  useTypeDef,
-  type FieldOptions,
-} from "./hooks.js";
-
-export { SchemaTable, FieldRows, DocsBody, type SchemaTableProps, type FieldRowsProps } from "./fields.js";
-export {
-  Endpoint,
-  Entry,
-  EntryExamples,
-  Operation,
-  type EndpointProps,
-  type EntryExamplesProps,
-  type EntryProps,
-  type OperationProps,
-} from "./operation.js";
-export {
-  EntryList,
-  OperationList,
-  TypeSection,
-  TypeSections,
-  type OperationListProps,
-  type TypeSectionProps,
-  type TypeSectionsProps,
-} from "./navigation.js";
-export { propertiesNode, parametersNode, parameterProperty } from "./synth.js";
-export { DIRECTION_LABEL, DIRECTION_VERB } from "./labels.js";
-
+export type { ApiEntry, EntryExample } from "@speculoos/core";
 export type {
   BadgeProps,
   BadgeTone,
@@ -82,4 +35,48 @@ export type {
   Tab,
   TabsProps,
 } from "./components.js";
-export type { ApiEntry, EntryExample } from "@speculoos/core";
+export {
+  defaultHref,
+  type SpeculoosContextValue,
+  type SpeculoosOptions,
+  SpeculoosProvider,
+  type SpeculoosProviderProps,
+  useComponents,
+  useHref,
+  useSpeculoos,
+} from "./context.js";
+export { DocsBody, FieldRows, type FieldRowsProps, SchemaTable, type SchemaTableProps } from "./fields.js";
+export {
+  type FieldOptions,
+  useEndpoint,
+  useEndpoints,
+  useEntries,
+  useFieldRows,
+  useFieldTree,
+  useOperation,
+  useOperations,
+  useTagGroups,
+  useTypeDef,
+  useTypeLabel,
+} from "./hooks.js";
+export { DIRECTION_LABEL, DIRECTION_VERB } from "./labels.js";
+export {
+  EntryList,
+  OperationList,
+  type OperationListProps,
+  TypeSection,
+  type TypeSectionProps,
+  TypeSections,
+  type TypeSectionsProps,
+} from "./navigation.js";
+export {
+  Endpoint,
+  type EndpointProps,
+  Entry,
+  EntryExamples,
+  type EntryExamplesProps,
+  type EntryProps,
+  Operation,
+  type OperationProps,
+} from "./operation.js";
+export { parameterProperty, parametersNode, propertiesNode } from "./synth.js";

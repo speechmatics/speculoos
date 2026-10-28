@@ -19,9 +19,9 @@
  * and nothing toggles.
  */
 
-import { useId, useState, type ReactNode } from "react";
 import { Badge, Box, Button, DataList, Flex, Text } from "@radix-ui/themes";
 import type { FieldRowProps, FieldsProps } from "@speculoos/react";
+import { type ReactNode, useId, useState } from "react";
 import type { BadgeColors } from "./colors.js";
 
 export type Size = "1" | "2" | "3";

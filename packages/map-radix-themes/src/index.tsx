@@ -16,7 +16,6 @@
  *   ./fields.tsx  `Fields` and `FieldRow`, as a DataList
  */
 
-import { createContext, useContext, useState, type ComponentType, type ReactNode } from "react";
 import {
   Badge,
   Box,
@@ -46,20 +45,20 @@ import type {
   SectionProps,
   TabsProps,
 } from "@speculoos/react";
-import { badgeColor, mergeColors, type BadgeColorOverrides } from "./colors.js";
-import { fieldRow, fields, type FieldLayout, type Presence, type Size } from "./fields.js";
-
-export type { FieldLayout, Presence } from "./fields.js";
+import { type ComponentType, createContext, type ReactNode, useContext, useState } from "react";
+import { type BadgeColorOverrides, badgeColor, mergeColors } from "./colors.js";
+import { type FieldLayout, fieldRow, fields, type Presence, type Size } from "./fields.js";
 
 export {
-  DEFAULT_COLORS,
   type BadgeColorOverrides,
   type BadgeColors,
+  DEFAULT_COLORS,
   type Direction,
   type HttpMethod,
   type RadixColor,
   type StatusClass,
 } from "./colors.js";
+export type { FieldLayout, Presence } from "./fields.js";
 
 export interface RadixThemesOptions {
   /**

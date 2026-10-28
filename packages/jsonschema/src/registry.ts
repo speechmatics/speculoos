@@ -10,9 +10,8 @@
  * entry and one anchor.
  */
 
-import type { Diagnostic, SourceLocation, TypeDef, TypeId, TypeRegistry } from "@speculoos/core";
+import type { Diagnostic, Node, SourceLocation, TypeDef, TypeId, TypeRegistry } from "@speculoos/core";
 import { createSlugger } from "@speculoos/core";
-import type { Node } from "@speculoos/core";
 import { isObject, str } from "./canonical.js";
 import { extractDocs } from "./lower.js";
 

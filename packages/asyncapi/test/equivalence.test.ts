@@ -8,10 +8,11 @@
  * depends on which version of AsyncAPI a spec happens to be written in, which is
  * the whole thing this adapter exists to prevent.
  */
-import { describe, expect, it, beforeAll } from "vitest";
+
+import type { ApiIR } from "@speculoos/core";
 import { specDir } from "@speculoos/fixtures";
 import { load } from "@speculoos/loader";
-import type { ApiIR } from "@speculoos/core";
+import { beforeAll, describe, expect, it } from "vitest";
 import { buildAsyncApi } from "../src/index.js";
 
 const root = specDir;

@@ -6,6 +6,6 @@
  * is defined and recursive schemas terminate.
  */
 
-export { load, type DocumentInput, type ProjectInput, type LoadedDocument, type LoadedProject } from "./load.js";
-export { detectDialect, type DialectInfo } from "./dialect.js";
-export { at, joinPointer, escapeSegment, unescapeSegment } from "./pointer.js";
+export { type DialectInfo, detectDialect } from "./dialect.js";
+export { type DocumentInput, type LoadedDocument, type LoadedProject, load, type ProjectInput } from "./load.js";
+export { at, escapeSegment, joinPointer, unescapeSegment } from "./pointer.js";

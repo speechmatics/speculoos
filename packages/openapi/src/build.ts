@@ -7,9 +7,19 @@
  * them — addresses, parameters, responses, servers, security and tags.
  */
 
+import {
+  type AdapterContext,
+  deref as derefRef,
+  docsOf,
+  extensionsOf,
+  optional,
+  protocolOf,
+  type Resolved,
+  securityFromMaps,
+} from "@speculoos/adapter-kit";
 import type {
-  ApiIR,
   ApiInfo,
+  ApiIR,
   Diagnostic,
   Endpoint,
   Example,
@@ -28,16 +38,6 @@ import type {
 } from "@speculoos/core";
 import { createSlugger, projectForView } from "@speculoos/core";
 import { buildSchemas, isObject, str } from "@speculoos/jsonschema";
-import {
-  deref as derefRef,
-  docsOf,
-  extensionsOf,
-  optional,
-  protocolOf,
-  securityFromMaps,
-  type AdapterContext,
-  type Resolved,
-} from "@speculoos/adapter-kit";
 import type { LoadedProject } from "@speculoos/loader";
 import { at, joinPointer } from "@speculoos/loader";
 

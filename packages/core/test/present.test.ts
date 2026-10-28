@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Node } from "../src/index.js";
-import { collectLinks, projectForView, toRows, toTree, typeLabel, type FieldNode } from "../src/index.js";
+import { collectLinks, type FieldNode, projectForView, toRows, toTree, typeLabel } from "../src/index.js";
 import { enumNode, ids, ir, jobRef, messageRef, obj, prop, ref, treeRef } from "./fixture.js";
 
 const find = (rows: FieldNode[], path: string) => rows.find((r) => r.path.join("/") === path);

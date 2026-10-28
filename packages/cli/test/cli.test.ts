@@ -1,9 +1,9 @@
-import { describe, expect, it } from "vitest";
 import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
-import { specDir } from "@speculoos/fixtures";
-import { parseApiIR } from "@speculoos/core/validate";
 import type { ApiIR } from "@speculoos/core";
+import { parseApiIR } from "@speculoos/core/validate";
+import { specDir } from "@speculoos/fixtures";
+import { describe, expect, it } from "vitest";
 import { parseRenames, passesFor, renderInspect, renderLint, run, summarise } from "../src/index.js";
 
 const root = specDir;

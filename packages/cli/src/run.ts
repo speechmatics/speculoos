@@ -6,12 +6,12 @@
  * out of step with the file.
  */
 
-import type { ApiIR, Diagnostic } from "@speculoos/core";
-import { load, type DocumentInput } from "@speculoos/loader";
-import { buildOpenApi } from "@speculoos/openapi";
 import { buildAsyncApi } from "@speculoos/asyncapi";
-import { applyTransforms, type Transform } from "@speculoos/transforms";
+import type { ApiIR, Diagnostic } from "@speculoos/core";
 import { parseApiIR } from "@speculoos/core/validate";
+import { type DocumentInput, load } from "@speculoos/loader";
+import { buildOpenApi } from "@speculoos/openapi";
+import { applyTransforms, type Transform } from "@speculoos/transforms";
 
 export interface RunOptions {
   specs: DocumentInput[];

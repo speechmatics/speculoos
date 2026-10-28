@@ -7,8 +7,7 @@
  * is a navigation entry leading nowhere. Both go.
  */
 
-import type { ApiIR, Endpoint, Operation, TagDef } from "@speculoos/core";
-import type { Diagnostic, TypeDef, TypeId } from "@speculoos/core";
+import type { ApiIR, Diagnostic, Endpoint, Operation, TagDef, TypeDef, TypeId } from "@speculoos/core";
 import { named, type Transform } from "./apply.js";
 import { reachableTypes, recomputeReferencedBy } from "./reach.js";
 import { reorder } from "./tags.js";

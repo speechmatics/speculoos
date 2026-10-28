@@ -8,8 +8,9 @@
  * exported unconditionally, so you can validate with any tool you like — or
  * hand it to a consumer that has no JavaScript at all.
  */
-import AjvModule from "ajv";
+
 import type { ErrorObject } from "ajv";
+import AjvModule from "ajv";
 import schema from "../schema/apiir.schema.json" with { type: "json" };
 
 /** JSON Schema (2020-12 compatible) describing a complete `ApiIR` document. */

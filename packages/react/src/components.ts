@@ -12,8 +12,8 @@
  * sanitising it is your `Markdown` component's job and nobody else's.
  */
 
-import type { ComponentType, ReactNode } from "react";
 import type { Chip, Docs, FieldNode, HrefTarget, Parameter, WsMessage } from "@speculoos/core";
+import type { ComponentType, ReactNode } from "react";
 
 /**
  * Where a link points. Defined in `@speculoos/core` rather than here: the HTML

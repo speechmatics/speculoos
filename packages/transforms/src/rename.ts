@@ -9,8 +9,8 @@
  * cannot break a reference.
  */
 
-import { slugify } from "@speculoos/core";
 import type { ApiIR, TypeDef, TypeId, TypeRegistry } from "@speculoos/core";
+import { slugify } from "@speculoos/core";
 import { named, type Transform } from "./apply.js";
 
 /**

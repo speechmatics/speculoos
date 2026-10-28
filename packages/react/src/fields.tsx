@@ -8,12 +8,12 @@
  * hangs the build.
  */
 
-import { Fragment, useMemo, type ReactNode } from "react";
-import { toFieldList } from "@speculoos/core";
 import type { Chip, Docs, FieldNode, Node, Parameter, TypeId, View } from "@speculoos/core";
+import { toFieldList } from "@speculoos/core";
+import { Fragment, type ReactNode, useMemo } from "react";
+import type { Components, FieldRowProps } from "./components.js";
 import { useComponents, useSpeculoos } from "./context.js";
 import { useFieldTree } from "./hooks.js";
-import type { Components, FieldRowProps } from "./components.js";
 
 /** Description, external link and the title when it adds something. */
 export function DocsBody({ docs }: { docs: Docs }): ReactNode {

@@ -11,13 +11,13 @@
  * so a site that wants a sidebar and a page per operation can call the pieces.
  */
 
-import { apiEntries, groupByTag } from "@speculoos/core";
 import type { ApiIR, Server } from "@speculoos/core";
-import { h, join, text, type Html } from "./escape.js";
-import { resolve, type HtmlOptions } from "./options.js";
-import { badge, code, docsBody, inline, markdown, section, type Ctx } from "./parts.js";
-import { entrySection, operationSection } from "./operation.js";
+import { apiEntries, groupByTag } from "@speculoos/core";
+import { type Html, h, join, text } from "./escape.js";
 import { renderTypes } from "./navigation.js";
+import { entrySection, operationSection } from "./operation.js";
+import { type HtmlOptions, resolve } from "./options.js";
+import { badge, type Ctx, code, docsBody, inline, markdown, section } from "./parts.js";
 
 function servers(c: Ctx, list: Server[], level: number): Html {
   if (list.length === 0) return "";

@@ -7,7 +7,7 @@
  */
 
 import { defaultHref, type Href } from "@speculoos/core";
-import { text, type Html } from "./escape.js";
+import { type Html, text } from "./escape.js";
 
 export interface HtmlOptions {
   /**

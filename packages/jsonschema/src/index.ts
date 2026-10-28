@@ -11,30 +11,30 @@
  * Then `simplify` runs the display passes over the result.
  */
 
-export { upcast, type Dialect } from "./upcast.js";
-export { lower, extractDocs, child, escapePointer, type LowerContext } from "./lower.js";
+export { type BuildSchemasOptions, type BuildSchemasResult, buildSchemas } from "./build.js";
 export {
-  simplify,
-  PASSES,
-  foldNullableUnion,
-  constUnionToEnum,
-  detectMap,
-  inferDiscriminator,
-  unwrapSingleVariant,
-  mapChildren,
-} from "./simplify.js";
-export { Registry, typeIdOf, typeNameOf, type Resolver, type Lowerer } from "./registry.js";
-export {
+  bool,
+  DATA_KEYWORDS,
   isObject,
   isSchema,
-  types,
   num,
-  str,
-  bool,
-  SCHEMA_KEYWORDS,
   SCHEMA_ARRAY_KEYWORDS,
+  SCHEMA_KEYWORDS,
   SCHEMA_MAP_KEYWORDS,
-  DATA_KEYWORDS,
   type Schema,
+  str,
+  types,
 } from "./canonical.js";
-export { buildSchemas, type BuildSchemasOptions, type BuildSchemasResult } from "./build.js";
+export { child, escapePointer, extractDocs, type LowerContext, lower } from "./lower.js";
+export { type Lowerer, Registry, type Resolver, typeIdOf, typeNameOf } from "./registry.js";
+export {
+  constUnionToEnum,
+  detectMap,
+  foldNullableUnion,
+  inferDiscriminator,
+  mapChildren,
+  PASSES,
+  simplify,
+  unwrapSingleVariant,
+} from "./simplify.js";
+export { type Dialect, upcast } from "./upcast.js";

@@ -6,10 +6,10 @@
  */
 
 import type { Diagnostic, Node, SourceLocation, TypeRegistry } from "@speculoos/core";
-import { Registry, type Resolver } from "./registry.js";
 import { lower } from "./lower.js";
+import { Registry, type Resolver } from "./registry.js";
 import { simplify } from "./simplify.js";
-import { upcast, type Dialect } from "./upcast.js";
+import { type Dialect, upcast } from "./upcast.js";
 
 export interface BuildSchemasOptions {
   resolver: Resolver;

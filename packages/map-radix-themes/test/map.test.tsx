@@ -12,28 +12,28 @@
  * here, which is why it has an explicit structural test of its own.
  */
 
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import type { ReactNode } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
 import { Theme } from "@radix-ui/themes";
+import { buildAsyncApi } from "@speculoos/asyncapi";
+import { type ApiIR, allOperations, apiEntries } from "@speculoos/core";
 import { specDir } from "@speculoos/fixtures";
 import { load } from "@speculoos/loader";
 import { buildOpenApi } from "@speculoos/openapi";
-import { buildAsyncApi } from "@speculoos/asyncapi";
-import { allOperations, apiEntries, type ApiIR } from "@speculoos/core";
 import {
+  type Components,
   Endpoint,
   EntryExamples,
   EntryList,
+  type MarkdownProps,
   Operation,
   OperationList,
   SchemaTable,
+  type SpeculoosOptions,
   SpeculoosProvider,
   TypeSections,
-  type Components,
-  type MarkdownProps,
-  type SpeculoosOptions,
 } from "@speculoos/react";
+import type { ReactNode } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { DEFAULT_COLORS, radixThemes } from "../src/index.js";
 
 /** A stand-in that shows the source, as the fake maps do. Not a sanitiser. */

@@ -18,24 +18,23 @@
  * derived here, so they match `@speculoos/react`'s.
  */
 
-export { renderApi, type RenderApiOptions } from "./api.js";
+/** Re-exported so a consumer can write an `href` function without importing core. */
+export type { Href, HrefTarget } from "@speculoos/core";
+export { type RenderApiOptions, renderApi } from "./api.js";
+export { CLASSES, classNames, INTEROP_CLASSES } from "./classes.js";
+export type { Html } from "./escape.js";
+export { text as escapeHtml } from "./escape.js";
+export { renderSchema, type SchemaOptions } from "./fields.js";
+export { type NavOptions, renderNav, renderType, renderTypes, type TypeOptions } from "./navigation.js";
 export {
+  type RenderEndpointOptions,
+  type RenderOperationOptions,
   renderEndpoint,
   renderEndpointById,
   renderEntry,
   renderEntryExamples,
   renderOperation,
   renderOperationById,
-  type RenderEndpointOptions,
-  type RenderOperationOptions,
 } from "./operation.js";
-export { renderNav, renderType, renderTypes, type NavOptions, type TypeOptions } from "./navigation.js";
-export { renderSchema, type SchemaOptions } from "./fields.js";
-export { CLASSES, INTEROP_CLASSES, classNames } from "./classes.js";
-export { resolve, type HtmlOptions, type Resolved } from "./options.js";
-export { text as escapeHtml } from "./escape.js";
-export type { Html } from "./escape.js";
+export { type HtmlOptions, type Resolved, resolve } from "./options.js";
 export type { BadgeTone, Ctx, SectionKind } from "./parts.js";
-
-/** Re-exported so a consumer can write an `href` function without importing core. */
-export type { HrefTarget, Href } from "@speculoos/core";

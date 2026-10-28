@@ -4,11 +4,12 @@
  * Built once and shared: parsing the fixtures per test file is slower than the
  * rendering being tested.
  */
+
+import { buildAsyncApi } from "@speculoos/asyncapi";
+import type { ApiIR } from "@speculoos/core";
 import { specDir } from "@speculoos/fixtures";
 import { load } from "@speculoos/loader";
 import { buildOpenApi } from "@speculoos/openapi";
-import { buildAsyncApi } from "@speculoos/asyncapi";
-import type { ApiIR } from "@speculoos/core";
 
 export async function restIR(): Promise<ApiIR> {
   const project = await load({ root: specDir, documents: [{ name: "batch", path: "batch.yaml" }] });

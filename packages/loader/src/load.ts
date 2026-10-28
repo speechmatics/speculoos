@@ -12,12 +12,12 @@
  * one shared type come out as one type.
  */
 
-import type { Diagnostic, SourceLocation } from "@speculoos/core";
 import { readFile } from "node:fs/promises";
 import { dirname, isAbsolute, relative, resolve as resolvePath, sep } from "node:path";
+import type { Diagnostic, SourceLocation } from "@speculoos/core";
 import { parseDocument } from "yaml";
+import { type DialectInfo, detectDialect } from "./dialect.js";
 import { at } from "./pointer.js";
-import { detectDialect, type DialectInfo } from "./dialect.js";
 
 export interface DocumentInput {
   /**

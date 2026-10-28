@@ -9,22 +9,22 @@
  */
 
 export {
-  applyTransforms,
-  TransformError,
-  named,
   type ApplyOptions,
+  applyTransforms,
+  named,
   type Transform,
+  TransformError,
 } from "./apply.js";
+export { redactExamples } from "./examples.js";
 export {
-  hideWhere,
-  hideInternal,
-  filterByTag,
   type FilterByTagOptions,
+  filterByTag,
   type HidePredicate,
   type HideSubject,
+  hideInternal,
+  hideWhere,
 } from "./hide.js";
-export { sortTags, type SortTagsOptions } from "./tags.js";
-export { renameTypes, type RenameMap } from "./rename.js";
-export { redactExamples } from "./examples.js";
 export { pruneUnreachableTypes } from "./prune.js";
-export { reachableTypes, recomputeReferencedBy, endpointNodes, typesIn } from "./reach.js";
+export { endpointNodes, reachableTypes, recomputeReferencedBy, typesIn } from "./reach.js";
+export { type RenameMap, renameTypes } from "./rename.js";
+export { type SortTagsOptions, sortTags } from "./tags.js";

@@ -8,10 +8,10 @@
 
 import {
   DATA_KEYWORDS,
+  isObject,
   SCHEMA_ARRAY_KEYWORDS,
   SCHEMA_KEYWORDS,
   SCHEMA_MAP_KEYWORDS,
-  isObject,
   type Schema,
 } from "./canonical.js";
 

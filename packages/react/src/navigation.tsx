@@ -8,12 +8,12 @@
  * dropped types would make that decision invisible.
  */
 
-import { Fragment, type ReactNode } from "react";
-import { entrySlug } from "@speculoos/core";
 import type { ApiEntry, Endpoint, HrefTarget, Operation as IROperation, TypeId } from "@speculoos/core";
+import { entrySlug } from "@speculoos/core";
+import { Fragment, type ReactNode } from "react";
 import { useComponents, useSpeculoos } from "./context.js";
-import { useEntries, useTagGroups } from "./hooks.js";
 import { DocsBody, SchemaTable } from "./fields.js";
+import { useEntries, useTagGroups } from "./hooks.js";
 import { DIRECTION_LABEL } from "./labels.js";
 
 /**

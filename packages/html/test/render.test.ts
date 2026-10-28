@@ -6,15 +6,16 @@
  * same page. Those are the ones that would catch an IR that only looked right
  * because React happened to paper over it.
  */
+
+import { type ApiIR, allOperations, apiEntries, entryExamples, type OperationEntry } from "@speculoos/core";
 import { beforeAll, describe, expect, it } from "vitest";
-import { allOperations, apiEntries, entryExamples, type ApiIR, type OperationEntry } from "@speculoos/core";
 import {
   renderApi,
-  renderNav,
   renderEndpoint,
   renderEndpointById,
   renderEntry,
   renderEntryExamples,
+  renderNav,
   renderOperation,
   renderOperationById,
   renderSchema,

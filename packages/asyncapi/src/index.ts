@@ -5,7 +5,7 @@
  * direction normalisation; see ./direction.ts.
  */
 
-export { buildAsyncApi, type BuildOptions } from "./build.js";
+export { type BuildOptions, buildAsyncApi } from "./build.js";
 export {
   directionFromV2,
   directionFromV3,
@@ -13,4 +13,4 @@ export {
   type V2Operation,
   type V3Action,
 } from "./direction.js";
-export { isJsonSchemaFormat, payloadSchema, type PayloadSchema } from "./schema-format.js";
+export { isJsonSchemaFormat, type PayloadSchema, payloadSchema } from "./schema-format.js";

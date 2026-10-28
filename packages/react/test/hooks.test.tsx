@@ -2,13 +2,14 @@
  * The hooks, used the way a consumer who wants none of the shipped components
  * would use them: build the markup yourself from `FieldNode`s.
  */
-import { beforeAll, describe, expect, it } from "vitest";
-import type { ReactNode } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
+
+import type { ApiIR, FieldNode } from "@speculoos/core";
 import { specDir } from "@speculoos/fixtures";
 import { load } from "@speculoos/loader";
 import { buildOpenApi } from "@speculoos/openapi";
-import type { ApiIR, FieldNode } from "@speculoos/core";
+import type { ReactNode } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { beforeAll, describe, expect, it } from "vitest";
 import {
   SpeculoosProvider,
   useFieldRows,

@@ -1,7 +1,7 @@
-import { describe, expect, it, beforeAll } from "vitest";
+import { type ApiIR, allOperations, groupByTag, toRows } from "@speculoos/core";
 import { specDir } from "@speculoos/fixtures";
 import { load } from "@speculoos/loader";
-import { allOperations, groupByTag, toRows, type ApiIR } from "@speculoos/core";
+import { beforeAll, describe, expect, it } from "vitest";
 import { buildOpenApi } from "../src/index.js";
 
 const root = specDir;

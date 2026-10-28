@@ -8,10 +8,11 @@
  *   node scripts/gen-schema.mjs          write the schema
  *   node scripts/gen-schema.mjs --check  fail if the committed schema is stale
  */
-import { createGenerator } from "ts-json-schema-generator";
+
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createGenerator } from "ts-json-schema-generator";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const out = resolve(root, "schema/apiir.schema.json");

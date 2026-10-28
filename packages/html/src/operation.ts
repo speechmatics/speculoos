@@ -12,12 +12,11 @@
  * the second renderer exists to test.
  */
 
-import { DIRECTION_LABEL, DIRECTION_VERB, parametersNode, propertiesNode } from "@speculoos/core";
 import type {
   ApiEntry,
   ApiIR,
-  EntryExample,
   Endpoint,
+  EntryExample,
   Example,
   MediaVariant,
   MessageOperation,
@@ -30,31 +29,35 @@ import type {
 } from "@speculoos/core";
 import {
   allOperations,
+  DIRECTION_LABEL,
+  DIRECTION_VERB,
   endpointHandshake,
   endpointUrl,
   entryExamples,
   groupMediaVariants,
+  parametersNode,
+  propertiesNode,
   replyAddress,
   securityLabel,
   securityUsage,
 } from "@speculoos/core";
-import { h, join, text, type Html } from "./escape.js";
+import { type Html, h, join, text } from "./escape.js";
 import { schemaTable } from "./fields.js";
-import { resolve, type HtmlOptions } from "./options.js";
+import { type HtmlOptions, resolve } from "./options.js";
 import {
   badge,
+  type Ctx,
   code,
   codeBlock,
   docsBody,
   empty,
   format,
+  type GroupItem,
   group,
   inline,
   link,
   markdown,
   section,
-  type Ctx,
-  type GroupItem,
 } from "./parts.js";
 
 /**

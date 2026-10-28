@@ -10,7 +10,7 @@
  */
 
 import type { ApiIR, Docs, HrefTarget } from "@speculoos/core";
-import { h, join, raw, text, type Html } from "./escape.js";
+import { type Html, h, join, raw, text } from "./escape.js";
 import type { Resolved } from "./options.js";
 
 export interface Ctx {

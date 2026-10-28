@@ -1,9 +1,9 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { type ApiIR, allOperations, type TypeDef } from "@speculoos/core";
+import { parseApiIR } from "@speculoos/core/validate";
 import { specDir } from "@speculoos/fixtures";
 import { load } from "@speculoos/loader";
 import { buildOpenApi } from "@speculoos/openapi";
-import { allOperations, type ApiIR, type TypeDef } from "@speculoos/core";
-import { parseApiIR } from "@speculoos/core/validate";
+import { beforeAll, describe, expect, it } from "vitest";
 import {
   applyTransforms,
   filterByTag,
@@ -14,8 +14,8 @@ import {
   redactExamples,
   renameTypes,
   sortTags,
-  TransformError,
   type Transform,
+  TransformError,
 } from "../src/index.js";
 
 let base: ApiIR;

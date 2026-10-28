@@ -1,6 +1,7 @@
-import { describe, expect, it } from "vitest";
 import type { Diagnostic, SourceLocation } from "@speculoos/core";
+import { describe, expect, it } from "vitest";
 import {
+  type AdapterContext,
   deref,
   docsOf,
   extensionsOf,
@@ -8,7 +9,6 @@ import {
   protocolOf,
   refName,
   securityFromMaps,
-  type AdapterContext,
 } from "../src/index.js";
 
 /** A one-document project, resolving same-document pointers only. */

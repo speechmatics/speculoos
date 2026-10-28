@@ -14,11 +14,11 @@
  * check that `toRows` and `toTree` agree.
  */
 
-import { toFieldList, toTree } from "@speculoos/core";
 import type { ApiIR, Chip, FieldNode, Node, Parameter, TypeId, View } from "@speculoos/core";
-import { h, join, text, type Html } from "./escape.js";
-import { resolve, type HtmlOptions } from "./options.js";
-import { badge, code, docsBody, empty, inline, link, type Ctx } from "./parts.js";
+import { toFieldList, toTree } from "@speculoos/core";
+import { type Html, h, join, text } from "./escape.js";
+import { type HtmlOptions, resolve } from "./options.js";
+import { badge, type Ctx, code, docsBody, empty, inline, link } from "./parts.js";
 
 /**
  * Chips that come from the shape of the field rather than from a constraint:

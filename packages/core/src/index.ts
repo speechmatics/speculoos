@@ -17,63 +17,63 @@
  * No runtime dependencies and no Node built-ins. See docs/PLAN.md.
  */
 
-export type * from "./schema.js";
+export {
+  DIAGNOSTIC_CODE_NAMES,
+  DIAGNOSTIC_CODES,
+  type DiagnosticCode,
+  type DiagnosticSeverity,
+  describeDiagnostic,
+  UNSUPPORTED_KEYWORD_CODES,
+} from "./diagnostics.js";
 export type * from "./document.js";
 
 export {
-  typeLabel,
-  formatValue,
   DIRECTION_LABEL,
   DIRECTION_VERB,
+  formatValue,
   type LabelContext,
   type LabelOptions,
+  typeLabel,
 } from "./label.js";
-export { projectForView, appliesToView } from "./view.js";
-export { slugify, createSlugger } from "./slug.js";
 export { defaultHref, type Href, type HrefTarget } from "./link.js";
-export { parametersNode, parameterProperty, propertiesNode } from "./synth.js";
 export {
-  DIAGNOSTIC_CODES,
-  DIAGNOSTIC_CODE_NAMES,
-  UNSUPPORTED_KEYWORD_CODES,
-  describeDiagnostic,
-  type DiagnosticCode,
-  type DiagnosticSeverity,
-} from "./diagnostics.js";
-export {
+  type ApiEntry,
   allOperations,
   apiEntries,
+  type EntryExample,
   endpointHandshake,
   endpointUrl,
   entryExamples,
   entrySlug,
   groupByTag,
   groupMediaVariants,
+  type Handshake,
   listedEndpoints,
+  type OperationEntry,
   replyAddress,
   resolveRef,
   securityLabel,
   securityUsage,
-  walk,
-  type ApiEntry,
-  type EntryExample,
-  type Handshake,
-  type OperationEntry,
   type TagGroup,
+  walk,
 } from "./navigate.js";
 export {
-  toTree,
-  toRows,
-  flatten,
-  collectLinks,
-  toFieldList,
-  chipsFor,
   type Chip,
   type ChipKind,
   type ChipOptions,
+  chipsFor,
+  collectLinks,
   type FieldChildren,
   type FieldList,
   type FieldNode,
+  flatten,
   type PresentContext,
+  toFieldList,
+  toRows,
+  toTree,
   type ViewOptions,
 } from "./present.js";
+export type * from "./schema.js";
+export { createSlugger, slugify } from "./slug.js";
+export { parameterProperty, parametersNode, propertiesNode } from "./synth.js";
+export { appliesToView, projectForView } from "./view.js";

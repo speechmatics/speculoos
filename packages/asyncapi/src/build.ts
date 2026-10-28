@@ -12,9 +12,21 @@
  * same shape — see ./direction.ts for the part that matters most.
  */
 
+import {
+  type AdapterContext,
+  anyNode,
+  deref as derefRef,
+  diagnostic,
+  docsOf,
+  extensionsOf,
+  optional,
+  type Resolved,
+  refName,
+  securityFromMaps,
+} from "@speculoos/adapter-kit";
 import type {
-  ApiIR,
   ApiInfo,
+  ApiIR,
   Bindings,
   Diagnostic,
   Endpoint,
@@ -30,21 +42,9 @@ import type {
 } from "@speculoos/core";
 import { createSlugger } from "@speculoos/core";
 import { buildSchemas, isObject, str } from "@speculoos/jsonschema";
-import {
-  anyNode,
-  deref as derefRef,
-  diagnostic,
-  docsOf,
-  extensionsOf,
-  optional,
-  refName,
-  securityFromMaps,
-  type AdapterContext,
-  type Resolved,
-} from "@speculoos/adapter-kit";
 import type { LoadedProject } from "@speculoos/loader";
 import { at, joinPointer } from "@speculoos/loader";
-import { V2_OPERATIONS, directionFromV2, directionFromV3 } from "./direction.js";
+import { directionFromV2, directionFromV3, V2_OPERATIONS } from "./direction.js";
 import { payloadSchema, unsupportedNode } from "./schema-format.js";
 
 export interface BuildOptions {

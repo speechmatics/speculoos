@@ -15,17 +15,16 @@
  *   node preview/build.mjs --serve      # build, then serve on :8137
  */
 
-import { createServer } from "node:http";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { createServer } from "node:http";
 import { basename, dirname, extname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-
-import MarkdownIt from "markdown-it";
+import { buildAsyncApi } from "@speculoos/asyncapi";
+import { specDir } from "@speculoos/fixtures";
+import { renderApi, renderNav } from "@speculoos/html";
 import { load } from "@speculoos/loader";
 import { buildOpenApi } from "@speculoos/openapi";
-import { buildAsyncApi } from "@speculoos/asyncapi";
-import { renderApi, renderNav } from "@speculoos/html";
-import { specDir } from "@speculoos/fixtures";
+import MarkdownIt from "markdown-it";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const outDir = join(here, "out");

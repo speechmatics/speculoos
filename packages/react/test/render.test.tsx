@@ -1,12 +1,13 @@
-import { beforeAll, describe, expect, it } from "vitest";
-import type { ReactNode } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
+import { buildAsyncApi } from "@speculoos/asyncapi";
+import { type ApiIR, apiEntries, entryExamples, type TypeDef } from "@speculoos/core";
 import { specDir } from "@speculoos/fixtures";
 import { load } from "@speculoos/loader";
 import { buildOpenApi } from "@speculoos/openapi";
-import { buildAsyncApi } from "@speculoos/asyncapi";
-import { apiEntries, entryExamples, type ApiIR, type TypeDef } from "@speculoos/core";
+import type { ReactNode } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { beforeAll, describe, expect, it } from "vitest";
 import {
+  type Components,
   Endpoint,
   Entry,
   EntryExamples,
@@ -14,10 +15,9 @@ import {
   Operation,
   OperationList,
   SchemaTable,
+  type SpeculoosOptions,
   SpeculoosProvider,
   TypeSections,
-  type Components,
-  type SpeculoosOptions,
 } from "../src/index.js";
 import { boxy, terse } from "./fake.js";
 

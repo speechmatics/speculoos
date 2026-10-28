@@ -5,9 +5,10 @@
  * Both are checked against real rendered output rather than by reading the
  * source, because the promise is about what reaches the page.
  */
-import { beforeAll, describe, expect, it } from "vitest";
+
 import type { ApiIR } from "@speculoos/core";
-import { CLASSES, INTEROP_CLASSES, classNames, renderApi, renderNav, renderTypes } from "../src/index.js";
+import { beforeAll, describe, expect, it } from "vitest";
+import { CLASSES, classNames, INTEROP_CLASSES, renderApi, renderNav, renderTypes } from "../src/index.js";
 import { classesIn, restIR, tagsIn, wsIR } from "./ir.js";
 
 let rest: ApiIR;

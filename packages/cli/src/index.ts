@@ -4,6 +4,6 @@
  * The library entry; the executable is ./cli.ts.
  */
 
-export { run, type RunOptions, type RunResult } from "./run.js";
-export { renderInspect, renderLint, summarise, type InspectOptions } from "./report.js";
-export { passesFor, parseRenames, type PassFlags } from "./passes.js";
+export { type PassFlags, parseRenames, passesFor } from "./passes.js";
+export { type InspectOptions, renderInspect, renderLint, summarise } from "./report.js";
+export { type RunOptions, type RunResult, run } from "./run.js";

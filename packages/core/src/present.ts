@@ -11,8 +11,8 @@
  * design systems whose table component takes a row array and cannot nest <tr> inside <tr>.
  */
 
+import { formatValue, type LabelOptions, typeLabel } from "./label.js";
 import type { Docs, Node, Property, TypeId, TypeRegistry, View } from "./schema.js";
-import { formatValue, typeLabel, type LabelOptions } from "./label.js";
 import { appliesToView } from "./view.js";
 
 // ─────────────────────────────────────────────────────────────────────────────

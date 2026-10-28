@@ -14,14 +14,15 @@
  *
  * What it compares is *content*, never markup. Markup differing is the point.
  */
-import { beforeAll, describe, expect, it } from "vitest";
-import { renderToStaticMarkup } from "react-dom/server";
-import { allOperations, type ApiIR, type OperationEntry } from "@speculoos/core";
+
+import { buildAsyncApi } from "@speculoos/asyncapi";
+import { type ApiIR, allOperations, type OperationEntry } from "@speculoos/core";
 import { specDir } from "@speculoos/fixtures";
+import { renderEndpoint, renderNav, renderOperation, renderTypes } from "@speculoos/html";
 import { load } from "@speculoos/loader";
 import { buildOpenApi } from "@speculoos/openapi";
-import { buildAsyncApi } from "@speculoos/asyncapi";
-import { renderEndpoint, renderNav, renderOperation, renderTypes } from "@speculoos/html";
+import { renderToStaticMarkup } from "react-dom/server";
+import { beforeAll, describe, expect, it } from "vitest";
 import { Endpoint, EntryList, Operation, SpeculoosProvider, TypeSections } from "../src/index.js";
 import { boxy } from "./fake.js";
 

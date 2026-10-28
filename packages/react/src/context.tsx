@@ -3,8 +3,8 @@
  * the site's rather than the spec's.
  */
 
-import { createContext, createElement, useContext, useMemo, type ReactNode } from "react";
-import { defaultHref, type ApiIR, type HrefTarget, type View } from "@speculoos/core";
+import { type ApiIR, defaultHref, type HrefTarget, type View } from "@speculoos/core";
+import { createContext, createElement, type ReactNode, useContext, useMemo } from "react";
 import type { Components } from "./components.js";
 
 export interface SpeculoosOptions {

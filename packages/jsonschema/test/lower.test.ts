@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { lowerOne, harness } from "./helpers.js";
+import { harness, lowerOne } from "./helpers.js";
 
 describe("lower — leaves", () => {
   it("lowers scalars with their constraints", () => {

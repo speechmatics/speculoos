@@ -7,8 +7,8 @@
  * stops growing.
  */
 
-import { walk } from "@speculoos/core";
 import type { ApiIR, Endpoint, Node, TypeId, TypeRegistry } from "@speculoos/core";
+import { walk } from "@speculoos/core";
 
 /** Every `Node` an endpoint owns directly, including through its callbacks. */
 export function endpointNodes(endpoint: Endpoint): Node[] {

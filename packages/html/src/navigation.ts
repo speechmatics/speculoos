@@ -7,13 +7,12 @@
  * dead anchors.
  */
 
-import { allOperations, apiEntries, groupByTag } from "@speculoos/core";
 import type { ApiEntry, ApiIR, OperationEntry, TypeDef } from "@speculoos/core";
-import { h, text, type Html } from "./escape.js";
+import { allOperations, apiEntries, DIRECTION_LABEL, groupByTag } from "@speculoos/core";
+import { type Html, h, text } from "./escape.js";
 import { schemaTable } from "./fields.js";
-import { resolve, type HtmlOptions } from "./options.js";
-import { badge, code, docsBody, inline, link, section, type Ctx } from "./parts.js";
-import { DIRECTION_LABEL } from "@speculoos/core";
+import { type HtmlOptions, resolve } from "./options.js";
+import { badge, type Ctx, code, docsBody, inline, link, section } from "./parts.js";
 
 /** The label a navigation entry shows: method and path, or direction and address. */
 function entryLabel(c: Ctx, entry: OperationEntry): Html {

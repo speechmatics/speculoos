@@ -10,9 +10,9 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { basename, dirname, extname, resolve } from "node:path";
 import { DIAGNOSTIC_CODE_NAMES } from "@speculoos/core";
-import { run } from "./run.js";
-import { renderInspect, renderLint, summarise } from "./report.js";
 import { passesFor } from "./passes.js";
+import { renderInspect, renderLint, summarise } from "./report.js";
+import { run } from "./run.js";
 
 const USAGE = `speculoos — render API specs as a design-system-agnostic IR
 

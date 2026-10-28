@@ -6,19 +6,20 @@
  * because it is believed. This package depends on every adapter and on
  * transforms, so it is the one place that can see the whole set at once.
  */
-import { describe, expect, it } from "vitest";
+
+import { buildAsyncApi } from "@speculoos/asyncapi";
 import {
-  DIAGNOSTIC_CODES,
-  DIAGNOSTIC_CODE_NAMES,
-  UNSUPPORTED_KEYWORD_CODES,
-  describeDiagnostic,
   type ApiIR,
+  DIAGNOSTIC_CODE_NAMES,
+  DIAGNOSTIC_CODES,
+  describeDiagnostic,
+  UNSUPPORTED_KEYWORD_CODES,
 } from "@speculoos/core";
-import { specDir, type SpecName } from "@speculoos/fixtures";
+import { type SpecName, specDir } from "@speculoos/fixtures";
 import { load } from "@speculoos/loader";
 import { buildOpenApi } from "@speculoos/openapi";
-import { buildAsyncApi } from "@speculoos/asyncapi";
 import { hideInternal } from "@speculoos/transforms";
+import { describe, expect, it } from "vitest";
 
 const SPECS: { file: SpecName; dialect: "openapi" | "asyncapi" }[] = [
   { file: "batch.yaml", dialect: "openapi" },

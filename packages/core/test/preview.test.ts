@@ -4,7 +4,7 @@
  * needs, it shows up here as a blank column or a nonsense label.
  */
 import { describe, it } from "vitest";
-import { allOperations, collectLinks, toRows, type FieldNode } from "../src/index.js";
+import { allOperations, collectLinks, type FieldNode, toRows } from "../src/index.js";
 import { ir, jobRef, messageRef } from "./fixture.js";
 
 const pad = (s: string, n: number) => s + " ".repeat(Math.max(0, n - [...s].length));

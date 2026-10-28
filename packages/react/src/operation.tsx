@@ -8,7 +8,20 @@
  * have meant inventing a lowest common denominator that reads like neither.
  */
 
-import { Fragment, useMemo, type ReactNode } from "react";
+import type {
+  ApiEntry,
+  ApiIR,
+  EntryExample,
+  Example,
+  Endpoint as IREndpoint,
+  Operation as IROperation,
+  MediaVariant,
+  MessageOperation,
+  Parameter,
+  RestResponse,
+  SecurityRequirements,
+  WsMessage,
+} from "@speculoos/core";
 import {
   endpointHandshake,
   endpointUrl,
@@ -18,26 +31,13 @@ import {
   securityLabel,
   securityUsage,
 } from "@speculoos/core";
-import type {
-  ApiEntry,
-  ApiIR,
-  EntryExample,
-  Endpoint as IREndpoint,
-  Example,
-  MediaVariant,
-  MessageOperation,
-  Operation as IROperation,
-  Parameter,
-  RestResponse,
-  SecurityRequirements,
-  WsMessage,
-} from "@speculoos/core";
-import { useComponents, useSpeculoos } from "./context.js";
-import { useEndpoint, useOperation } from "./hooks.js";
-import { DocsBody, SchemaTable } from "./fields.js";
-import { parametersNode, propertiesNode } from "./synth.js";
+import { Fragment, type ReactNode, useMemo } from "react";
 import type { Tab } from "./components.js";
+import { useComponents, useSpeculoos } from "./context.js";
+import { DocsBody, SchemaTable } from "./fields.js";
+import { useEndpoint, useOperation } from "./hooks.js";
 import { DIRECTION_LABEL, DIRECTION_VERB } from "./labels.js";
+import { parametersNode, propertiesNode } from "./synth.js";
 
 /**
  * `in: "path"` covers both an OAS path parameter and an AsyncAPI channel address

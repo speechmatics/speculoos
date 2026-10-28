@@ -6,27 +6,27 @@
  * `useFieldRows` and you can write your own.
  */
 
-import { useMemo } from "react";
 import {
+  type ApiEntry,
   allOperations,
   apiEntries,
-  groupByTag,
-  listedEndpoints,
-  toRows,
-  toTree,
-  typeLabel,
-  type ApiEntry,
   type Endpoint,
   type FieldNode,
+  groupByTag,
   type LabelOptions,
+  listedEndpoints,
   type Node,
   type OperationEntry,
   type TagGroup,
   type TypeDef,
   type TypeId,
+  toRows,
+  toTree,
+  typeLabel,
   type View,
   type ViewOptions,
 } from "@speculoos/core";
+import { useMemo } from "react";
 import { useSpeculoos } from "./context.js";
 
 /** Per-call overrides. `view` has no provider-level default: it is per content. */

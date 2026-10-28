@@ -1,7 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { type ApiIR, type MessageOperation, toRows } from "@speculoos/core";
 import { specDir } from "@speculoos/fixtures";
 import { load } from "@speculoos/loader";
-import { toRows, type ApiIR, type MessageOperation } from "@speculoos/core";
+import { describe, expect, it } from "vitest";
 import { buildAsyncApi, directionFromV2, directionFromV3, isJsonSchemaFormat } from "../src/index.js";
 
 const root = specDir;
