@@ -16,7 +16,10 @@
     "preview:radix": "pnpm --filter @speculoos/map-radix-themes dev",
     "pack:local": "node scripts/pack-local.mjs",
     "docs:diagnostics": "node scripts/diagnostics-doc.mjs",
-    "docs:check": "node scripts/diagnostics-doc.mjs --check"
+    "docs:check": "node scripts/diagnostics-doc.mjs --check",
+    "set-version": "node scripts/set-version.mjs",
+    "release:check": "node scripts/release-check.mjs",
+    "release": "pnpm build && pnpm release:check && pnpm -r publish"
   },
   "devDependencies": {
     "@speculoos/asyncapi": "workspace:*",
@@ -26,6 +29,7 @@
     "@speculoos/loader": "workspace:*",
     "@speculoos/openapi": "workspace:*",
     "markdown-it": "^14.1.0",
+    "publint": "0.3.12",
     "typescript": "^5.9.3"
   },
   "repository": {

@@ -42,6 +42,10 @@ jobs:
       # public contract, so the two must not drift.
       - run: pnpm docs:check
 
+      # What a consumer would install: versions, metadata, publint, and the packed
+      # tarballs typechecked and loaded from ESM and CommonJS. See docs/RELEASING.md.
+      - run: pnpm release:check
+
       # The preview harness is dev tooling, but building it exercises both
       # adapters and the HTML renderer end to end over every fixture, and it is
       # where a rendering regression shows up as something a human can read.
