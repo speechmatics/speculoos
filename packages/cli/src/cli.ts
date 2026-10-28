@@ -51,9 +51,14 @@ interface Args {
 export async function main(argv: string[]): Promise<number> {
   const args = parse(argv);
 
-  if (args.flags.has("help") || args.flags.has("h") || args.command === "") {
+  // Asking for help succeeds; giving no command is a usage error.
+  if (args.flags.has("help") || args.flags.has("h")) {
     process.stdout.write(USAGE);
-    return args.command === "" ? 1 : 0;
+    return 0;
+  }
+  if (args.command === "") {
+    process.stderr.write(USAGE);
+    return 1;
   }
 
   if (!["build", "lint", "inspect"].includes(args.command)) {

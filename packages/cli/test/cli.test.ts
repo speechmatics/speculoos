@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
 import { specDir } from "@speculoos/fixtures";
 import { parseApiIR } from "@speculoos/core/validate";
@@ -190,5 +191,25 @@ describe("transform passes", () => {
         validate: true,
       }),
     ).rejects.toThrow(/Transform bad \(step 1\)/);
+  });
+});
+
+describe("the speculoos binary", () => {
+  // The built CLI, as a shell or a script runs it: exit codes are its API.
+  const cli = (...args: string[]) =>
+    spawnSync(process.execPath, [resolve(__dirname, "../dist/cli.js"), ...args], { encoding: "utf8" });
+
+  it("succeeds when asked for help", () => {
+    for (const flag of ["--help", "-h"]) {
+      const { status, stdout } = cli(flag);
+      expect(status).toBe(0);
+      expect(stdout).toContain("Usage:");
+    }
+  });
+
+  it("fails with usage on stderr when given no command", () => {
+    const { status, stderr } = cli();
+    expect(status).toBe(1);
+    expect(stderr).toContain("Usage:");
   });
 });
