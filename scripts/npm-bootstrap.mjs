@@ -15,7 +15,8 @@
  * 3. trusts .github/workflows/release.yml in the repository to publish it
  *    (`npm trust github`).
  *
- * Each step checks first, so it can be run again after any failure.
+ * Each step checks first, so it can be run again after any failure; a step
+ * that fails is reported at the end rather than stopping the rest.
  *
  * Every real version, the first alpha included, is then published by the
  * workflow, with provenance. A new trust configuration expires unless the
@@ -109,8 +110,27 @@ const packages = readdirSync(join(root, "packages"))
   .map((dir) => JSON.parse(readFileSync(join(root, "packages", dir, "package.json"), "utf8")))
   .filter((pkg) => pkg.private !== true);
 
+/**
+ * Lists a package's trusted publishers. Interactive: npm may need a second
+ * factor here, so the terminal stays attached and only stdout is read.
+ * Undefined if the listing failed.
+ */
+function trustList(name) {
+  try {
+    return execFileSync("npm", ["trust", "list", name, "--json"], { stdio: ["inherit", "pipe", "inherit"] })
+      .toString()
+      .trim();
+  } catch {
+    return undefined;
+  }
+}
+
+/** What is left to do, by package, for the summary. */
+const unfinished = [];
+
 // Each step checks before it acts, so this can be run again from wherever it
-// stopped: nothing is published twice, deprecated twice or trusted twice.
+// stopped, and no failure stops the others: nothing is published, deprecated
+// or trusted twice, and the summary says what is left.
 for (const pkg of packages) {
   console.log(`\n${pkg.name}`);
 
@@ -129,10 +149,9 @@ for (const pkg of packages) {
       rmSync(dir, { recursive: true, force: true });
     }
     if (!dryRun && !(await waitFor(pkg.name, PLACEHOLDER))) {
-      console.error(
-        `  ${pkg.name}@${PLACEHOLDER} is still not on the registry after 15 minutes. Run this again later.`,
-      );
-      process.exit(1);
+      console.error(`  not on the registry after 15 minutes; run this again later`);
+      unfinished.push(`${pkg.name}: not yet served by the registry`);
+      continue;
     }
   }
 
@@ -143,28 +162,39 @@ for (const pkg of packages) {
   const versions = Object.entries(published ?? (dryRun ? { [PLACEHOLDER]: {} } : {}));
   const placeholders = versions.filter(([v, meta]) => v.startsWith(PLACEHOLDER) && meta.deprecated === undefined);
   for (const [version] of placeholders) {
-    loud("npm", ["deprecate", `${pkg.name}@${version}`, `Placeholder. Install ${pkg.name}@alpha.`]);
+    try {
+      loud("npm", ["deprecate", `${pkg.name}@${version}`, `Placeholder. Install ${pkg.name}@alpha.`]);
+    } catch {
+      unfinished.push(`${pkg.name}@${version}: not deprecated`);
+    }
   }
   if (placeholders.length === 0 && versions.length > 0) console.log("  placeholders already deprecated");
 
   // 3. Trust the release workflow, unless a trusted publisher is configured.
-  let trusted = "";
-  try {
-    trusted = dryRun ? "" : quiet("npm", ["trust", "list", pkg.name, "--json"]);
-  } catch {
-    // None configured, or the listing failed: try to create one below.
-  }
-  if (trusted.includes(REPOSITORY)) {
+  //    The registry does not say publicly, so this asks npm trust list.
+  const trusted = dryRun ? "" : trustList(pkg.name);
+  if (trusted?.includes(REPOSITORY)) {
     console.log(`  already trusts ${REPOSITORY}`);
-  } else if (trusted.trim() !== "" && trusted.trim() !== "[]" && trusted.trim() !== "{}") {
+  } else if (trusted !== undefined && !["", "[]", "{}"].includes(trusted)) {
     console.error(`  has a different trusted publisher; replace it by hand (npm trust list / revoke):\n${trusted}`);
+    unfinished.push(`${pkg.name}: trusts something else`);
   } else {
-    loud("npm", ["trust", "github", pkg.name, "--repo", REPOSITORY, "--file", WORKFLOW, "--allow-publish", "--yes"]);
+    try {
+      loud("npm", ["trust", "github", pkg.name, "--repo", REPOSITORY, "--file", WORKFLOW, "--allow-publish", "--yes"]);
+    } catch {
+      // Most likely a 409: the listing failed, and a trusted publisher already
+      // exists. Confirm by hand rather than guess.
+      unfinished.push(`${pkg.name}: trust not added; a 409 means one already exists (npm trust list ${pkg.name})`);
+    }
     // npm asks for a pause between trust calls, to stay clear of rate limits.
     if (!dryRun) await sleep(2000);
   }
 }
 
+if (unfinished.length > 0) {
+  console.log(`\nLeft to do — run this again, or check by hand:\n${unfinished.map((u) => `  - ${u}`).join("\n")}`);
+  process.exit(1);
+}
 console.log(
   `\nDone. Within 2 days, run ${WORKFLOW} (Actions → Release → Run workflow) so it publishes and validates the trust configurations.`,
 );
