@@ -19,8 +19,8 @@
     "docs:check": "node scripts/diagnostics-doc.mjs --check",
     "set-version": "node scripts/set-version.mjs",
     "release:check": "node scripts/release-check.mjs",
-    "release": "pnpm build && pnpm release:check && pnpm -r publish",
-    "format": "biome format --write ."
+    "format": "biome format --write .",
+    "release:dry-run": "pnpm build && pnpm release:check && node scripts/publish.mjs --dry-run"
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.4",

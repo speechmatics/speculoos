@@ -1,0 +1,49 @@
+# Publishes to npm, with trusted publishing: OIDC, no token, and provenance on
+# every version. Runs on every push to main and publishes whatever version is
+# not on npm yet, so `pnpm set-version` and a merge is a release; with nothing
+# new, it publishes nothing. See docs/RELEASING.md.
+#
+# npm trusts this file by name (scripts/npm-bootstrap.mjs): renaming it breaks
+# publishing until every package's trusted publisher is updated.
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# One release at a time, and never cancelled halfway through a publish.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # The OIDC token npm exchanges for a publish.
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v6
+        # Version comes from `packageManager` in package.json.
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: pnpm
+          registry-url: "https://registry.npmjs.org"
+
+      # Trusted publishing needs npm >= 11.5.1, newer than some Node 24s ship.
+      - run: npm install -g npm@^11.5.1
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm build
+
+      # Not a release if it would not be one a consumer could install.
+      - run: pnpm release:check
+
+      - run: node scripts/publish.mjs
