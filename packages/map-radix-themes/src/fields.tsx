@@ -15,7 +15,7 @@
  *
  * Nested rows start collapsed behind a "Show 4 properties" toggle, so a site
  * can expand named types inline (`expandRefs: "always"`) without a page of
- * every field of every type. In "rows" layout there are no `children` to hide,
+ * every field of every type — or open, when the table asks (`expanded`). In "rows" layout there are no `children` to hide,
  * and nothing toggles.
  */
 
@@ -152,8 +152,8 @@ export function fields(size: Size, layout: FieldLayout) {
 
 export function fieldRow(colors: BadgeColors, layout: FieldLayout, presence: Presence) {
   function FieldRow(props: FieldRowProps): ReactNode {
-    const { field, depth, name, docs, required, deprecated, children } = props;
-    const [open, setOpen] = useState(false);
+    const { field, depth, name, docs, required, deprecated, expanded, children } = props;
+    const [open, setOpen] = useState(expanded === true);
     const nested = useId();
     const hasChildren = children !== undefined && children !== null;
     const described = field.docs.description !== undefined || field.docs.externalDocs !== undefined;

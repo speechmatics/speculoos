@@ -114,9 +114,16 @@ export interface FieldRowsProps {
   location?: Parameter["in"];
   /** "tree" nests; "rows" has already been flattened and must not recurse. */
   nested: boolean;
+  /** See `FieldRowProps.expanded`. */
+  expanded?: boolean;
 }
 
-function rowProps(field: FieldNode, C: Components, location?: Parameter["in"]): Omit<FieldRowProps, "children"> {
+function rowProps(
+  field: FieldNode,
+  C: Components,
+  location?: Parameter["in"],
+  expanded?: boolean,
+): Omit<FieldRowProps, "children"> {
   const composed = field.composedFrom ?? [];
   const chips = [
     ...field.chips.filter((c) => c.kind !== "extends"),
@@ -138,11 +145,12 @@ function rowProps(field: FieldNode, C: Components, location?: Parameter["in"]): 
     deprecated: field.docs.deprecated === true,
     ...(field.children.kind === "variants" ? { variantsLabel: field.children.label } : {}),
     ...(location !== undefined ? { location } : {}),
+    ...(expanded === true ? { expanded } : {}),
   };
 }
 
 /** Renders a list of fields as rows, recursing when the layout is "tree". */
-export function FieldRows({ fields, location, nested }: FieldRowsProps): ReactNode {
+export function FieldRows({ fields, location, nested, expanded }: FieldRowsProps): ReactNode {
   const C = useComponents();
   return (
     <>
@@ -152,8 +160,10 @@ export function FieldRows({ fields, location, nested }: FieldRowsProps): ReactNo
             ? field.children.nodes
             : [];
         return (
-          <C.FieldRow key={field.key} {...rowProps(field, C, field.depth === 0 ? location : undefined)}>
-            {kids.length > 0 ? <FieldRows fields={kids} nested={nested} /> : undefined}
+          <C.FieldRow key={field.key} {...rowProps(field, C, field.depth === 0 ? location : undefined, expanded)}>
+            {kids.length > 0 ? (
+              <FieldRows fields={kids} nested={nested} {...(expanded === true ? { expanded } : {})} />
+            ) : undefined}
           </C.FieldRow>
         );
       })}
@@ -177,6 +187,11 @@ export interface SchemaTableProps {
   kind?: "fields" | "parameters" | "headers";
   /** Shown when the node has no rows at all. */
   empty?: ReactNode;
+  /**
+   * Shows nested rows open rather than collapsed, where the map collapses them:
+   * for a table whose point is its nesting, such as one property of a type.
+   */
+  expanded?: boolean;
 }
 
 /**
@@ -188,7 +203,7 @@ export interface SchemaTableProps {
  * named type.
  */
 export function SchemaTable(props: SchemaTableProps): ReactNode {
-  const { node, typeId, view, expandRefs, maxDepth, kind = "fields", empty } = props;
+  const { node, typeId, view, expandRefs, maxDepth, kind = "fields", empty, expanded } = props;
   const C = useComponents();
   const { ir, options } = useSpeculoos();
   const resolved = node ?? (typeId === undefined ? undefined : ir.schemas[typeId]?.node);
@@ -204,6 +219,7 @@ export function SchemaTable(props: SchemaTableProps): ReactNode {
       {...(expandRefs !== undefined ? { expandRefs } : {})}
       {...(maxDepth !== undefined ? { maxDepth } : {})}
       {...(empty !== undefined ? { empty } : {})}
+      {...(expanded === true ? { expanded } : {})}
     />
   );
 }
@@ -216,9 +232,10 @@ interface BodyProps {
   expandRefs?: "never" | "depth" | "always";
   maxDepth?: number;
   empty?: ReactNode;
+  expanded?: boolean;
 }
 
-function SchemaTableBody({ node, kind, nested, view, expandRefs, maxDepth, empty }: BodyProps): ReactNode {
+function SchemaTableBody({ node, kind, nested, view, expandRefs, maxDepth, empty, expanded }: BodyProps): ReactNode {
   const C = useComponents();
   const opts = {
     ...(view !== undefined ? { view } : {}),
@@ -242,7 +259,7 @@ function SchemaTableBody({ node, kind, nested, view, expandRefs, maxDepth, empty
       {composedFrom.length > 0 && <Composition ids={composedFrom} />}
       {fields.length > 0 && (
         <C.Fields kind={kind}>
-          <FieldRows fields={fields} nested={nested} />
+          <FieldRows fields={fields} nested={nested} {...(expanded === true ? { expanded } : {})} />
         </C.Fields>
       )}
     </>

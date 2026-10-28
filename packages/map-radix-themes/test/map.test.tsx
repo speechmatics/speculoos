@@ -252,6 +252,17 @@ describe("field rows", () => {
     expect(html).toMatch(/<div id="[^"]+" style="display:none">/);
   });
 
+  it("starts nested rows open when the table asks", () => {
+    const html = render(
+      <SchemaTable typeId="x#/components/schemas/Job" expandRefs="always" expanded />,
+      ir("batch.yaml"),
+      radixThemes({ markdown: Markdown }),
+    );
+    expect(html).toContain('aria-expanded="true"');
+    expect(html).not.toContain('aria-expanded="false"');
+    expect(html).not.toMatch(/<div id="[^"]+" style="display:none">/);
+  });
+
   it("offers no toggle when nothing is nested", () => {
     expect(render(<Operation id="listJobs" />, ir("batch.yaml"), radixThemes({ markdown: Markdown }), { layout: "rows" })).not.toContain("aria-expanded");
   });

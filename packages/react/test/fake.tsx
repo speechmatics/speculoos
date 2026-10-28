@@ -36,8 +36,8 @@ export const boxy: Components = {
   Badge: ({ tone, children }) => <x-badge data-tone={tone}>{children}</x-badge>,
   Link: ({ href, children }) => <x-link data-href={href}>{children}</x-link>,
   Fields: ({ kind, children }) => <x-fields data-kind={kind}>{children}</x-fields>,
-  FieldRow: ({ field, depth, name, type, chips, docs, required, deprecated, location, variantsLabel, children }) => (
-    <x-row data-depth={String(depth)} data-key={field.key}>
+  FieldRow: ({ field, depth, name, type, chips, docs, required, deprecated, location, variantsLabel, expanded, children }) => (
+    <x-row data-depth={String(depth)} data-key={field.key} {...(expanded ? { "data-expanded": "" } : {})}>
       <x-name>{name}</x-name>
       <x-type>{type}</x-type>
       {required && <x-required>required</x-required>}

@@ -156,6 +156,12 @@ export interface FieldRowProps {
   /** Set for a parameter row: "path" | "query" | "header" | "cookie". */
   location?: Parameter["in"] | undefined;
   /**
+   * Set when the table was asked to show its nested rows open
+   * (`SchemaTable`'s `expanded`). A map that collapses nested rows starts them
+   * open; one that does not can ignore it.
+   */
+  expanded?: boolean | undefined;
+  /**
    * Nested rows, in `layout: "tree"`. Always absent in `layout: "rows"`.
    *
    * These are `FieldRow`s too, each carrying its own `depth`, so a map built on

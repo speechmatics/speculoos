@@ -144,6 +144,13 @@ describe("SchemaTable", () => {
     expect(html).not.toContain("nullable");
   });
 
+  it("asks every row to show its nested rows open when expanded", () => {
+    const html = render(<SchemaTable typeId={jobId} expandRefs="always" expanded />, rest);
+    expect(html).toContain("<x-children>");
+    expect(html.match(/<x-row /g)?.length).toBe(html.match(/<x-row [^>]*data-expanded/g)?.length);
+    expect(render(<SchemaTable typeId={jobId} expandRefs="always" />, rest)).not.toContain("data-expanded");
+  });
+
   it("terminates on a self-referential type when told to expand everything", () => {
     const html = render(<SchemaTable typeId={jobId} expandRefs="always" />, rest);
     expect(html).toContain("recursive");
