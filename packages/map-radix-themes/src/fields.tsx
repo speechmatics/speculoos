@@ -7,11 +7,13 @@
  * schemas, parameters and headers alike, and a `Table`'s column headers bought
  * nothing a reader needed.
  *
- * Nested rows are returned *after* their parent, as siblings, indented by
- * depth. A `<dl>` could nest, but a row cannot tell which layout it is in —
- * `children` is absent on a leaf in "tree" and on every row in "rows" — so
- * nesting in one and indenting in the other would indent twice. Siblings
- * everywhere is the one shape that reads the same in both.
+ * Nested rows are returned *after* their parent, in a box of their own: a
+ * border and a faint fill, one box inside another per level. A `<dl>` could
+ * nest, but a row cannot tell which layout it is in — `children` is absent on
+ * a leaf in "tree" and on every row in "rows" — so the rows inside a box are
+ * still siblings of each other, on the list's own flow or grid. An indent
+ * alone was tried first, and three levels down it no longer said whose
+ * property a row was.
  *
  * Nested rows start collapsed behind a "Show 4 properties" toggle, so a site
  * can expand named types inline (`expandRefs: "always"`) without a page of
@@ -45,21 +47,6 @@ export type FieldLayout = "columns" | "vertical" | "stacked";
  * the rows quiet; "required" is the other way round.
  */
 export type Presence = "optional" | "required";
-
-type Space = "0" | "4" | "6" | "7" | "8";
-
-/**
- * How far to indent a row, in Radix space steps.
- *
- * The top-level rows of a field list are at depth 1, because the nameless root
- * object above them is dropped; a root that is kept (a scalar body, a link to a
- * named type) is at depth 0 and has no siblings. Neither is indented.
- */
-const INDENT: readonly Space[] = ["0", "4", "6", "7", "8"];
-
-function indent(depth: number): Space {
-  return INDENT[Math.min(Math.max(depth - 1, 0), INDENT.length - 1)] ?? "0";
-}
 
 /**
  * The field name, in bold. `name` arrives already built from the map's own
@@ -156,6 +143,60 @@ function TypeLine({
   );
 }
 
+/**
+ * The box a row's nested rows open into.
+ *
+ * It must not break the list it sits in. Stacked or vertical, a `DataList` is
+ * a flex column, so the box is one too and takes the list's gap (`inherit`, so
+ * a box in a box still has it). In "columns" it is a grid with two tracks the
+ * labels line up on, so the box spans both and takes them as a `subgrid` — and
+ * below `sm`, where the list turns into a flex column, a subgrid with no grid
+ * above it is just a grid of one column, which is what stacked rows want.
+ *
+ * Its padding is the indent, so a deeper level is further in because it is
+ * inside more boxes, and it is smaller on a phone, where three levels of it
+ * would leave a description a few words wide.
+ *
+ * Stacked rows open with a rule, which in the first row would draw a second
+ * line just under the box's border. The rows sit 1px higher than the box's
+ * padding, and the box clips what is above its padding, so the first rule is
+ * hidden and the others are not.
+ */
+function NestedBox({
+  id,
+  open,
+  layout,
+  children,
+}: {
+  id: string;
+  open: boolean;
+  layout: FieldLayout;
+  children: ReactNode;
+}): ReactNode {
+  const flow =
+    layout === "columns"
+      ? { display: "grid", gridTemplateColumns: "subgrid", gridColumn: "1 / -1", gap: "inherit" }
+      : { display: "flex", flexDirection: "column" as const, gap: "inherit" };
+  const ruled = layout === "stacked";
+  return (
+    <Box
+      id={id}
+      px={{ initial: "2", sm: "3" }}
+      pt={ruled ? "0" : "3"}
+      pb="3"
+      style={{
+        ...(open ? flow : { display: "none" }),
+        border: "1px solid var(--gray-a5)",
+        borderRadius: "var(--radius-3)",
+        background: "var(--gray-a2)",
+        overflow: ruled ? "hidden" : undefined,
+      }}
+    >
+      {ruled ? <div style={{ ...flow, marginTop: -1 }}>{children}</div> : children}
+    </Box>
+  );
+}
+
 export function fields(size: Size, layout: FieldLayout) {
   function Fields({ kind, children }: FieldsProps): ReactNode {
     return (
@@ -176,36 +217,29 @@ export function fields(size: Size, layout: FieldLayout) {
 
 export function fieldRow(colors: BadgeColors, layout: FieldLayout, presence: Presence) {
   function FieldRow(props: FieldRowProps): ReactNode {
-    const { field, depth, name, docs, required, deprecated, expanded, children } = props;
+    const { field, name, docs, required, deprecated, expanded, children } = props;
     const [open, setOpen] = useState(expanded === true);
     const nested = useId();
     const hasChildren = children !== undefined && children !== null;
     const described = field.docs.description !== undefined || field.docs.externalDocs !== undefined;
     const columns = layout === "columns";
     const oneLine = layout === "stacked";
-    // Stacked, the value sits under the name, so the whole row indents.
-    const pad = indent(depth);
-    const rowStyle = {
-      ...(!columns && pad !== "0" ? { paddingLeft: `var(--space-${pad})` } : {}),
-      ...(oneLine ? { borderTop: "1px solid var(--gray-a4)", paddingTop: "var(--space-3)" } : {}),
-    };
+    const rowStyle = oneLine ? { borderTop: "1px solid var(--gray-a4)", paddingTop: "var(--space-3)" } : {};
     return (
       <>
         <DataList.Item data-key={field.key} align="start" style={rowStyle}>
           <DataList.Label minWidth={columns ? { initial: "0", sm: "180px" } : "0"}>
-            <Box pl={columns ? pad : "0"}>
-              <Flex gap="2" align="baseline" wrap="wrap">
-                <Name name={name} type={props.type} />
-                {oneLine && <TypeLine {...props} />}
-                <Marks
-                  named={named(name)}
-                  required={required}
-                  deprecated={deprecated}
-                  colors={colors}
-                  presence={presence}
-                />
-              </Flex>
-            </Box>
+            <Flex gap="2" align="baseline" wrap="wrap">
+              <Name name={name} type={props.type} />
+              {oneLine && <TypeLine {...props} />}
+              <Marks
+                named={named(name)}
+                required={required}
+                deprecated={deprecated}
+                colors={colors}
+                presence={presence}
+              />
+            </Flex>
           </DataList.Label>
           {/* Grid and flex items will not shrink below their content by
               default, so one wide thing in a description — a table, a long
@@ -243,11 +277,10 @@ export function fieldRow(colors: BadgeColors, layout: FieldLayout, presence: Pre
             </DataList.Value>
           )}
         </DataList.Item>
-        {/* `display: contents` keeps the nested rows on the list's own grid. */}
         {hasChildren && (
-          <div id={nested} style={{ display: open ? "contents" : "none" }}>
+          <NestedBox id={nested} open={open} layout={layout}>
             {children}
-          </div>
+          </NestedBox>
         )}
       </>
     );

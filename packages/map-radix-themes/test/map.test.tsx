@@ -117,15 +117,15 @@ describe("field rows in tree layout", () => {
       layout: "tree",
       expandRefs: "always",
     });
-    // Nested rows are indented siblings. A <dl> opened inside another would
-    // mean the map nested them — and indented them twice.
+    // Nested rows are siblings inside a box. A <dl> opened inside another
+    // would mean the map nested them as a list.
     let open = 0;
     for (const [tag] of html.matchAll(/<\/?dl\b/g)) {
       open += tag === "<dl" ? 1 : -1;
       expect(open).toBeLessThanOrEqual(1);
     }
     expect(open).toBe(0);
-    expect(html).toMatch(/padding-left:var\(--space-[1-9]\)/); // and something was indented
+    expect(html).toMatch(/<div id="[^"]+" style="[^"]*border:1px solid var\(--gray-a5\)/); // and something was boxed
   });
 
   it("shows the same rows in both layouts", () => {
@@ -268,7 +268,7 @@ describe("field rows", () => {
     expect(html).toMatch(
       /aria-expanded="false"[^>]*><span aria-hidden="true">▸<\/span>Show \d+ (properties|property|options?)<\/button>/,
     );
-    expect(html).toMatch(/<div id="[^"]+" style="display:none">/);
+    expect(html).toMatch(/<div id="[^"]+" style="display:none;/);
   });
 
   it("starts nested rows open when the table asks", () => {
@@ -279,7 +279,7 @@ describe("field rows", () => {
     );
     expect(html).toContain('aria-expanded="true"');
     expect(html).not.toContain('aria-expanded="false"');
-    expect(html).not.toMatch(/<div id="[^"]+" style="display:none">/);
+    expect(html).not.toMatch(/<div id="[^"]+" style="display:none;/);
   });
 
   it("offers no toggle when nothing is nested", () => {

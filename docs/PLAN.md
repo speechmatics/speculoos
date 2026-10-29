@@ -1004,16 +1004,18 @@ sections, so nothing stands out. Each item says where it lands: **map**
 (`@speculoos/map-radix-themes`, released as a new alpha) or **react** (`@speculoos/react`,
 with its `@speculoos/html` counterpart, at parity). What the review found on the
 Speechmatics site itself — page width, the session and side panels, `<Schema>` in guides —
-is planned in that repo's `SPECULOOS-PLAN.md`, so the two can proceed in parallel. Only
-item 2 is a dependency across them: the site picks up the rest with the new alpha.
+is planned in that repo's `SPECULOOS-PLAN.md`, so the two can proceed in parallel; the
+site picks up the map's changes with each new alpha.
 
 *Nesting.* The largest item; see the design below.
 
-1. **map** A bordered, tinted box around each open level of nested rows, in place of the
-   indent.
-2. **react** An additive optional `path` on `FieldRowProps`: the names of the field's
-   ancestors, with `[]` after an array, such as `["results[]", "alternatives[]"]`.
-   `@speculoos/html` gets the same as `data-path`.
+1. **map** ✅ A bordered, tinted box around each open level of nested rows, in place of the
+   indent. Checked in all three field layouts, light and dark, and at 390 pixels.
+2. ~~**react** An additive optional `path` on `FieldRowProps`.~~ Not needed:
+   `FieldNode.path` already holds the display path, such as
+   `["results", "[]", "alternatives", "[]", "content"]`, and a row has its `field`. A
+   union's branches add a segment of their own (its label, or `option-1`), which the
+   prefix must not print as if it were a property.
 3. **map** From depth 3, the path printed before the name, dimmed:
    `config.transcription_config.` then **`language`**.
 4. **map** Below `sm`, a smaller inner padding per level, so a third level still leaves
