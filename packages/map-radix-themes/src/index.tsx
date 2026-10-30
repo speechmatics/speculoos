@@ -159,7 +159,16 @@ export function radixThemes(options: RadixThemesOptions): Components {
         <section data-kind={kind}>
           <Flex direction="column" gap="2" mb={inCard ? "2" : "3"}>
             <Flex gap="3" align="center" wrap="wrap">
-              <Heading as={`h${h}`} size={inCard ? "3" : HEADING_SIZE[h]}>
+              {/* A title with a mark in it — "Send ↑" — is a flex row, so the
+                  badge centres on the text rather than sitting on its
+                  baseline, a few pixels low. A plain string stays text. */}
+              <Heading
+                as={`h${h}`}
+                size={inCard ? "3" : HEADING_SIZE[h]}
+                {...(typeof title === "string"
+                  ? {}
+                  : { style: { display: "flex", alignItems: "center", flexWrap: "wrap", gap: "var(--space-2)" } })}
+              >
                 {title}
               </Heading>
               {deprecated === true && <Badge color={colors.tone.deprecated}>deprecated</Badge>}
