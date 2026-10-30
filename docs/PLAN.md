@@ -1047,6 +1047,13 @@ background. Status tabs are not carded, on a channel page or a REST one.
     off at the edge.
 13. **react** A constraint chip agrees in number: "≥ 1 character", not "≥ 1 characters".
 
+*Toggles.*
+
+14. **map** ✅ Find-in-page reaches collapsed rows: a closed box is
+    `hidden="until-found"`, and opens when the browser finds a match in it. Where
+    `beforematch` is not supported, closed stays `display: none`, as before. The toggle
+    loses the ghost button's negative margin, and lines up with the text above it.
+
 *Checked and fine:* status badges and the dashed repeat box read clearly in dark mode, and
 no page scrolls sideways at phone width.
 
