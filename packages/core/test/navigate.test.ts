@@ -192,8 +192,11 @@ describe("endpointHandshake", () => {
   };
 
   it("describes a WebSocket channel's upgrade: GET, the URL, the servers' security", () => {
-    const h = endpointHandshake({ ...channel(), protocols: ["wss"], servers: [], address: "/" }, { servers: [server] });
+    const ch = { ...channel(), protocols: ["wss"], servers: [], address: "/" };
+    const h = endpointHandshake(ch, { servers: [server] });
     expect(h).toEqual({
+      // Anchored after its channel, so a page's prose can link to it.
+      slug: `${ch.slug}-handshake`,
       method: "GET",
       url: "wss://eu.example.com/v2/",
       security: server.security,
