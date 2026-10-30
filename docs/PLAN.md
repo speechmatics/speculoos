@@ -987,7 +987,7 @@ and collapsible nested properties. It then became the site's whole API reference
 APIs, REST and WebSocket, a page per entry, and the schema tables in guide pages — and the
 OpenAPI plugin it replaced was removed. §15 of the M6 plan.
 
-**Alpha. ✅ Prepared, not yet published.** Every package except `fixtures` is published,
+**Alpha. ✅ Published: `0.1.0-alpha.0`.** Every package except `fixtures` is published,
 in lockstep as `0.1.0-alpha.N` under npm's `alpha` tag, MIT-licensed, with a README each.
 `pnpm release:check`, in CI, checks what a consumer would install: versions and metadata,
 publint, and the packed tarballs installed into a fresh project where every entry point
@@ -996,6 +996,87 @@ export and trimmed to what is meant to be used — 158 values and 169 types to 1
 with the building blocks for custom sections and passes documented rather than left as
 accidents. Releases are published by GitHub Actions with npm trusted publishing (OIDC,
 provenance), never from a laptop. `docs/RELEASING.md`.
+
+**M7 — Styling. Planned.** A review of the docs pilot in a browser (2026-10-29): every
+reference page, light and dark, at 1534, 820 and 390 pixels wide. The map works; what it
+lacks is hierarchy. Nested fields are told apart by indent alone, and cards wrap whole
+sections, so nothing stands out. Each item says where it lands: **map**
+(`@speculoos/map-radix-themes`, released as a new alpha) or **react** (`@speculoos/react`,
+with its `@speculoos/html` counterpart, at parity). What the review found on the
+Speechmatics site itself — page width, the session and side panels, `<Schema>` in guides —
+is planned in that repo's `SPECULOOS-PLAN.md`, so the two can proceed in parallel; the
+site picks up the map's changes with each new alpha.
+
+*Nesting.* The largest item; see the design below.
+
+1. **map** ✅ A bordered, tinted box around each open level of nested rows, in place of the
+   indent. Checked in all three field layouts, light and dark, and at 390 pixels.
+2. **core** ✅ `FieldNode.address`, additive: the path as a reader writes it, property
+   names only, `["results[]", "alternatives[]", "content"]`. Not a prop on
+   `FieldRowProps`: a row has its `field`. Not `FieldNode.path` either: a union's
+   branches add a segment of their own there (its label, or `option-1`), which `path`
+   needs to stay unique and a reader must not see as a property.
+3. **map** ✅ From the third level of the address, the path printed before the name,
+   dimmed: `config.transcription_config.` then **`language`**.
+4. **map** ✅ Below `sm`, a smaller inner padding per level, so a third level still leaves
+   room on a phone: 4px a side, 12px from `sm`. Four levels deep at 390 pixels, a row
+   keeps 263 of the list's 303 pixels.
+5. *Later:* a deep-link anchor per field path. Field ids must be unique on a page where
+   one type appears in both the request and a response, so each id needs its section's
+   id as a prefix.
+
+*Cards.* A card holds something small and self-contained. It never holds a whole section.
+On a channel page, the handshake, Send and Receive are plain sections against the page
+background. Status tabs are not carded, on a channel page or a REST one.
+
+6. **map** The handshake becomes a plain section, headed at the same size as Send and
+   Receive, with its own anchor; today it has none.
+7. **map** A message becomes a heading over a rule, not a card. `CardSection` and `InCard`
+   go.
+8. **map** No card around a code block: the `<pre>` gets its own background, so code also
+   shows in dark mode inside a container.
+9. **map** The example list keeps its card but loses the inner border, so it has one
+   frame.
+
+*Consistency.*
+
+10. **map** Enums take one form. Today `diarization` shows an inline union, `model` a type
+    name and then value badges, and `status` reads "enum one of" behind "Show 4 options".
+11. **map** Status codes are coloured badges everywhere; the WebSocket handshake's tabs are
+    bare numbers.
+12. **map** Code in a hover card, and in a narrow side panel, wraps rather than being cut
+    off at the edge.
+13. **react** A constraint chip agrees in number: "≥ 1 character", not "≥ 1 characters".
+
+*Toggles.*
+
+14. **map** ✅ Find-in-page reaches collapsed rows: a closed box is
+    `hidden="until-found"`, and opens when the browser finds a match in it. Where
+    `beforematch` is not supported, closed stays `display: none`, as before. The toggle
+    loses the ghost button's negative margin, and lines up with the text above it.
+
+*Checked and fine:* status badges and the dashed repeat box read clearly in dark mode, and
+no page scrolls sideways at phone width.
+
+*The nesting design.* The rows stay siblings: a `<tr>` cannot contain a `<tr>`, and the
+`FieldRow` contract allows for that. What changes is the wrapper the map already puts
+around a row's children. Today it is `display: contents`; it becomes a real box:
+- It sits under the parent row, with a 1px `--gray-a5` border, a `--gray-a2` fill and the
+  Radix radius.
+- Each level then draws its own box inside its parent's, and the depth-indexed padding
+  goes.
+- The parent row's toggle opens and closes its box, so what a box holds is always the
+  answer to "Show 14 properties".
+- Rows inside a box keep their rules, inset to its padding.
+- In the stacked and vertical layouts a `DataList` is a flex column, so the box is a plain
+  block.
+- In `columns` it spans both grid columns and uses `subgrid`, so its labels still line up
+  with the list's.
+
+A box shows *that* a row is nested; the path shows *where*. At depth 2 the parent's row sits
+directly above the box, so the box is enough and a prefix would be noise. From depth 3 the
+parent's name can be a screen above, so the prefix starts there and stays dimmed, in the
+type's colour. It breaks after any dot, so a long path wraps at a dot on a phone.
 
 **Post-1.0:** example synthesis and code samples (OD-2); further framework bindings; an
 MDX/Docusaurus/Astro integration package; a playground app.

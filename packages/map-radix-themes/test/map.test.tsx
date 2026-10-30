@@ -117,15 +117,15 @@ describe("field rows in tree layout", () => {
       layout: "tree",
       expandRefs: "always",
     });
-    // Nested rows are indented siblings. A <dl> opened inside another would
-    // mean the map nested them — and indented them twice.
+    // Nested rows are siblings inside a box. A <dl> opened inside another
+    // would mean the map nested them as a list.
     let open = 0;
     for (const [tag] of html.matchAll(/<\/?dl\b/g)) {
       open += tag === "<dl" ? 1 : -1;
       expect(open).toBeLessThanOrEqual(1);
     }
     expect(open).toBe(0);
-    expect(html).toMatch(/padding-left:var\(--space-[1-9]\)/); // and something was indented
+    expect(html).toMatch(/<div id="[^"]+"[^>]*><div [^>]*border:1px solid var\(--gray-a5\)/); // and something was boxed
   });
 
   it("shows the same rows in both layouts", () => {
@@ -268,7 +268,7 @@ describe("field rows", () => {
     expect(html).toMatch(
       /aria-expanded="false"[^>]*><span aria-hidden="true">▸<\/span>Show \d+ (properties|property|options?)<\/button>/,
     );
-    expect(html).toMatch(/<div id="[^"]+" style="display:none">/);
+    expect(html).toMatch(/<div id="[^"]+" style="display:none"/);
   });
 
   it("starts nested rows open when the table asks", () => {
@@ -279,7 +279,54 @@ describe("field rows", () => {
     );
     expect(html).toContain('aria-expanded="true"');
     expect(html).not.toContain('aria-expanded="false"');
-    expect(html).not.toMatch(/<div id="[^"]+" style="display:none">/);
+    expect(html).not.toMatch(/<div id="[^"]+" style="display:none"/);
+  });
+
+  it("prints the path before a name from the third level, breaking after each dot, never a branch's label", async () => {
+    // No fixture nests three deep, so a spec of its own.
+    const object = (properties: object) => ({ type: "object", properties });
+    const project = await load({
+      documents: [
+        {
+          name: "n",
+          content: {
+            openapi: "3.1.0",
+            info: { title: "Nested", version: "1" },
+            paths: {},
+            components: {
+              schemas: {
+                Session: object({
+                  config: object({ transcription_config: object({ language: { type: "string" } }) }),
+                  results: {
+                    type: "array",
+                    items: object({ alternatives: { type: "array", items: object({ content: { type: "string" } }) } }),
+                  },
+                  speakers: object({
+                    mode: { oneOf: [{ title: "Fixed", ...object({ count: object({ max: { type: "integer" } }) }) }] },
+                  }),
+                }),
+              },
+            },
+          },
+        },
+      ],
+    });
+    const html = render(
+      <SchemaTable typeId="n#/components/schemas/Session" expandRefs="always" expanded />,
+      buildOpenApi({ project }),
+      radixThemes({ markdown: Markdown }),
+    );
+    const prefixes = labelsOf(html)
+      .filter((l) => l.includes("<wbr/>"))
+      // The path's `Code`, then the name's.
+      .map((l) => [...l.matchAll(/<code[^>]*>(.*?)<\/code>/g)].slice(0, 2).map((m) => m[1]?.replace(/<[^>]+>/g, "")));
+    expect(prefixes).toEqual([
+      ["config.transcription_config.", "language"],
+      ["results[].alternatives[].", "content"],
+      // Inside a branch: the branch is where the value is, not a step on the way.
+      ["speakers.mode.", "count"],
+      ["speakers.mode.count.", "max"],
+    ]);
   });
 
   it("offers no toggle when nothing is nested", () => {
