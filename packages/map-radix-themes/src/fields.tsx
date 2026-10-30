@@ -21,9 +21,9 @@
  * and nothing toggles.
  */
 
-import { Badge, Box, Button, DataList, Flex, Text } from "@radix-ui/themes";
+import { Badge, Box, Button, Code, DataList, Flex, Text } from "@radix-ui/themes";
 import type { FieldRowProps, FieldsProps } from "@speculoos/react";
-import { type ReactNode, useId, useState } from "react";
+import { Fragment, type ReactNode, useId, useState } from "react";
 import type { BadgeColors } from "./colors.js";
 
 export type Size = "1" | "2" | "3";
@@ -56,12 +56,54 @@ export type Presence = "optional" | "required";
  * is identified by its type instead, so the type takes the name's place:
  * `"invalid_model"` heads its own description, and a dash would say nothing.
  */
-function Name({ name, type }: Pick<FieldRowProps, "name" | "type">): ReactNode {
-  return (
+function Name({ name, type, field }: Pick<FieldRowProps, "name" | "type" | "field">): ReactNode {
+  const within = parents(field);
+  const bold = (
     <Text weight="bold" style={{ color: "var(--gray-12)" }}>
       {named(name) ? name : type}
     </Text>
   );
+  if (within === undefined) return bold;
+  // One inline run, so the path and the name wrap as one.
+  return (
+    <span>
+      <Text style={{ color: "var(--gray-11)" }}>
+        <Code variant="ghost" weight="regular">
+          {within}
+        </Code>
+      </Text>
+      {bold}
+    </span>
+  );
+}
+
+/**
+ * Where a row is, dimmed before its name: `config.transcription_config.` then
+ * `language`. From the third level only — at the second, the parent's row is
+ * just above the box — and only on a row whose address ends at its own name: a
+ * union's branch is not a property, and has no place to print.
+ *
+ * It may break after any dot, so a long one wraps there on a phone rather
+ * than mid-name.
+ */
+function parents(field: FieldRowProps["field"]): ReactNode {
+  const { address, name } = field;
+  if (address.length < 3 || name === undefined || address.at(-1)?.replace(/(\[\])+$/, "") !== name) return undefined;
+  const segments = address.slice(0, -1);
+  return segments.map((segment, i) => {
+    // A map's key reads `metadata[key: string]`, with no dot before it.
+    const next = address[i + 1] ?? "";
+    return (
+      <Fragment key={segment + String(i)}>
+        {segment}
+        {!next.startsWith("[") && (
+          <>
+            .<wbr />
+          </>
+        )}
+      </Fragment>
+    );
+  });
 }
 
 function named(name: FieldRowProps["name"]): boolean {
@@ -230,7 +272,7 @@ export function fieldRow(colors: BadgeColors, layout: FieldLayout, presence: Pre
         <DataList.Item data-key={field.key} align="start" style={rowStyle}>
           <DataList.Label minWidth={columns ? { initial: "0", sm: "180px" } : "0"}>
             <Flex gap="2" align="baseline" wrap="wrap">
-              <Name name={name} type={props.type} />
+              <Name name={name} type={props.type} field={field} />
               {oneLine && <TypeLine {...props} />}
               <Marks
                 named={named(name)}

@@ -282,6 +282,53 @@ describe("field rows", () => {
     expect(html).not.toMatch(/<div id="[^"]+" style="display:none;/);
   });
 
+  it("prints the path before a name from the third level, breaking after each dot, never a branch's label", async () => {
+    // No fixture nests three deep, so a spec of its own.
+    const object = (properties: object) => ({ type: "object", properties });
+    const project = await load({
+      documents: [
+        {
+          name: "n",
+          content: {
+            openapi: "3.1.0",
+            info: { title: "Nested", version: "1" },
+            paths: {},
+            components: {
+              schemas: {
+                Session: object({
+                  config: object({ transcription_config: object({ language: { type: "string" } }) }),
+                  results: {
+                    type: "array",
+                    items: object({ alternatives: { type: "array", items: object({ content: { type: "string" } }) } }),
+                  },
+                  speakers: object({
+                    mode: { oneOf: [{ title: "Fixed", ...object({ count: object({ max: { type: "integer" } }) }) }] },
+                  }),
+                }),
+              },
+            },
+          },
+        },
+      ],
+    });
+    const html = render(
+      <SchemaTable typeId="n#/components/schemas/Session" expandRefs="always" expanded />,
+      buildOpenApi({ project }),
+      radixThemes({ markdown: Markdown }),
+    );
+    const prefixes = labelsOf(html)
+      .filter((l) => l.includes("<wbr/>"))
+      // The path's `Code`, then the name's.
+      .map((l) => [...l.matchAll(/<code[^>]*>(.*?)<\/code>/g)].slice(0, 2).map((m) => m[1]?.replace(/<[^>]+>/g, "")));
+    expect(prefixes).toEqual([
+      ["config.transcription_config.", "language"],
+      ["results[].alternatives[].", "content"],
+      // Inside a branch: the branch is where the value is, not a step on the way.
+      ["speakers.mode.", "count"],
+      ["speakers.mode.count.", "max"],
+    ]);
+  });
+
   it("offers no toggle when nothing is nested", () => {
     expect(
       render(<Operation id="listJobs" />, ir("batch.yaml"), radixThemes({ markdown: Markdown }), { layout: "rows" }),

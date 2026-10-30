@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Node } from "../src/index.js";
 import { collectLinks, type FieldNode, projectForView, toRows, toTree, typeLabel } from "../src/index.js";
-import { enumNode, ids, ir, jobRef, messageRef, obj, prop, ref, treeRef } from "./fixture.js";
+import { arr, enumNode, ids, ir, jobRef, messageRef, obj, prop, ref, str, treeRef } from "./fixture.js";
 
 const find = (rows: FieldNode[], path: string) => rows.find((r) => r.path.join("/") === path);
 
@@ -132,6 +132,24 @@ describe("toRows", () => {
   it("produces unique keys for every row", () => {
     const rows = toRows(jobRef, ir, { expandRefs: "always" });
     expect(new Set(rows.map((r) => r.key)).size).toBe(rows.length);
+  });
+
+  it("gives each row an address of property names, with an array's [] on its name", () => {
+    const tree = obj([prop("results", arr(obj([prop("alternatives", arr(obj([prop("content", str())])))])))]);
+    const rows = toRows(tree, ir);
+    expect(find(rows, "results/[]/alternatives/[]/content")?.address).toEqual([
+      "results[]",
+      "alternatives[]",
+      "content",
+    ]);
+  });
+
+  it("leaves a union's branches out of the address, though the path has them", () => {
+    const rows = toRows(messageRef, ir, { expandRefs: "always" });
+    const branch = rows.find((r) => r.name === "StartRecognition");
+    expect(branch?.address).toEqual([]);
+    const child = rows.find((r) => r.path[0] === "StartRecognition" && r.path.length === 2);
+    expect(child?.address).toEqual([child?.name]);
   });
 
   it("carries depth for indentation", () => {

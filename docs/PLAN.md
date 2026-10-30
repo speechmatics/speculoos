@@ -1011,13 +1011,13 @@ site picks up the map's changes with each new alpha.
 
 1. **map** ✅ A bordered, tinted box around each open level of nested rows, in place of the
    indent. Checked in all three field layouts, light and dark, and at 390 pixels.
-2. ~~**react** An additive optional `path` on `FieldRowProps`.~~ Not needed:
-   `FieldNode.path` already holds the display path, such as
-   `["results", "[]", "alternatives", "[]", "content"]`, and a row has its `field`. A
-   union's branches add a segment of their own (its label, or `option-1`), which the
-   prefix must not print as if it were a property.
-3. **map** From depth 3, the path printed before the name, dimmed:
-   `config.transcription_config.` then **`language`**.
+2. **core** ✅ `FieldNode.address`, additive: the path as a reader writes it, property
+   names only, `["results[]", "alternatives[]", "content"]`. Not a prop on
+   `FieldRowProps`: a row has its `field`. Not `FieldNode.path` either: a union's
+   branches add a segment of their own there (its label, or `option-1`), which `path`
+   needs to stay unique and a reader must not see as a property.
+3. **map** ✅ From the third level of the address, the path printed before the name,
+   dimmed: `config.transcription_config.` then **`language`**.
 4. **map** Below `sm`, a smaller inner padding per level, so a third level still leaves
    room on a phone.
 5. *Later:* a deep-link anchor per field path. Field ids must be unique on a page where
