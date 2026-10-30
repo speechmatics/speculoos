@@ -34,4 +34,4 @@ I ([mnemitz](https://github.com/mnemitz)) primarily drove this project as a vibe
 
 Consumers of this project should know that Claude Opus 5.5 has written most of the code, with very clear direction and regular feedback from myself.
 
-Contributors are free to use whatever tools they like to generate code for this repo, ensuring to follow the guidance in the documentation (**TODO add links**). Contributors are still expected to be able to explain and justify their additions without LLM assistance.
+Contributors are free to use whatever tools they like to generate code for this repo, ensuring to follow the guidance in the documentation https://github.com/speechmatics/speculoos/tree/main/docs. Contributors are still expected to be able to explain and justify their additions without LLM assistance.
