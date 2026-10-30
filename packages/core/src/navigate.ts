@@ -194,6 +194,11 @@ export function entryExamples(entry: ApiEntry): EntryExample[] {
  * AsyncAPI has no place for it.
  */
 export interface Handshake {
+  /**
+   * Its anchor: the channel's slug and `-handshake`, as an example's anchor is
+   * its entry's slug and a suffix.
+   */
+  slug: string;
   /** "GET" unless the channel's `ws` binding says otherwise. */
   method: string;
   /** The full URL when one server applies, else the channel's address. */
@@ -234,6 +239,7 @@ export function endpointHandshake(endpoint: Endpoint, ir: Pick<ApiIR, "servers">
       : "GET";
   const only = servers.length === 1 ? servers[0] : undefined;
   return {
+    slug: `${endpoint.slug}-handshake`,
     method,
     url: endpointUrl(endpoint, ir) ?? endpoint.address,
     security,

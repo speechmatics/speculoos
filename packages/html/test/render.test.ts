@@ -408,6 +408,7 @@ describe("handshake", () => {
   it("opens a WebSocket channel with its upgrade request and how to authenticate", () => {
     const html = renderEndpointById("/v2/{language}", ws);
     expect(html).toContain("spec-section spec-section--handshake");
+    expect(html).toContain('id="v2-language-handshake"');
     expect(html).toContain(">wss://eu2.rt.example.com/v2/v2/{language}</code>");
     expect(html).toContain(">Authorization: Bearer &lt;token&gt;</code>");
     expect(html.slice(html.indexOf("spec-section--handshake"), html.indexOf("Authentication"))).toContain(

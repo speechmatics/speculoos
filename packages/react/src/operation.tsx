@@ -513,7 +513,7 @@ function Handshake({
   const handshake = endpointHandshake(endpoint, ir);
   if (handshake === undefined) return null;
   return (
-    <C.Section kind="handshake" title="Handshake" level={level}>
+    <C.Section kind="handshake" id={handshake.slug} title="Handshake" level={level}>
       <C.List kind="handshake">
         <C.ListItem>
           <C.Badge tone="method" value={handshake.method.toLowerCase()}>

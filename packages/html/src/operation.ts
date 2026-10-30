@@ -431,7 +431,7 @@ function handshake(c: Ctx, endpoint: Endpoint, level: number, extras?: Html): Ht
   const item = (...parts: (Html | undefined)[]) => h("li", { class: c.o.cls("list-item") }, inline(...parts));
   return section(
     c,
-    { kind: "handshake", title: text("Handshake"), level },
+    { kind: "handshake", id: hs.slug, title: text("Handshake"), level },
     h(
       "ul",
       { class: c.o.cls("list", "handshake") },

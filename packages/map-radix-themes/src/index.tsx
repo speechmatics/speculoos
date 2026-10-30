@@ -126,12 +126,6 @@ const InList = createContext(false);
 /** What the enclosing `List` is of, so an item can lay itself out to suit. */
 const ListKind = createContext<ListProps["kind"] | undefined>(undefined);
 
-/**
- * Whether a section sits inside a card (a message, the handshake). Its heading
- * then steps down, so the card's own title stays the largest thing in it.
- */
-const InCard = createContext(false);
-
 function clampLevel(level: number): 1 | 2 | 3 | 4 | 5 | 6 {
   return Math.min(Math.max(Math.round(level), 1), 6) as 1 | 2 | 3 | 4 | 5 | 6;
 }
@@ -147,24 +141,37 @@ export function radixThemes(options: RadixThemesOptions): Components {
   } = options;
   const colors = mergeColors(options.colors);
 
-  function Section(props: SectionProps): ReactNode {
-    // Before the early return: a hook must run on every render.
-    const inCard = useContext(InCard);
-    if (props.kind === "message" || props.kind === "handshake") return <CardSection {...props} />;
-    const { kind, id, title, subtitle, level, deprecated, children } = props;
+  /**
+   * A heading, its marks, and what it heads. Every section is one of these,
+   * against the page: a card is for something small and set apart, and a
+   * section is neither.
+   *
+   * A message's heading keeps its level — a message is a real section, with an
+   * anchor a page's prose links to — and a rule above it, so twenty of them
+   * read as a vocabulary, each where the last one ends, rather than as twenty
+   * titles. The handshake is a section like Send and Receive, at their size.
+   */
+  function Section({ kind, id, title, subtitle, level, deprecated, message, children }: SectionProps): ReactNode {
     const h = clampLevel(level);
     const major = MAJOR.has(kind);
+    const ruled = kind === "message";
     return (
-      <Box asChild mt={major ? "7" : inCard ? "4" : "5"} mb={major ? "5" : "3"} {...(id !== undefined ? { id } : {})}>
+      <Box
+        asChild
+        mt={major ? "7" : ruled ? "6" : "5"}
+        mb={major ? "5" : "3"}
+        {...(ruled ? { pt: "5", style: { borderTop: "1px solid var(--gray-a5)" } } : {})}
+        {...(id !== undefined ? { id } : {})}
+      >
         <section data-kind={kind}>
-          <Flex direction="column" gap="2" mb={inCard ? "2" : "3"}>
+          <Flex direction="column" gap="2" mb="3">
             <Flex gap="3" align="center" wrap="wrap">
               {/* A title with a mark in it — "Send ↑" — is a flex row, so the
                   badge centres on the text rather than sitting on its
                   baseline, a few pixels low. A plain string stays text. */}
               <Heading
                 as={`h${h}`}
-                size={inCard ? "3" : HEADING_SIZE[h]}
+                size={HEADING_SIZE[h]}
                 {...(typeof title === "string"
                   ? {}
                   : { style: { display: "flex", alignItems: "center", flexWrap: "wrap", gap: "var(--space-2)" } })}
@@ -181,38 +188,10 @@ export function radixThemes(options: RadixThemesOptions): Components {
               </Flex>
             )}
           </Flex>
+          {MessageExtras !== undefined && message !== undefined && <MessageExtras message={message} />}
           {children}
         </section>
       </Box>
-    );
-  }
-
-  /**
-   * A message is a card headed by its name. The heading keeps its level — a
-   * message is a real section, with an anchor a page's prose links to — but is
-   * sized down, so twenty of them read as a list rather than as twenty titles.
-   * Sections inside a card step down again (see `InCard`).
-   *
-   * The handshake is a card too: everything about opening the connection in
-   * one unit, before the first message.
-   */
-  function CardSection({ kind, id, title, level, deprecated, message, children }: SectionProps): ReactNode {
-    const h = clampLevel(level);
-    return (
-      <Card asChild size="1" my="4" {...(id !== undefined ? { id } : {})}>
-        <section data-kind={kind}>
-          <Flex gap="3" align="center" wrap="wrap" mb="2">
-            {/* The handshake is one per page and heads everything about
-                connecting, so it reads as a section title; messages are many. */}
-            <Heading as={`h${h}`} size={kind === "handshake" ? "5" : "4"}>
-              {title}
-            </Heading>
-            {deprecated === true && <Badge color={colors.tone.deprecated}>deprecated</Badge>}
-          </Flex>
-          {MessageExtras !== undefined && message !== undefined && <MessageExtras message={message} />}
-          <InCard.Provider value={true}>{children}</InCard.Provider>
-        </section>
-      </Card>
     );
   }
 
@@ -233,20 +212,26 @@ export function radixThemes(options: RadixThemesOptions): Components {
   }
 
   /**
-   * Radix has no code block. A ghost `Code` inside a `<pre>`, on a card, with a
-   * horizontal scroll area so a wide payload does not widen the page.
+   * Radix has no code block. A ghost `Code` inside a `<pre>`, with a horizontal
+   * scroll area so a wide payload does not widen the page.
+   *
+   * A fill, not a card: a code block often sits in something framed already —
+   * an example list — and a card there drew a frame in a frame. A fill shows
+   * in either, in light and dark.
    */
   function CodeBlock({ children, language }: CodeBlockProps): ReactNode {
     return (
-      <Card variant="surface" my="3">
+      <Box my="3" style={{ background: "var(--gray-a3)", borderRadius: "var(--radius-3)" }}>
         <ScrollArea scrollbars="horizontal">
-          <pre style={{ margin: 0 }} {...(language !== undefined ? { "data-language": language } : {})}>
-            <Code variant="ghost" size="2" {...(language !== undefined ? { className: `language-${language}` } : {})}>
-              {children}
-            </Code>
-          </pre>
+          <Box asChild p="3">
+            <pre style={{ margin: 0 }} {...(language !== undefined ? { "data-language": language } : {})}>
+              <Code variant="ghost" size="2" {...(language !== undefined ? { className: `language-${language}` } : {})}>
+                {children}
+              </Code>
+            </pre>
+          </Box>
         </ScrollArea>
-      </Card>
+      </Box>
     );
   }
 
