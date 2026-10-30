@@ -196,8 +196,9 @@ function TypeLine({
  * above it is just a grid of one column, which is what stacked rows want.
  *
  * Its padding is the indent, so a deeper level is further in because it is
- * inside more boxes, and it is smaller on a phone, where three levels of it
- * would leave a description a few words wide.
+ * inside more boxes. On a phone it is the smallest step, 4px a side: four
+ * levels deep at 390 pixels, 8px left a description about 200px wide, and 4px
+ * gives it 32px more without the text touching the border.
  *
  * Stacked rows open with a rule, which in the first row would draw a second
  * line just under the box's border. The rows sit 1px higher than the box's
@@ -229,7 +230,7 @@ function NestedBox({
   return (
     <Findable id={id} open={open} onFound={onFound}>
       <Box
-        px={{ initial: "2", sm: "3" }}
+        px={{ initial: "1", sm: "3" }}
         pt={ruled ? "0" : "3"}
         pb="3"
         style={{

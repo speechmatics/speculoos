@@ -1018,8 +1018,9 @@ site picks up the map's changes with each new alpha.
    needs to stay unique and a reader must not see as a property.
 3. **map** ✅ From the third level of the address, the path printed before the name,
    dimmed: `config.transcription_config.` then **`language`**.
-4. **map** Below `sm`, a smaller inner padding per level, so a third level still leaves
-   room on a phone.
+4. **map** ✅ Below `sm`, a smaller inner padding per level, so a third level still leaves
+   room on a phone: 4px a side, 12px from `sm`. Four levels deep at 390 pixels, a row
+   keeps 263 of the list's 303 pixels.
 5. *Later:* a deep-link anchor per field path. Field ids must be unique on a page where
    one type appears in both the request and a response, so each id needs its section's
    id as a prefix.
