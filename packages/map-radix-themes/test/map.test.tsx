@@ -117,15 +117,15 @@ describe("field rows in tree layout", () => {
       layout: "tree",
       expandRefs: "always",
     });
-    // Nested rows are indented siblings. A <dl> opened inside another would
-    // mean the map nested them — and indented them twice.
+    // Nested rows are siblings inside a box. A <dl> opened inside another
+    // would mean the map nested them as a list.
     let open = 0;
     for (const [tag] of html.matchAll(/<\/?dl\b/g)) {
       open += tag === "<dl" ? 1 : -1;
       expect(open).toBeLessThanOrEqual(1);
     }
     expect(open).toBe(0);
-    expect(html).toMatch(/padding-left:var\(--space-[1-9]\)/); // and something was indented
+    expect(html).toMatch(/<div id="[^"]+"[^>]*><div [^>]*border:1px solid var\(--gray-a5\)/); // and something was boxed
   });
 
   it("shows the same rows in both layouts", () => {
@@ -147,11 +147,12 @@ describe("messages", () => {
     return render(<Operation id={withTwo.operation.id} />, api, radixThemes({ markdown: Markdown }));
   };
 
-  it("gives each message a card of its own, headed one level down and anchored", () => {
+  it("gives each message a section of its own under a rule, headed one level down and anchored, never a card", () => {
     const html = messageOp();
     expect(html).toMatch(
-      /<section data-kind="message" id="start-recognition" class="[^"]*rt-Card[^"]*"><div[^>]*><h3 [^>]*>Start recognition<\/h3>/,
+      /<section data-kind="message" style="border-top:1px solid var\(--gray-a5\)" id="start-recognition"[^>]*><div[^>]*><div[^>]*><h3 [^>]*>Start recognition<\/h3>/,
     );
+    expect(html).not.toContain("rt-Card");
     expect(html).not.toContain('role="tablist" aria-orientation="horizontal" data-kind="message"');
   });
 
@@ -268,7 +269,7 @@ describe("field rows", () => {
     expect(html).toMatch(
       /aria-expanded="false"[^>]*><span aria-hidden="true">▸<\/span>Show \d+ (properties|property|options?)<\/button>/,
     );
-    expect(html).toMatch(/<div id="[^"]+" style="display:none">/);
+    expect(html).toMatch(/<div id="[^"]+" style="display:none"/);
   });
 
   it("starts nested rows open when the table asks", () => {
@@ -279,7 +280,54 @@ describe("field rows", () => {
     );
     expect(html).toContain('aria-expanded="true"');
     expect(html).not.toContain('aria-expanded="false"');
-    expect(html).not.toMatch(/<div id="[^"]+" style="display:none">/);
+    expect(html).not.toMatch(/<div id="[^"]+" style="display:none"/);
+  });
+
+  it("prints the path before a name from the third level, breaking after each dot, never a branch's label", async () => {
+    // No fixture nests three deep, so a spec of its own.
+    const object = (properties: object) => ({ type: "object", properties });
+    const project = await load({
+      documents: [
+        {
+          name: "n",
+          content: {
+            openapi: "3.1.0",
+            info: { title: "Nested", version: "1" },
+            paths: {},
+            components: {
+              schemas: {
+                Session: object({
+                  config: object({ transcription_config: object({ language: { type: "string" } }) }),
+                  results: {
+                    type: "array",
+                    items: object({ alternatives: { type: "array", items: object({ content: { type: "string" } }) } }),
+                  },
+                  speakers: object({
+                    mode: { oneOf: [{ title: "Fixed", ...object({ count: object({ max: { type: "integer" } }) }) }] },
+                  }),
+                }),
+              },
+            },
+          },
+        },
+      ],
+    });
+    const html = render(
+      <SchemaTable typeId="n#/components/schemas/Session" expandRefs="always" expanded />,
+      buildOpenApi({ project }),
+      radixThemes({ markdown: Markdown }),
+    );
+    const prefixes = labelsOf(html)
+      .filter((l) => l.includes("<wbr/>"))
+      // The path's `Code`, then the name's.
+      .map((l) => [...l.matchAll(/<code[^>]*>(.*?)<\/code>/g)].slice(0, 2).map((m) => m[1]?.replace(/<[^>]+>/g, "")));
+    expect(prefixes).toEqual([
+      ["config.transcription_config.", "language"],
+      ["results[].alternatives[].", "content"],
+      // Inside a branch: the branch is where the value is, not a step on the way.
+      ["speakers.mode.", "count"],
+      ["speakers.mode.count.", "max"],
+    ]);
   });
 
   it("offers no toggle when nothing is nested", () => {
@@ -290,14 +338,16 @@ describe("field rows", () => {
 });
 
 describe("messageExtras", () => {
-  it("renders inside each message's card, given the IR message", () => {
+  it("renders inside each message's section, given the IR message", () => {
     const Extras = ({ message }: { message: { name: string } }) => <aside data-extra={message.name} />;
     const html = render(
       <Endpoint id="/v2/{language}" />,
       ir("realtime-v3.yaml"),
       radixThemes({ markdown: Markdown, messageExtras: Extras }),
     );
-    expect(html).toMatch(/rt-Card[\s\S]*?<aside data-extra="StartRecognition"><\/aside>/);
+    expect(html).toMatch(
+      /data-kind="message"[^>]*>(?:(?!<section)[\s\S])*?<aside data-extra="StartRecognition"><\/aside>/,
+    );
   });
 });
 
@@ -419,25 +469,30 @@ describe("gathered examples", () => {
     );
     expect(html).toMatch(/<div id="start-recognition-example-0-body" hidden=""/);
   });
-});
 
-describe("handshake", () => {
-  it("is a card, like a message: the connection as one unit before the first message", () => {
-    const html = render(<Endpoint id="/v2/{language}" />, ir("realtime-v3.yaml"), radixThemes({ markdown: Markdown }));
-    expect(html).toMatch(/<section data-kind="handshake" class="[^"]*rt-Card[^"]*">/);
+  it("is one frame: its code blocks have a fill, not a card of their own", () => {
+    const api = ir("realtime-v3.yaml");
+    const channel = apiEntries(api).find((e) => e.kind === "channel")!;
+    const html = render(<EntryExamples entry={channel} />, api, radixThemes({ markdown: Markdown }));
+    expect(html.match(/rt-Card/g)).toHaveLength(1);
+    expect(html).toContain("background:var(--gray-a3)");
   });
 });
 
-describe("headings inside cards", () => {
-  it("keep the card's title the largest: the handshake's sections step down", () => {
-    const html = render(<Endpoint id="/v2/{language}" />, ir("realtime-v3.yaml"), radixThemes({ markdown: Markdown }));
-    // The card ends where the channel's own Address parameters begin.
-    const start = html.indexOf('data-kind="handshake"');
-    const card = html.slice(start, html.indexOf('data-kind="parameters"', start));
-    const sizes = [...card.matchAll(/rt-Heading rt-r-size-(\d)/g)].map((m) => Number(m[1]));
-    expect(sizes.length).toBeGreaterThan(1);
-    expect(sizes[0]).toBe(5); // Handshake
-    expect(sizes.slice(1).every((s) => s < 5)).toBe(true); // Authentication, …
+describe("handshake", () => {
+  const channel = () =>
+    render(<Endpoint id="/v2/{language}" />, ir("realtime-v3.yaml"), radixThemes({ markdown: Markdown }));
+  const headingSize = (html: string, kind: string) =>
+    html.slice(html.indexOf(`data-kind="${kind}"`)).match(/rt-Heading rt-r-size-(\d)/)?.[1];
+
+  it("is a section like Send and Receive, at their size, with an anchor of its own", () => {
+    const html = channel();
+    expect(html).toMatch(/<section data-kind="handshake" id="[^"]+-handshake"/);
+    expect(headingSize(html, "handshake")).toBe(headingSize(html, "operation"));
+  });
+
+  it("leaves nothing on a channel page in a card", () => {
+    expect(channel()).not.toContain("rt-Card");
   });
 });
 

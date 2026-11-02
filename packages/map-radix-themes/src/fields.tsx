@@ -7,11 +7,13 @@
  * schemas, parameters and headers alike, and a `Table`'s column headers bought
  * nothing a reader needed.
  *
- * Nested rows are returned *after* their parent, as siblings, indented by
- * depth. A `<dl>` could nest, but a row cannot tell which layout it is in —
- * `children` is absent on a leaf in "tree" and on every row in "rows" — so
- * nesting in one and indenting in the other would indent twice. Siblings
- * everywhere is the one shape that reads the same in both.
+ * Nested rows are returned *after* their parent, in a box of their own: a
+ * border and a faint fill, one box inside another per level. A `<dl>` could
+ * nest, but a row cannot tell which layout it is in — `children` is absent on
+ * a leaf in "tree" and on every row in "rows" — so the rows inside a box are
+ * still siblings of each other, on the list's own flow or grid. An indent
+ * alone was tried first, and three levels down it no longer said whose
+ * property a row was.
  *
  * Nested rows start collapsed behind a "Show 4 properties" toggle, so a site
  * can expand named types inline (`expandRefs: "always"`) without a page of
@@ -19,9 +21,9 @@
  * and nothing toggles.
  */
 
-import { Badge, Box, Button, DataList, Flex, Text } from "@radix-ui/themes";
+import { Badge, Box, Button, Code, DataList, Flex, Text } from "@radix-ui/themes";
 import type { FieldRowProps, FieldsProps } from "@speculoos/react";
-import { type ReactNode, useId, useState } from "react";
+import { Fragment, type ReactNode, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import type { BadgeColors } from "./colors.js";
 
 export type Size = "1" | "2" | "3";
@@ -46,21 +48,6 @@ export type FieldLayout = "columns" | "vertical" | "stacked";
  */
 export type Presence = "optional" | "required";
 
-type Space = "0" | "4" | "6" | "7" | "8";
-
-/**
- * How far to indent a row, in Radix space steps.
- *
- * The top-level rows of a field list are at depth 1, because the nameless root
- * object above them is dropped; a root that is kept (a scalar body, a link to a
- * named type) is at depth 0 and has no siblings. Neither is indented.
- */
-const INDENT: readonly Space[] = ["0", "4", "6", "7", "8"];
-
-function indent(depth: number): Space {
-  return INDENT[Math.min(Math.max(depth - 1, 0), INDENT.length - 1)] ?? "0";
-}
-
 /**
  * The field name, in bold. `name` arrives already built from the map's own
  * `Code`, which is a ghost and so takes this weight and colour.
@@ -69,12 +56,54 @@ function indent(depth: number): Space {
  * is identified by its type instead, so the type takes the name's place:
  * `"invalid_model"` heads its own description, and a dash would say nothing.
  */
-function Name({ name, type }: Pick<FieldRowProps, "name" | "type">): ReactNode {
-  return (
+function Name({ name, type, field }: Pick<FieldRowProps, "name" | "type" | "field">): ReactNode {
+  const within = parents(field);
+  const bold = (
     <Text weight="bold" style={{ color: "var(--gray-12)" }}>
       {named(name) ? name : type}
     </Text>
   );
+  if (within === undefined) return bold;
+  // One inline run, so the path and the name wrap as one.
+  return (
+    <span>
+      <Text style={{ color: "var(--gray-11)" }}>
+        <Code variant="ghost" weight="regular">
+          {within}
+        </Code>
+      </Text>
+      {bold}
+    </span>
+  );
+}
+
+/**
+ * Where a row is, dimmed before its name: `config.transcription_config.` then
+ * `language`. From the third level only — at the second, the parent's row is
+ * just above the box — and only on a row whose address ends at its own name: a
+ * union's branch is not a property, and has no place to print.
+ *
+ * It may break after any dot, so a long one wraps there on a phone rather
+ * than mid-name.
+ */
+function parents(field: FieldRowProps["field"]): ReactNode {
+  const { address, name } = field;
+  if (address.length < 3 || name === undefined || address.at(-1)?.replace(/(\[\])+$/, "") !== name) return undefined;
+  const segments = address.slice(0, -1);
+  return segments.map((segment, i) => {
+    // A map's key reads `metadata[key: string]`, with no dot before it.
+    const next = address[i + 1] ?? "";
+    return (
+      <Fragment key={segment + String(i)}>
+        {segment}
+        {!next.startsWith("[") && (
+          <>
+            .<wbr />
+          </>
+        )}
+      </Fragment>
+    );
+  });
 }
 
 function named(name: FieldRowProps["name"]): boolean {
@@ -156,6 +185,139 @@ function TypeLine({
   );
 }
 
+/**
+ * The box a row's nested rows open into.
+ *
+ * It must not break the list it sits in. Stacked or vertical, a `DataList` is
+ * a flex column, so the box is one too and takes the list's gap (`inherit`, so
+ * a box in a box still has it). In "columns" it is a grid with two tracks the
+ * labels line up on, so the box spans both and takes them as a `subgrid` — and
+ * below `sm`, where the list turns into a flex column, a subgrid with no grid
+ * above it is just a grid of one column, which is what stacked rows want.
+ *
+ * Its padding is the indent, so a deeper level is further in because it is
+ * inside more boxes. On a phone it is the smallest step, 4px a side: four
+ * levels deep at 390 pixels, 8px left a description about 200px wide, and 4px
+ * gives it 32px more without the text touching the border.
+ *
+ * Stacked rows open with a rule, which in the first row would draw a second
+ * line just under the box's border. The rows sit 1px higher than the box's
+ * padding, and the box clips what is above its padding, so the first rule is
+ * hidden and the others are not.
+ *
+ * Closed, it can still be found: the browser's find-in-page searches it, and
+ * opens it on a match (`hidden="until-found"`), so a reader looking for
+ * `max_speakers` need not first guess which row holds it. See `Findable`.
+ */
+function NestedBox({
+  id,
+  open,
+  onFound,
+  layout,
+  children,
+}: {
+  id: string;
+  open: boolean;
+  onFound: () => void;
+  layout: FieldLayout;
+  children: ReactNode;
+}): ReactNode {
+  const flow =
+    layout === "columns"
+      ? { display: "grid", gridTemplateColumns: "subgrid", gridColumn: "1 / -1", gap: "inherit" }
+      : { display: "flex", flexDirection: "column" as const, gap: "inherit" };
+  const ruled = layout === "stacked";
+  return (
+    <Findable id={id} open={open} onFound={onFound}>
+      <Box
+        px={{ initial: "1", sm: "3" }}
+        pt={ruled ? "0" : "3"}
+        pb="3"
+        style={{
+          ...flow,
+          border: "1px solid var(--gray-a5)",
+          borderRadius: "var(--radius-3)",
+          background: "var(--gray-a2)",
+          overflow: ruled ? "hidden" : undefined,
+        }}
+      >
+        {ruled ? <div style={{ ...flow, marginTop: -1 }}>{children}</div> : children}
+      </Box>
+    </Findable>
+  );
+}
+
+/** A layout effect in the browser; on the server, where there is no layout, a plain one. */
+const useBrowserLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
+
+/**
+ * Shows its child when open, and when closed hides it where find-in-page can
+ * still reach it.
+ *
+ * Open, it is `display: contents`, so the box inside is laid out as if this
+ * were not here. Closed, it is `hidden="until-found"`: the browser keeps it out
+ * of view but searches it, and on a match fires `beforematch`, drops the
+ * attribute and scrolls there. It is also out of flow, because a hidden box
+ * still takes a row of its list and a gap after it.
+ *
+ * React 18 writes `hidden` as a boolean, so the attribute is set by hand,
+ * before paint. On the server, and in a browser without `beforematch`, closed
+ * is `display: none`, as before: hidden, and not found.
+ *
+ * On a match the browser scrolls before React would re-render, so the handler
+ * puts the open style on itself first; the render that follows writes the same.
+ */
+function Findable({
+  id,
+  open,
+  onFound,
+  children,
+}: {
+  id: string;
+  open: boolean;
+  onFound: () => void;
+  children: ReactNode;
+}): ReactNode {
+  const ref = useRef<HTMLDivElement>(null);
+  const [findable, setFindable] = useState(false);
+  const found = useRef(onFound);
+  found.current = onFound;
+
+  useBrowserLayoutEffect(() => {
+    if ("onbeforematch" in document.body) setFindable(true);
+  }, []);
+
+  useBrowserLayoutEffect(() => {
+    const el = ref.current;
+    if (!findable || el === null) return;
+    if (open) el.removeAttribute("hidden");
+    else el.setAttribute("hidden", "until-found");
+  }, [open, findable]);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!findable || el === null) return;
+    const reveal = () => {
+      el.style.position = "";
+      el.style.display = "contents";
+      found.current();
+    };
+    el.addEventListener("beforematch", reveal);
+    return () => el.removeEventListener("beforematch", reveal);
+  }, [findable]);
+
+  const style = open
+    ? { display: "contents", gap: "inherit" }
+    : findable
+      ? { position: "absolute" as const }
+      : { display: "none" };
+  return (
+    <div ref={ref} id={id} style={style}>
+      {children}
+    </div>
+  );
+}
+
 export function fields(size: Size, layout: FieldLayout) {
   function Fields({ kind, children }: FieldsProps): ReactNode {
     return (
@@ -176,36 +338,29 @@ export function fields(size: Size, layout: FieldLayout) {
 
 export function fieldRow(colors: BadgeColors, layout: FieldLayout, presence: Presence) {
   function FieldRow(props: FieldRowProps): ReactNode {
-    const { field, depth, name, docs, required, deprecated, expanded, children } = props;
+    const { field, name, docs, required, deprecated, expanded, children } = props;
     const [open, setOpen] = useState(expanded === true);
     const nested = useId();
     const hasChildren = children !== undefined && children !== null;
     const described = field.docs.description !== undefined || field.docs.externalDocs !== undefined;
     const columns = layout === "columns";
     const oneLine = layout === "stacked";
-    // Stacked, the value sits under the name, so the whole row indents.
-    const pad = indent(depth);
-    const rowStyle = {
-      ...(!columns && pad !== "0" ? { paddingLeft: `var(--space-${pad})` } : {}),
-      ...(oneLine ? { borderTop: "1px solid var(--gray-a4)", paddingTop: "var(--space-3)" } : {}),
-    };
+    const rowStyle = oneLine ? { borderTop: "1px solid var(--gray-a4)", paddingTop: "var(--space-3)" } : {};
     return (
       <>
         <DataList.Item data-key={field.key} align="start" style={rowStyle}>
           <DataList.Label minWidth={columns ? { initial: "0", sm: "180px" } : "0"}>
-            <Box pl={columns ? pad : "0"}>
-              <Flex gap="2" align="baseline" wrap="wrap">
-                <Name name={name} type={props.type} />
-                {oneLine && <TypeLine {...props} />}
-                <Marks
-                  named={named(name)}
-                  required={required}
-                  deprecated={deprecated}
-                  colors={colors}
-                  presence={presence}
-                />
-              </Flex>
-            </Box>
+            <Flex gap="2" align="baseline" wrap="wrap">
+              <Name name={name} type={props.type} field={field} />
+              {oneLine && <TypeLine {...props} />}
+              <Marks
+                named={named(name)}
+                required={required}
+                deprecated={deprecated}
+                colors={colors}
+                presence={presence}
+              />
+            </Flex>
           </DataList.Label>
           {/* Grid and flex items will not shrink below their content by
               default, so one wide thing in a description — a table, a long
@@ -227,10 +382,14 @@ export function fieldRow(colors: BadgeColors, layout: FieldLayout, presence: Pre
                   </Text>
                 )}
                 {hasChildren && (
+                  // A ghost button pulls itself out by its padding, to sit flush
+                  // in running text. Here it sits under a description, so it
+                  // keeps its own room and lines up with the text above.
                   <Button
                     variant="ghost"
                     size="1"
                     color="gray"
+                    style={{ margin: 0 }}
                     aria-expanded={open}
                     aria-controls={nested}
                     onClick={() => setOpen((o) => !o)}
@@ -243,11 +402,10 @@ export function fieldRow(colors: BadgeColors, layout: FieldLayout, presence: Pre
             </DataList.Value>
           )}
         </DataList.Item>
-        {/* `display: contents` keeps the nested rows on the list's own grid. */}
         {hasChildren && (
-          <div id={nested} style={{ display: open ? "contents" : "none" }}>
+          <NestedBox id={nested} open={open} onFound={() => setOpen(true)} layout={layout}>
             {children}
-          </div>
+          </NestedBox>
         )}
       </>
     );

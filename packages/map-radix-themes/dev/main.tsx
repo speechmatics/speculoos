@@ -21,7 +21,7 @@ import {
   type MarkdownProps,
 } from "@speculoos/react";
 import specs from "virtual:speculoos-specs";
-import { radixThemes } from "../src/index.js";
+import { radixThemes, type FieldLayout } from "../src/index.js";
 
 /**
  * How a consumer is meant to wire markdown: a renderer they chose, a sanitiser
@@ -62,6 +62,9 @@ function useParam<T extends string>(key: string, initial: T): [T, (value: T) => 
 }
 
 type Pages = "one" | "per-entry";
+
+/** Whether named types are linked, or opened inline as nested rows. */
+type Refs = "never" | "always";
 
 /**
  * A URL in this dev page, keeping the current settings and changing `page`.
@@ -144,13 +147,15 @@ function App(): ReactNode {
   const [layout, setLayout] = useParam<Layout>("layout", "tree");
   const [appearance, setAppearance] = useParam<Appearance>("appearance", "light");
   const [pages, setPages] = useParam<Pages>("pages", "one");
+  const [refs, setRefs] = useParam<Refs>("refs", "never");
+  const [fieldLayout, setFieldLayout] = useParam<FieldLayout>("fields", "stacked");
   const page = new URLSearchParams(location.search).get("page") ?? "";
 
   const current = specs.find((s) => s.name === spec) ?? specs[0];
-  const components = useMemo(() => radixThemes({ markdown: Markdown }), []);
+  const components = useMemo(() => radixThemes({ markdown: Markdown, fieldLayout }), [fieldLayout]);
   const options = useMemo(
-    () => (pages === "per-entry" ? { layout, href: perEntryHref } : { layout }),
-    [layout, pages],
+    () => ({ layout, expandRefs: refs, ...(pages === "per-entry" ? { href: perEntryHref } : {}) }),
+    [layout, pages, refs],
   );
   // A routed page that was scrolled to an anchor before React rendered it.
   useEffect(() => {
@@ -178,6 +183,13 @@ function App(): ReactNode {
                 </Select.Root>
                 <Control label="Pages" value={pages} values={["one", "per-entry"]} onChange={setPages} />
                 <Control label="Layout" value={layout} values={["tree", "rows"]} onChange={setLayout} />
+                <Control
+                  label="Fields"
+                  value={fieldLayout}
+                  values={["stacked", "vertical", "columns"]}
+                  onChange={setFieldLayout}
+                />
+                <Control label="Refs" value={refs} values={["never", "always"]} onChange={setRefs} />
                 <Control label="Appearance" value={appearance} values={["light", "dark"]} onChange={setAppearance} />
                 <Separator size="4" />
                 <EntryList />

@@ -69,6 +69,14 @@ export interface FieldNode {
   key: string;
   /** Display path, e.g. ["config", "transcription", "[]", "language"]. */
   path: string[];
+  /**
+   * Where the field sits, as a reader would write it: property names only, an
+   * array's `[]` on its name — `["results[]", "alternatives[]", "content"]`. A
+   * union's branches, an enum's values and an intersection's members add
+   * nothing: they are not somewhere a value is, so `path` has them (it must,
+   * to stay unique) and this does not.
+   */
+  address: string[];
   depth: number;
   /** Absent on the root, and on array element nodes. */
   name?: string;
@@ -129,7 +137,7 @@ export function toTree(node: Node, ctx: PresentContext, opts: ViewOptions = {}):
     opts: { ...DEFAULTS, label: {}, ...opts },
     keys: new Set(),
   };
-  return buildField(c, { node, path: [], depth: 0, required: false, ancestors: new Set() });
+  return buildField(c, { node, path: [], address: [], depth: 0, required: false, ancestors: new Set() });
 }
 
 /** Pre-order flatten of `toTree`. Same `FieldNode` objects, one array. */
@@ -214,6 +222,7 @@ export function collectLinks(root: FieldNode): TypeId[] {
 interface FieldInput {
   node: Node;
   path: string[];
+  address: string[];
   depth: number;
   required: boolean;
   ancestors: ReadonlySet<TypeId>;
@@ -224,8 +233,8 @@ interface FieldInput {
 }
 
 function buildField(c: Ctx, input: FieldInput): FieldNode {
-  const { node, path, depth, required, ancestors } = input;
-  const expansion = expand(c, node, depth, ancestors, path);
+  const { node, path, address, depth, required, ancestors } = input;
+  const expansion = expand(c, node, depth, ancestors, path, address);
 
   const target = expansion.typeRef === undefined ? undefined : c.schemas[expansion.typeRef];
   const chipOpts: ChipOptions = { maxInlineEnum: c.opts.label.maxVariants ?? 3 };
@@ -240,6 +249,7 @@ function buildField(c: Ctx, input: FieldInput): FieldNode {
   return {
     key: uniqueKey(c, path),
     path,
+    address,
     depth,
     ...(input.name !== undefined && { name: input.name }),
     node,
@@ -347,13 +357,19 @@ function expand(
   ancestors: ReadonlySet<TypeId>,
   /** The owning field's path. Children hang off it. */
   basePath: string[],
+  /** The owning field's address. */
+  baseAddress: string[],
 ): Expansion {
   // Arrays are transparent: a reader thinks of `items: Foo` as "a list of Foo",
   // and wants Foo's fields, not a wrapper level. Nested arrays unwrap too.
   let eff = node;
   const suffix = [...basePath];
+  const within = [...baseAddress];
   while (eff.kind === "array") {
     suffix.push("[]");
+    // On the name, "results[]"; a root array has none, and the reader is
+    // already inside it.
+    if (within.length > 0) within[within.length - 1] += "[]";
     eff = eff.items;
   }
 
@@ -376,22 +392,24 @@ function expand(
     if (!isRoot && expandRefs === "depth" && depth >= maxDepth) {
       return { children: { kind: "link", target: eff.target, reason: "depth" }, typeRef: eff.target };
     }
-    const inner = expand(c, target.node, depth, new Set([...ancestors, eff.target]), suffix);
+    const inner = expand(c, target.node, depth, new Set([...ancestors, eff.target]), suffix, within);
     return { ...inner, typeRef: eff.target };
   }
 
   const at = (seg: string): string[] => [...suffix, seg];
+  const named = (seg: string): string[] => [...within, seg];
 
   switch (eff.kind) {
     case "object": {
       const props = eff.properties.filter((p) => appliesToView(p, c.opts.view));
       if (props.length === 0 && eff.additional.kind !== "schema") return NONE;
-      const nodes = props.map((p) => propertyField(c, p, depth, ancestors, at(p.name)));
+      const nodes = props.map((p) => propertyField(c, p, depth, ancestors, at(p.name), named(p.name)));
       if (eff.additional.kind === "schema") {
         nodes.push(
           buildField(c, {
             node: eff.additional.node,
             path: at("[key: string]"),
+            address: named("[key: string]"),
             depth: depth + 1,
             required: false,
             ancestors,
@@ -411,6 +429,7 @@ function expand(
             buildField(c, {
               node: eff.values,
               path: at(keyLabel),
+              address: named(keyLabel),
               depth: depth + 1,
               required: false,
               ancestors,
@@ -426,6 +445,7 @@ function expand(
         buildField(c, {
           node: n,
           path: at(String(i)),
+          address: named(String(i)),
           depth: depth + 1,
           required: true,
           ancestors,
@@ -440,6 +460,7 @@ function expand(
         buildField(c, {
           node: v.node,
           path: at(v.label || `option-${i + 1}`),
+          address: within,
           depth: depth + 1,
           required: false,
           ancestors,
@@ -473,6 +494,7 @@ function expand(
         buildField(c, {
           node: { kind: "const", value: m.value, source: eff.source, docs: m.docs ?? {}, nullable: false },
           path: at(`value-${i + 1}`),
+          address: within,
           depth: depth + 1,
           required: false,
           ancestors,
@@ -486,6 +508,7 @@ function expand(
         buildField(c, {
           node: n,
           path: at(`member-${i + 1}`),
+          address: within,
           depth: depth + 1,
           required: true,
           ancestors,
@@ -495,14 +518,21 @@ function expand(
     }
 
     case "unsupported":
-      return eff.partial ? expand(c, eff.partial, depth, ancestors, suffix) : NONE;
+      return eff.partial ? expand(c, eff.partial, depth, ancestors, suffix, within) : NONE;
 
     default:
       return NONE;
   }
 }
 
-function propertyField(c: Ctx, p: Property, depth: number, ancestors: ReadonlySet<TypeId>, path: string[]): FieldNode {
+function propertyField(
+  c: Ctx,
+  p: Property,
+  depth: number,
+  ancestors: ReadonlySet<TypeId>,
+  path: string[],
+  address: string[],
+): FieldNode {
   const extraChips: Chip[] = [];
   if (p.deprecated) extraChips.push({ kind: "deprecated", label: "deprecated" });
   if (p.readOnly) extraChips.push({ kind: "readOnly", label: "read-only" });
@@ -511,6 +541,7 @@ function propertyField(c: Ctx, p: Property, depth: number, ancestors: ReadonlySe
   return buildField(c, {
     node: p.node,
     path,
+    address,
     depth: depth + 1,
     required: p.required,
     ancestors,
