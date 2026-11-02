@@ -1,6 +1,6 @@
 {
   "name": "@speculoos/jsonschema",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0-alpha.1",
   "description": "Upcast dialects to canonical JSON Schema, then lower to the Speculoos IR.",
   "keywords": [
     "json-schema",

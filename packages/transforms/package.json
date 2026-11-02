@@ -1,6 +1,6 @@
 {
   "name": "@speculoos/transforms",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0-alpha.1",
   "description": "IR-to-IR passes: hide, filter, sort, rename, redact.",
   "keywords": [
     "openapi",

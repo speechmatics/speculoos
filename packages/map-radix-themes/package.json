@@ -1,6 +1,6 @@
 {
   "name": "@speculoos/map-radix-themes",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0-alpha.1",
   "description": "A Speculoos component map for Radix Themes. Twelve components, not a renderer.",
   "keywords": [
     "radix-ui",

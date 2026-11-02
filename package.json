@@ -1,6 +1,6 @@
 {
   "name": "speculoos",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0-alpha.1",
   "private": true,
   "description": "Render OpenAPI and AsyncAPI specs in your own design system, via a shared intermediate representation.",
   "license": "MIT",

@@ -1,6 +1,6 @@
 {
   "name": "@speculoos/loader",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0-alpha.1",
   "description": "Load a project of OpenAPI/AsyncAPI documents and resolve $refs across them.",
   "keywords": [
     "openapi",
