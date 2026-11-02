@@ -1029,14 +1029,16 @@ site picks up the map's changes with each new alpha.
 On a channel page, the handshake, Send and Receive are plain sections against the page
 background. Status tabs are not carded, on a channel page or a REST one.
 
-6. **map** The handshake becomes a plain section, headed at the same size as Send and
-   Receive, with its own anchor; today it has none.
-7. **map** A message becomes a heading over a rule, not a card. `CardSection` and `InCard`
-   go.
-8. **map** No card around a code block: the `<pre>` gets its own background, so code also
-   shows in dark mode inside a container.
-9. **map** The example list keeps its card but loses the inner border, so it has one
-   frame.
+6. **map** ✅ The handshake becomes a plain section, headed at the same size as Send and
+   Receive, with its own anchor; today it has none. The anchor is the channel's slug and
+   `-handshake`, from core's `endpointHandshake` (`Handshake.slug`), so React and HTML
+   agree on it.
+7. **map** ✅ A message becomes a heading under a rule, not a card. `CardSection` and
+   `InCard` go.
+8. **map** ✅ No card around a code block: the `<pre>` gets its own background, so code
+   also shows in dark mode inside a container.
+9. **map** ✅ The example list keeps its card but loses the inner border, so it has one
+   frame. The inner border was the code block's card, so item 8 removes it.
 
 *Consistency.*
 

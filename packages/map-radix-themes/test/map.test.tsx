@@ -147,11 +147,12 @@ describe("messages", () => {
     return render(<Operation id={withTwo.operation.id} />, api, radixThemes({ markdown: Markdown }));
   };
 
-  it("gives each message a card of its own, headed one level down and anchored", () => {
+  it("gives each message a section of its own under a rule, headed one level down and anchored, never a card", () => {
     const html = messageOp();
     expect(html).toMatch(
-      /<section data-kind="message" id="start-recognition" class="[^"]*rt-Card[^"]*"><div[^>]*><h3 [^>]*>Start recognition<\/h3>/,
+      /<section data-kind="message" style="border-top:1px solid var\(--gray-a5\)" id="start-recognition"[^>]*><div[^>]*><div[^>]*><h3 [^>]*>Start recognition<\/h3>/,
     );
+    expect(html).not.toContain("rt-Card");
     expect(html).not.toContain('role="tablist" aria-orientation="horizontal" data-kind="message"');
   });
 
@@ -337,14 +338,16 @@ describe("field rows", () => {
 });
 
 describe("messageExtras", () => {
-  it("renders inside each message's card, given the IR message", () => {
+  it("renders inside each message's section, given the IR message", () => {
     const Extras = ({ message }: { message: { name: string } }) => <aside data-extra={message.name} />;
     const html = render(
       <Endpoint id="/v2/{language}" />,
       ir("realtime-v3.yaml"),
       radixThemes({ markdown: Markdown, messageExtras: Extras }),
     );
-    expect(html).toMatch(/rt-Card[\s\S]*?<aside data-extra="StartRecognition"><\/aside>/);
+    expect(html).toMatch(
+      /data-kind="message"[^>]*>(?:(?!<section)[\s\S])*?<aside data-extra="StartRecognition"><\/aside>/,
+    );
   });
 });
 
@@ -466,25 +469,30 @@ describe("gathered examples", () => {
     );
     expect(html).toMatch(/<div id="start-recognition-example-0-body" hidden=""/);
   });
-});
 
-describe("handshake", () => {
-  it("is a card, like a message: the connection as one unit before the first message", () => {
-    const html = render(<Endpoint id="/v2/{language}" />, ir("realtime-v3.yaml"), radixThemes({ markdown: Markdown }));
-    expect(html).toMatch(/<section data-kind="handshake" class="[^"]*rt-Card[^"]*">/);
+  it("is one frame: its code blocks have a fill, not a card of their own", () => {
+    const api = ir("realtime-v3.yaml");
+    const channel = apiEntries(api).find((e) => e.kind === "channel")!;
+    const html = render(<EntryExamples entry={channel} />, api, radixThemes({ markdown: Markdown }));
+    expect(html.match(/rt-Card/g)).toHaveLength(1);
+    expect(html).toContain("background:var(--gray-a3)");
   });
 });
 
-describe("headings inside cards", () => {
-  it("keep the card's title the largest: the handshake's sections step down", () => {
-    const html = render(<Endpoint id="/v2/{language}" />, ir("realtime-v3.yaml"), radixThemes({ markdown: Markdown }));
-    // The card ends where the channel's own Address parameters begin.
-    const start = html.indexOf('data-kind="handshake"');
-    const card = html.slice(start, html.indexOf('data-kind="parameters"', start));
-    const sizes = [...card.matchAll(/rt-Heading rt-r-size-(\d)/g)].map((m) => Number(m[1]));
-    expect(sizes.length).toBeGreaterThan(1);
-    expect(sizes[0]).toBe(5); // Handshake
-    expect(sizes.slice(1).every((s) => s < 5)).toBe(true); // Authentication, …
+describe("handshake", () => {
+  const channel = () =>
+    render(<Endpoint id="/v2/{language}" />, ir("realtime-v3.yaml"), radixThemes({ markdown: Markdown }));
+  const headingSize = (html: string, kind: string) =>
+    html.slice(html.indexOf(`data-kind="${kind}"`)).match(/rt-Heading rt-r-size-(\d)/)?.[1];
+
+  it("is a section like Send and Receive, at their size, with an anchor of its own", () => {
+    const html = channel();
+    expect(html).toMatch(/<section data-kind="handshake" id="[^"]+-handshake"/);
+    expect(headingSize(html, "handshake")).toBe(headingSize(html, "operation"));
+  });
+
+  it("leaves nothing on a channel page in a card", () => {
+    expect(channel()).not.toContain("rt-Card");
   });
 });
 

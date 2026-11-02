@@ -619,7 +619,10 @@ describe("EntryExamples", () => {
 describe("Handshake", () => {
   it("opens a WebSocket channel with its upgrade request and how to authenticate", () => {
     const html = render(<Endpoint id="/v2/{language}" />, ws);
-    expect(html).toContain('<x-section data-kind="handshake" data-level="3"><x-title>Handshake</x-title>');
+    // Anchored after its channel, so a page's prose can link to it.
+    expect(html).toContain(
+      '<x-section data-kind="handshake" data-level="3" id="v2-language-handshake"><x-title>Handshake</x-title>',
+    );
     expect(html).toContain(
       '<x-badge data-tone="method">GET</x-badge> <x-code>wss://eu2.rt.example.com/v2/v2/{language}</x-code>',
     );
