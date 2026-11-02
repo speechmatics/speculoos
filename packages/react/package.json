@@ -1,6 +1,6 @@
 {
   "name": "@speculoos/react",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0-alpha.1",
   "description": "Headless React binding for the Speculoos IR. Ships no styles and no DOM.",
   "keywords": [
     "react",
